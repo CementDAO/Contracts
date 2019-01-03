@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.5.0;
 
 import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
@@ -55,7 +55,7 @@ contract MIXR is ERC20, Ownable {
      * Modifier to allow governance only to whitelisted addresses
      */
     modifier onlyWhitelist() {
-        require(SetLib.contains(whitelist, msg.sender));
+        require(SetLib.contains(whitelist, msg.sender), "User not allowed!");
         _;
     }
 
@@ -112,10 +112,8 @@ contract MIXR is ERC20, Ownable {
         require(
             SetLib.contains(basket, _token),
             "Deposit failed, token needs to be added to basket by a Rating Agent first.");
-        require(
-            proportions[_token] > 0,
-            "Token not approved! Please configure the basket proportions to allow it.");
-        IERC20(this).transferFrom(
+        IERC20(address(this)).approve(address(this), amount);
+        IERC20(address(this)).transferFrom(
             msg.sender, address(this), amount); // Receive the MIXR token that was sent
         IERC20(_token).transferFrom(
             address(this), msg.sender, amount); // Send an equal number of selected tokens back

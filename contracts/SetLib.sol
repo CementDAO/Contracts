@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.5.0;
 
 
 library SetLib {
@@ -35,9 +35,7 @@ library SetLib {
     }
 
     function contains(Data storage self, address value)
-        public
-        view
-        returns (bool)
+        public view returns(bool)
     {
         return self.flags[value];
     }

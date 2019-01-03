@@ -7,16 +7,24 @@
         "test": "test"
     },
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "coverage": "./node_modules/.bin/solidity-coverage",
+        "solium": "./node_modules/.bin/solium -d contracts/"
     },
     "keywords": [],
     "author": "",
     "license": "ISC",
     "dependencies": {
-        "openzeppelin-solidity": "^2.0.0"
+        "openzeppelin-solidity": "^2.1.0-rc.2"
     },
     "devDependencies": {
         "bignumber.js": "^8.0.1",
-        "eslint": "^5.11.1"
+        "eslint": "^5.11.1",
+        "eslint-config-airbnb": "^17.1.0",
+        "eslint-plugin-import": "^2.14.0",
+        "eslint-plugin-jsx-a11y": "^6.1.1",
+        "eslint-plugin-react": "^7.11.0",
+        "solidity-coverage": "^0.5.11",
+        "ethlint": "^1.2.1",
+        "truffle": "^5.0.0"
     }
 }

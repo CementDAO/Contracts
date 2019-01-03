@@ -1,1 +1,5 @@
-node_modules
+node_modules/*
+contracts/Migrations.sol
+contracts/NEOToken.sol
+contracts/SetLib.sol
+contracts/test/ERC20.sol

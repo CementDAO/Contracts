@@ -1,36 +1,19 @@
 {
-    "env": {
-        "es6": true,
-        "mocha": true,
-        "jest": true
-    },
-    "extends": "eslint:recommended",
-    "parserOptions": {
-        "ecmaVersion": 2017
-    },
+    "extends": "airbnb",
     "rules": {
         "indent": [
             "error",
             4
-        ],
-        "linebreak-style": [
-            "error",
-            "unix"
-        ],
-        "quotes": [
-            "error",
-            "single"
-        ],
-        "semi": [
-            "error",
-            "always"
         ]
+    },
+    "env": {
+        "mocha": true,
+        "es6": true
     },
     "globals": {
         "artifacts": true,
-        "contract": true,
         "web3": true,
-        "module": true,
+        "contract": true,
         "assert": true
     }
 }

@@ -1,5 +1,5 @@
-var MIXR = artifacts.require('./MIXR.sol');
-var SetLib = artifacts.require('./SetLib.sol');
+const MIXR = artifacts.require('./MIXR.sol');
+const SetLib = artifacts.require('./SetLib.sol');
 
 module.exports = (deployer) => {
     deployer.deploy(SetLib);
