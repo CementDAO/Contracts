@@ -24,8 +24,12 @@ contract('MIXR', (accounts) => {
         await MIXRInstance.addToWhiteList(userWhitelist, { from: accounts[0] });
     });
 
-    it('should add erc20', async () => {
+    it('should add erc20 to approved', async () => {
         await MIXRInstance.addToApprovedTokens(NEOTokenInstance.address, { from: userWhitelist });
+    });
+
+    it('should add erc20 to basket', async () => {
+        await MIXRInstance.addToBasketTokens(NEOTokenInstance.address, 1, { from: userWhitelist });
     });
 
     it('should deposit erc20', async () => {

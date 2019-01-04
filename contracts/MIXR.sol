@@ -47,6 +47,20 @@ contract MIXR is ERC20, Ownable {
     }
 
     /**
+     * @dev In order to make the code easier to read
+     * this method is only a group of requires
+     */
+    modifier isValidToken(address _token) {
+        require(
+            SetLib.contains(basket, _token),
+            "Deposit failed, token needs to be added to basket by a Rating Agent first.");
+        require(
+            proportions[_token] > 0,
+            "Token not approved! Please configure the basket proportions to allow it.");
+        _;
+    }
+
+    /**
      * @dev Add new user to whitelist
      * @param _userAddress the user address to add
      */
@@ -74,10 +88,8 @@ contract MIXR is ERC20, Ownable {
      */
     function depositToken(address _token, uint256 amount)
         public
+        isValidToken(_token)
     {
-        require(
-            SetLib.contains(basket, _token),
-            "Deposit failed, token needs to be added to basket by a Rating Agent first.");
         _mint(address(this), amount);
         IERC20(address(this)).approve(address(this), amount);
         IERC20(_token).transferFrom(
@@ -96,10 +108,8 @@ contract MIXR is ERC20, Ownable {
      */
     function redeemToken(address _token, uint256 amount)
         public
+        isValidToken(_token)
     {
-        require(
-            SetLib.contains(basket, _token),
-            "Deposit failed, token needs to be added to basket by a Rating Agent first.");
         IERC20(_token).approve(address(this), amount);
         IERC20(address(this)).transferFrom(
             msg.sender, address(this), amount); // Receive the MIXR token that was sent
