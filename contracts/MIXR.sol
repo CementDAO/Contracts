@@ -38,19 +38,6 @@ contract MIXR is ERC20, Ownable {
     uint8 public constant decimals = 18;
 
     /**
-    * @dev Constructor that gives _owner all of existing tokens.
-    */
-    constructor()
-        public
-    {
-        /**
-         * @dev deploying only 525 tokens!
-         */
-        uint256 initialSupply = 525 * (10 ** uint256(decimals));
-        _mint(address(this), initialSupply);
-    }
-
-    /**
      * @dev (C1) Whitelist of addresses that can do governance.
      * Modifier to allow governance only to whitelisted addresses
      */
@@ -91,9 +78,10 @@ contract MIXR is ERC20, Ownable {
         require(
             SetLib.contains(basket, _token),
             "Deposit failed, token needs to be added to basket by a Rating Agent first.");
+        _mint(address(this), amount);
+        IERC20(address(this)).approve(address(this), amount);
         IERC20(_token).transferFrom(
             msg.sender, address(this), amount); // Receive the token that was sent
-        IERC20(address(this)).approve(address(this), amount);
         IERC20(address(this)).transferFrom(
             address(this), msg.sender, amount); // Send an equal number of MIXR tokens back
     }
@@ -112,11 +100,12 @@ contract MIXR is ERC20, Ownable {
         require(
             SetLib.contains(basket, _token),
             "Deposit failed, token needs to be added to basket by a Rating Agent first.");
-        IERC20(address(this)).approve(address(this), amount);
+        IERC20(_token).approve(address(this), amount);
         IERC20(address(this)).transferFrom(
             msg.sender, address(this), amount); // Receive the MIXR token that was sent
         IERC20(_token).transferFrom(
             address(this), msg.sender, amount); // Send an equal number of selected tokens back
+        _burn(address(this), amount);
     }
 
     /** @dev (C3) This function adds an ERC20 token to the approved tokens list */
