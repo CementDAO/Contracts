@@ -41,4 +41,18 @@ contract('MIXR', (accounts) => {
         assert.equal(previousNeoBalance.minus(newNeoBalance).s, oneBg.s, 'should have less one neo');
         assert.equal(newMixrBalance.minus(previousMixrBalance).s, oneBg.s, 'should have one more mixr');
     });
+
+    it('should redeem erc20', async () => {
+        const valueChange = '0.01';
+        const one = web3.utils.toWei(valueChange, 'ether');
+        const oneBg = new BigNumber(web3.utils.toWei(valueChange, 'ether'));
+        const previousNeoBalance = new BigNumber(await NEOTokenInstance.balanceOf(userWhitelist));
+        const previousMixrBalance = new BigNumber(await MIXRInstance.balanceOf(userWhitelist));
+        await MIXRInstance.approve(MIXRInstance.address, one, { from: userWhitelist });
+        await MIXRInstance.redeemToken(NEOTokenInstance.address, one, { from: userWhitelist });
+        const newNeoBalance = new BigNumber(await NEOTokenInstance.balanceOf(userWhitelist));
+        const newMixrBalance = new BigNumber(await MIXRInstance.balanceOf(userWhitelist));
+        assert.equal(newNeoBalance.minus(previousNeoBalance).s, oneBg.s, 'should have less one neo');
+        assert.equal(previousMixrBalance.minus(newMixrBalance).s, oneBg.s, 'should have one more mixr');
+    });
 });
