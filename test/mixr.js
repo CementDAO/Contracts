@@ -1,6 +1,6 @@
 const MIXR = artifacts.require('./MIXR.sol');
 const NEOToken = artifacts.require('./NEOToken.sol');
-const ERC20 = artifacts.require('./some/ERC20.sol');
+const ERC20 = artifacts.require('../node_modules/openzeppelin-solidity/contracts/token/ERC20/ERC20.sol');
 
 const BigNumber = require('bignumber.js');
 
