@@ -1,6 +1,5 @@
 const MIXR = artifacts.require('./MIXR.sol');
-const NEOToken = artifacts.require('./NEOToken.sol');
-const ERC20 = artifacts.require('../node_modules/openzeppelin-solidity/contracts/token/ERC20/ERC20.sol');
+const NEOToken = artifacts.require('./test/NEOToken.sol');
 
 const BigNumber = require('bignumber.js');
 
@@ -10,14 +9,16 @@ contract('MIXR', (accounts) => {
     const userWhitelist = accounts[1];
 
     before(async () => {
-        /**
-         * At this point, the MIXR and ERC20 are deployed.
-         * The NEOToken is deployed only to get the contract address.
-         */
         MIXRInstance = await MIXR.deployed();
-        await ERC20.deployed();
-        const instance = await NEOToken.deployed();
-        NEOTokenInstance = await ERC20.at(instance.address);
+        NEOTokenInstance = await NEOToken.deployed();
+        /**
+         * An altenative to this would be to deploy ERC20 and then
+         * get the contract instance using the address.
+         *
+         * await ERC20.deployed();
+         * const instance = await NEOToken.deployed();
+         * NEOTokenInstance = await ERC20.at(instance.address);
+         */
     });
 
     it('add user to whitelist', async () => {
