@@ -28,7 +28,7 @@ contract MIXR is ERC20, Ownable {
      * this is just an integer for each token, and then the proportion
      * for token i is calculated as proportions[i]/sum(proportions)
      */
-    mapping(address => uint256) proportions; 
+    mapping(address => uint256) private proportions; 
 
     /**
      * @dev As an ERC20 it might the name.
@@ -41,8 +41,20 @@ contract MIXR is ERC20, Ownable {
      * @dev (C1) Whitelist of addresses that can do governance.
      * Modifier to allow governance only to whitelisted addresses
      */
-    modifier onlyWhitelist() {
+    modifier onlyGovernor() {
         require(SetLib.contains(whitelist, msg.sender), "User not allowed!");
+        _;
+    }
+
+    /**
+     * @dev Currently there's not a right way to find out if an address is
+     * an ERC20 token. One possible solutions is explained here
+     * https://stackoverflow.com/questions/45364197/
+     */
+    modifier isValidERC20(address _token) {
+        require(
+            IERC20(_token).balanceOf(_token) >= 0,
+            "This is not a valid ERC20 address.");
         _;
     }
 
@@ -50,7 +62,7 @@ contract MIXR is ERC20, Ownable {
      * @dev In order to make the code easier to read
      * this method is only a group of requires
      */
-    modifier isValidToken(address _token) {
+    modifier isAcceptedERC20(address _token) {
         require(
             SetLib.contains(basket, _token),
             "Deposit failed, token needs to be added to basket by a Rating Agent first.");
@@ -88,7 +100,7 @@ contract MIXR is ERC20, Ownable {
      */
     function depositToken(address _token, uint256 amount)
         public
-        isValidToken(_token)
+        isAcceptedERC20(_token)
     {
         _mint(address(this), amount);
         IERC20(address(this)).approve(address(this), amount);
@@ -108,7 +120,7 @@ contract MIXR is ERC20, Ownable {
      */
     function redeemToken(address _token, uint256 amount)
         public
-        isValidToken(_token)
+        isAcceptedERC20(_token)
     {
         IERC20(_token).approve(address(this), amount);
         IERC20(address(this)).transferFrom(
@@ -121,7 +133,8 @@ contract MIXR is ERC20, Ownable {
     /** @dev (C3) This function adds an ERC20 token to the approved tokens list */
     function addToApprovedTokens(address _token)
         public
-        onlyWhitelist
+        onlyGovernor
+        isValidERC20(_token)
     {
         SetLib.insert(basket, _token);
     }
@@ -132,7 +145,7 @@ contract MIXR is ERC20, Ownable {
      */
     function addToBasketTokens(address _token, uint256 proportion)
         public
-        onlyWhitelist
+        onlyGovernor
     {
         require(SetLib.contains(basket, _token), "Token not in basket!");
         proportions[_token] = proportion;

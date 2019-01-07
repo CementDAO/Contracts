@@ -1,6 +1,9 @@
 pragma solidity ^0.5.0;
 
-
+/**
+ * @dev This is from the solidity documentation
+ * https://solidity.readthedocs.io/en/v0.5.2/contracts.html?highlight=library#libraries
+ */
 library SetLib {
     // We define a new struct datatype that will be used to
     // hold its data in the calling contract.
@@ -35,7 +38,9 @@ library SetLib {
     }
 
     function contains(Data storage self, address value)
-        public view returns(bool)
+        public
+        view
+        returns(bool)
     {
         return self.flags[value];
     }
