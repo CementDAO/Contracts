@@ -23,8 +23,8 @@
         "eslint-plugin-import": "^2.14.0",
         "eslint-plugin-jsx-a11y": "^6.1.1",
         "eslint-plugin-react": "^7.11.0",
-        "solidity-coverage": "^0.5.11",
         "ethlint": "^1.2.1",
+        "solidity-coverage": "https://github.com/obernardovieira/solidity-coverage.git#9f7545a6fb1129b28da7e97894b349788528a436",
         "truffle": "^5.0.0"
     }
 }

@@ -73,6 +73,18 @@ contract MIXR is ERC20, Ownable {
     }
 
     /**
+     * @dev According to https://stackoverflow.com/a/40939341 by Manuel Aráoz
+     * one of the openzeppelin team by the moment I'm writting, is possible to
+     * check if an address is a contract.
+     */
+    function isContract(address addr) private returns (bool) {
+        uint size;
+        // solium-disable-next-line security/no-inline-assembly
+        assembly { size := extcodesize(addr) }
+        return size > 0;
+    }
+
+    /**
      * @dev Add new user to whitelist
      * @param _userAddress the user address to add
      */
