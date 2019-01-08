@@ -1,16 +1,25 @@
 const MIXR = artifacts.require('./MIXR.sol');
 const NEOToken = artifacts.require('./test/NEOToken.sol');
+const KittyToken = artifacts.require('./test/KittyToken.sol');
 
 const BigNumber = require('bignumber.js');
 
 contract('MIXR', (accounts) => {
     let MIXRInstance;
     let NEOTokenInstance;
+    let KittyTokenInstance;
     const userWhitelist = accounts[1];
+    /**
+     * In truffle, accounts[0] is the default account,
+     * which is the one used to deploy the contracts.
+     * The account that deploy the contracts is the owner account.
+     */
+    const accountOwner = accounts[0];
 
     before(async () => {
         MIXRInstance = await MIXR.deployed();
         NEOTokenInstance = await NEOToken.deployed();
+        KittyTokenInstance = await KittyToken.deployed();
         /**
          * An altenative to this would be to deploy ERC20 and then
          * get the contract instance using the address.
@@ -20,30 +29,67 @@ contract('MIXR', (accounts) => {
          * NEOTokenInstance = await ERC20.at(instance.address);
          */
     });
+    beforeEach(async () => {
+        await MIXRInstance.addToWhiteList(userWhitelist, { from: accountOwner });
+    });
+    afterEach(async () => {
+        await MIXRInstance.removeFromWhiteList(userWhitelist, { from: accountOwner });
+    });
 
     describe('add and remove from whitelist', () => {
-        it('add user not using owner', async () => {
-            try {
-                await MIXRInstance.addToWhiteList(userWhitelist, { from: accounts[1] });
-            } catch (e) {
-                //
-            }
+        before(async () => {
+            await MIXRInstance.removeFromWhiteList(userWhitelist, { from: accountOwner });
         });
-        it('add user using invalid address', async () => {
-            try {
-                await MIXRInstance.addToWhiteList(userWhitelist, { from: 0x0 });
-            } catch (e) {
-                //
-            }
-        });
+        /**
+         * We could have more tests, for example, using invalid address in *from*
+         * field, but that address is checked by web3.js and by the network. So,
+         * doesn't make sense be here testing something already tested.
+         */
+        /**
+         * We can also test with some other accounts that are not owners, but
+         * this is already tested by open-zeppelin.
+         */
         it('add user using owner', async () => {
-            await MIXRInstance.addToWhiteList(userWhitelist, { from: accounts[0] });
+            await MIXRInstance.addToWhiteList(userWhitelist, { from: accountOwner });
+        });
+        it('remove user using owner', async () => {
+            await MIXRInstance.removeFromWhiteList(userWhitelist, { from: accountOwner });
         });
     });
     describe('add and remove erc20 to approved', () => {
-        it('should add erc20 to approved', async () => {
+        it('add erc20 to approved from whitelist user', async () => {
             await MIXRInstance.addToApprovedTokens(NEOTokenInstance.address,
                 { from: userWhitelist });
+        });
+        it('add non erc20 to approved from whitelist user', async () => {
+            try {
+                await MIXRInstance.addToApprovedTokens(KittyToken.address,
+                    { from: userWhitelist });
+                throw new Error('The test \'add erc20 to approved '
+                    + 'from non whitelist user\' isn\'t failing.');
+            } catch (e) {
+                if (e.message.indexOf('revert') < 0) {
+                    throw new Error(e);
+                } else {
+                    const reason = e.message.match('Reason given: (.*)\\.');
+                    assert.equal('User not allowed!', reason[1], 'Reason should be \'User not allowed!\'');
+                }
+            }
+        });
+        it('add erc20 to approved from non whitelist user', async () => {
+            try {
+                await MIXRInstance.addToApprovedTokens(NEOTokenInstance.address,
+                    { from: accounts[2] });
+                throw new Error('The test \'add erc20 to approved '
+                    + 'from non whitelist user\' isn\'t failing.');
+            } catch (e) {
+                if (e.message.indexOf('revert') < 0) {
+                    throw new Error(e);
+                } else {
+                    const reason = e.message.match('Reason given: (.*)\\.');
+                    assert.equal('User not allowed!', reason[1], 'Reason should be \'User not allowed!\'');
+                }
+            }
         });
     });
     describe('add and remove erc20 to basket', () => {
