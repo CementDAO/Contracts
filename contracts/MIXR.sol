@@ -14,8 +14,10 @@ contract MIXR is ERC20, Ownable {
      * can react to transfers of tokens other than itself
      */
 
+    using SetLib for SetLib.Data;
+
     /** @dev (C1) Whitelist of addresses that can do governance. */
-    SetLib.Data private whitelist;
+    SetLib.Data private governors;
 
     /**
      * @dev (C2, C3) This is list of stablecoins that can be stored in the basket,
@@ -42,7 +44,7 @@ contract MIXR is ERC20, Ownable {
      * Modifier to allow governance only to whitelisted addresses
      */
     modifier onlyGovernor() {
-        require(SetLib.contains(whitelist, msg.sender), "User not allowed!");
+        require(governors.contains(msg.sender), "User not allowed!");
         _;
     }
 
@@ -55,6 +57,9 @@ contract MIXR is ERC20, Ownable {
         require(
             IERC20(_token).balanceOf(_token) >= 0,
             "This is not a valid ERC20 address.");
+        require(
+            IERC20(_token).totalSupply() >= 0,
+            "This is not a valid ERC20 address.");
         _;
     }
 
@@ -62,9 +67,9 @@ contract MIXR is ERC20, Ownable {
      * @dev In order to make the code easier to read
      * this method is only a group of requires
      */
-    modifier isAcceptedERC20(address _token) {
+    modifier isAvailableToken(address _token) {
         require(
-            SetLib.contains(basket, _token),
+            basket.contains(_token),
             "Deposit failed, token needs to be added to basket by a Rating Agent first.");
         require(
             proportions[_token] > 0,
@@ -85,25 +90,25 @@ contract MIXR is ERC20, Ownable {
     }
 
     /**
-     * @dev Add new user to whitelist
+     * @dev Add new user to governors
      * @param _userAddress the user address to add
      */
     function addToWhiteList(address _userAddress)
         public
         onlyOwner
     {
-        SetLib.insert(whitelist, _userAddress);
+        governors.insert(_userAddress);
     }
 
     /**
-     * @dev Remove user from whitelist
+     * @dev Remove user from governors
      * @param _userAddress the user address to remove
      */
     function removeFromWhiteList(address _userAddress)
         public
         onlyOwner
     {
-        SetLib.remove(whitelist, _userAddress);
+        governors.remove(_userAddress);
     }
 
     /**
@@ -112,7 +117,7 @@ contract MIXR is ERC20, Ownable {
      */
     function depositToken(address _token, uint256 amount)
         public
-        isAcceptedERC20(_token)
+        isAvailableToken(_token)
     {
         _mint(address(this), amount);
         IERC20(address(this)).approve(address(this), amount);
@@ -132,7 +137,7 @@ contract MIXR is ERC20, Ownable {
      */
     function redeemToken(address _token, uint256 amount)
         public
-        isAcceptedERC20(_token)
+        isAvailableToken(_token)
     {
         IERC20(_token).approve(address(this), amount);
         IERC20(address(this)).transferFrom(
@@ -148,7 +153,7 @@ contract MIXR is ERC20, Ownable {
         onlyGovernor
         isValidERC20(_token)
     {
-        SetLib.insert(basket, _token);
+        basket.insert(_token);
     }
 
     /**
@@ -159,7 +164,7 @@ contract MIXR is ERC20, Ownable {
         public
         onlyGovernor
     {
-        require(SetLib.contains(basket, _token), "Token not in basket!");
+        require(basket.contains(_token), "Token not in basket!");
         proportions[_token] = proportion;
     }
 
