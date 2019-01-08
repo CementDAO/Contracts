@@ -36,6 +36,18 @@
         ],
         "security/no-inline-assembly": [
             "warning"
+        ],
+        "imports-on-top": "warning",
+        "variable-declarations": "warning",
+        "array-declarations": "warning",
+        "operator-whitespace": "warning",
+        "function-whitespace": "warning",
+        "semicolon-whitespace": "warning",
+        "comma-whitespace": "warning",
+        "conditionals-whitespace": "warning",
+        "arg-overflow": [
+            "warning",
+            3
         ]
     }
 }
