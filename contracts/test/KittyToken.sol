@@ -1,11 +1,12 @@
 pragma solidity ^0.5.0;
 
-import "openzeppelin-solidity/contracts/token/ERC721/ERC721Full.sol";
+import "openzeppelin-solidity/contracts/token/ERC721/ERC721.sol";
 
 
-contract KittyToken is ERC721Full {
-    constructor() public
-        ERC721Full("KittyToken", "KTT")
+contract KittyToken is ERC721 {
+    constructor()
+        public
+        ERC721()
     {
     }
 }

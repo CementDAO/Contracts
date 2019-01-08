@@ -61,21 +61,6 @@ contract('MIXR', (accounts) => {
             await MIXRInstance.addToApprovedTokens(NEOTokenInstance.address,
                 { from: userWhitelist });
         });
-        it('add non erc20 to approved from whitelist user', async () => {
-            try {
-                await MIXRInstance.addToApprovedTokens(KittyToken.address,
-                    { from: userWhitelist });
-                throw new Error('The test \'add erc20 to approved '
-                    + 'from non whitelist user\' isn\'t failing.');
-            } catch (e) {
-                if (e.message.indexOf('revert') < 0) {
-                    throw new Error(e);
-                } else {
-                    const reason = e.message.match('Reason given: (.*)\\.');
-                    assert.equal('User not allowed!', reason[1], 'Reason should be \'User not allowed!\'');
-                }
-            }
-        });
         it('add erc20 to approved from non whitelist user', async () => {
             try {
                 await MIXRInstance.addToApprovedTokens(NEOTokenInstance.address,
@@ -87,19 +72,66 @@ contract('MIXR', (accounts) => {
                     throw new Error(e);
                 } else {
                     const reason = e.message.match('Reason given: (.*)\\.');
-                    assert.equal('User not allowed!', reason[1], 'Reason should be \'User not allowed!\'');
+                    assert.equal('User not allowed!', reason[1],
+                        'Reason should be \'User not allowed!\'');
+                }
+            }
+        });
+        it('add non erc20 to approved from whitelist user', async () => {
+            try {
+                await MIXRInstance.addToApprovedTokens(KittyTokenInstance.address,
+                    { from: userWhitelist });
+                throw new Error('The test \'add non erc20 to approved '
+                    + 'from whitelist user\' isn\'t failing.');
+            } catch (e) {
+                if (e.message.indexOf('revert') < 0) {
+                    throw new Error(e);
+                } else {
+                    // error when trying to interface
+                }
+            }
+        });
+        it('add non contract to approved from whitelist user', async () => {
+            try {
+                await MIXRInstance.addToApprovedTokens(accounts[2],
+                    { from: userWhitelist });
+                throw new Error('The test \'add non contract to approved '
+                    + 'from whitelist user\' isn\'t failing.');
+            } catch (e) {
+                if (e.message.indexOf('revert') < 0) {
+                    throw new Error(e);
+                } else {
+                    const reason = e.message.match('Reason given: (.*)\\.');
+                    assert.equal('Address is not a contract.', reason[1],
+                        'Reason should be \'Address is not a contract.\'');
                 }
             }
         });
     });
-    describe('add and remove erc20 to basket', () => {
-        it('should add erc20 to basket', async () => {
+    describe('add and remove erc20 to basket', async () => {
+        it('add non approved erc20 to basket', async () => {
+            try {
+                await MIXRInstance.addToBasketTokens(KittyTokenInstance.address,
+                    1, { from: userWhitelist });
+                throw new Error('The test \'add non contract to approved '
+                    + 'from whitelist user\' isn\'t failing.');
+            } catch (e) {
+                if (e.message.indexOf('revert') < 0) {
+                    throw new Error(e);
+                } else {
+                    const reason = e.message.match('Reason given: (.*)\\.');
+                    assert.equal('Token not approved!', reason[1],
+                        'Reason should be \'Token not approved!\'');
+                }
+            }
+        });
+        it('add approved erc20 to basket', async () => {
             await MIXRInstance.addToBasketTokens(NEOTokenInstance.address,
                 1, { from: userWhitelist });
         });
     });
-    describe('add and remove erc20 to basket', () => {
-        it('should deposit erc20', async () => {
+    describe('deposit erc20', () => {
+        it('deposit valid erc20', async () => {
             const valueChange = '0.01';
             const one = web3.utils.toWei(valueChange, 'ether');
             const oneBg = new BigNumber(web3.utils.toWei(valueChange, 'ether'));
@@ -124,7 +156,24 @@ contract('MIXR', (accounts) => {
             assert.equal(newMixrBalance.minus(previousMixrBalance).s,
                 oneBg.s, 'should have one more mixr');
         });
-        it('should redeem erc20', async () => {
+        it('deposit invalid erc20', async () => {
+            try {
+                const valueChange = '0.01';
+                const one = web3.utils.toWei(valueChange, 'ether');
+                await MIXRInstance.depositToken(KittyTokenInstance.address,
+                    one, { from: userWhitelist });
+                throw new Error('The test \'deposit invalid erc20\' isn\'t failing.');
+            } catch (e) {
+                if (e.message.indexOf('revert') < 0) {
+                    throw new Error(e);
+                } else {
+                    //
+                }
+            }
+        });
+    });
+    describe('redeem erc20', () => {
+        it('redeem erc20', async () => {
             const valueChange = '0.01';
             const one = web3.utils.toWei(valueChange, 'ether');
             const oneBg = new BigNumber(web3.utils.toWei(valueChange, 'ether'));
@@ -148,6 +197,21 @@ contract('MIXR', (accounts) => {
                 oneBg.s, 'should have less one neo');
             assert.equal(previousMixrBalance.minus(newMixrBalance).s,
                 oneBg.s, 'should have one more mixr');
+        });
+        it('redeem invalid erc20', async () => {
+            try {
+                const valueChange = '0.01';
+                const one = web3.utils.toWei(valueChange, 'ether');
+                await MIXRInstance.redeemToken(KittyTokenInstance.address,
+                    one, { from: userWhitelist });
+                throw new Error('The test \'redeem invalid erc20\' isn\'t failing.');
+            } catch (e) {
+                if (e.message.indexOf('revert') < 0) {
+                    throw new Error(e);
+                } else {
+                    //
+                }
+            }
         });
     });
 });
