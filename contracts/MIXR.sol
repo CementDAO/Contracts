@@ -2,12 +2,13 @@ pragma solidity ^0.5.0;
 
 import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "./SetLib.sol";
 
 
 /** @title MIXR contract. */
-contract MIXR is ERC20, Ownable {
+contract MIXR is ERC20, ERC20Detailed, Ownable {
     /**
      * @dev MIXR is an ERC20 token which is created as a basket of tokens.
      * This means that in addition to the usual ERC20 features the MIXR token
@@ -33,11 +34,14 @@ contract MIXR is ERC20, Ownable {
     mapping(address => uint256) private proportions; 
 
     /**
-     * @dev As an ERC20 it might the name.
+     * @dev Constructor with the details of the ERC20.
      */
-    string public constant name = "MIXR";
-    string public constant symbol = "MIXR";
-    uint8 public constant decimals = 18;
+    constructor()
+        public
+        ERC20Detailed("MIXR", "MIXR", 18)
+    {
+        //   
+    }
 
     /**
      * @dev (C1) Whitelist of addresses that can do governance.
@@ -82,11 +86,12 @@ contract MIXR is ERC20, Ownable {
      * one of the openzeppelin team by the moment I'm writting, is possible to
      * check if an address is a contract.
      */
-    function isContract(address addr) private returns (bool) {
+    modifier isContract(address _verifyAddress) {
         uint size;
         // solium-disable-next-line security/no-inline-assembly
-        assembly { size := extcodesize(addr) }
-        return size > 0;
+        assembly { size := extcodesize(_verifyAddress) }
+        require(size > 0, "Address is not a contract.");
+        _;
     }
 
     /**
@@ -115,16 +120,16 @@ contract MIXR is ERC20, Ownable {
      * @dev (C11) This function allows to deposit to the MIXR basket an
      * ERC20 token in the list, and returns a MIXR token in exchange.
      */
-    function depositToken(address _token, uint256 amount)
+    function depositToken(address _token, uint256 _amount)
         public
         isAvailableToken(_token)
     {
-        _mint(address(this), amount);
-        IERC20(address(this)).approve(address(this), amount);
+        _mint(address(this), _amount);
+        IERC20(address(this)).approve(address(this), _amount);
         IERC20(_token).transferFrom(
-            msg.sender, address(this), amount); // Receive the token that was sent
+            msg.sender, address(this), _amount); // Receive the token that was sent
         IERC20(address(this)).transferFrom(
-            address(this), msg.sender, amount); // Send an equal number of MIXR tokens back
+            address(this), msg.sender, _amount); // Send an equal number of MIXR tokens back
     }
 
     /**
@@ -135,22 +140,23 @@ contract MIXR is ERC20, Ownable {
      * several different tokens that is managed from the frontend as
      * several consecutive but separate transactions
      */
-    function redeemToken(address _token, uint256 amount)
+    function redeemToken(address _token, uint256 _amount)
         public
         isAvailableToken(_token)
     {
-        IERC20(_token).approve(address(this), amount);
+        IERC20(_token).approve(address(this), _amount);
         IERC20(address(this)).transferFrom(
-            msg.sender, address(this), amount); // Receive the MIXR token that was sent
+            msg.sender, address(this), _amount); // Receive the MIXR token that was sent
         IERC20(_token).transferFrom(
-            address(this), msg.sender, amount); // Send an equal number of selected tokens back
-        _burn(address(this), amount);
+            address(this), msg.sender, _amount); // Send an equal number of selected tokens back
+        _burn(address(this), _amount);
     }
 
     /** @dev (C3) This function adds an ERC20 token to the approved tokens list */
     function addToApprovedTokens(address _token)
         public
         onlyGovernor
+        isContract(_token)
         isValidERC20(_token)
     {
         basket.insert(_token);
@@ -160,12 +166,17 @@ contract MIXR is ERC20, Ownable {
      * @dev (C4) This function sets a proportion for a token in the basket,
      * allowing this smart contract to receive them
      */
-    function addToBasketTokens(address _token, uint256 proportion)
+    function addToBasketTokens(address _token, uint256 _proportion)
         public
         onlyGovernor
     {
-        require(basket.contains(_token), "Token not in basket!");
-        proportions[_token] = proportion;
+        /**
+         * There's no need to check if porportion is higher than 0
+         * solidity itself does not allow it.
+         * https://github.com/ethereum/solidity/issues/533#issuecomment-218776352
+         */
+        require(basket.contains(_token), "Token not approved!");
+        proportions[_token] = _proportion;
     }
 
 }
