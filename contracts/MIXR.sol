@@ -7,17 +7,18 @@ import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "./SetLib.sol";
 
 
-/** @title MIXR contract. */
+/**
+ * @title MIXR contract.
+ * @dev MIXR is an ERC20 token which is created as a basket of tokens.
+ * This means that in addition to the usual ERC20 features the MIXR token
+ * can react to transfers of tokens other than itself
+ */
 contract MIXR is ERC20, ERC20Detailed, Ownable {
-    /**
-     * @dev MIXR is an ERC20 token which is created as a basket of tokens.
-     * This means that in addition to the usual ERC20 features the MIXR token
-     * can react to transfers of tokens other than itself
-     */
-
     using SetLib for SetLib.Data;
 
-    /** @dev (C1) Whitelist of addresses that can do governance. */
+    /**
+     * @dev (C1) Whitelist of addresses that can do governance.
+     */
     SetLib.Data private governors;
 
     /**
@@ -29,7 +30,7 @@ contract MIXR is ERC20, ERC20Detailed, Ownable {
     /**
      * @dev (C4) The proportion of each token we want in the basket,
      * this is just an integer for each token, and then the proportion
-     * for token i is calculated as proportions[i]/sum(proportions)
+     * for token i is calculated as proportions[i] / sum(proportions)
      */
     mapping(address => uint256) private proportions; 
 
@@ -135,10 +136,10 @@ contract MIXR is ERC20, ERC20Detailed, Ownable {
     /**
      * @dev (C12) This function allows to deposit to the MIXR basket
      * an amount ERC20 token in the list, and returns a MIXR token in exchange.
-     */
-    /* Alberto: I would suggest that if the redeemer wants to receive
+     * 
+     * Alberto: I would suggest that if the redeemer wants to receive
      * several different tokens that is managed from the frontend as
-     * several consecutive but separate transactions
+     * several consecutive but separate transactions.
      */
     function redeemToken(address _token, uint256 _amount)
         public
@@ -170,11 +171,6 @@ contract MIXR is ERC20, ERC20Detailed, Ownable {
         public
         onlyGovernor
     {
-        /**
-         * There's no need to check if porportion is higher than 0
-         * solidity itself does not allow it.
-         * https://github.com/ethereum/solidity/issues/533#issuecomment-218776352
-         */
         require(basket.contains(_token), "Token not approved!");
         proportions[_token] = _proportion;
     }

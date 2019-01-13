@@ -3,8 +3,11 @@ pragma solidity ^0.5.0;
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 
 
+/**
+ * @dev The NEOToken contract isn't part of the business logic
+ * for CementDAO. It is a fixture that is only used during tests.
+ */
 contract NEOToken is ERC20 {
-
     string public constant name = "NEOToken";
     string public constant symbol = "NEO";
     uint8 public constant decimals = 18;
