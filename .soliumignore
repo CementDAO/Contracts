@@ -1,5 +1,5 @@
 node_modules/*
 contracts/Migrations.sol
-contracts/test/NEOToken.sol
-contracts/test/KittyToken.sol
+contracts/test/SampleERC20.sol
+contracts/test/SampleERC721.sol
 contracts/SetLib.sol

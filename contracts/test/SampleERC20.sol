@@ -4,11 +4,11 @@ import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 
 
 /**
- * @dev The NEOToken contract isn't part of the business logic
+ * @dev The SampleERC20 contract isn't part of the business logic
  * for CementDAO. It is a fixture that is only used during tests.
  */
-contract NEOToken is ERC20 {
-    string public constant name = "NEOToken";
+contract SampleERC20 is ERC20 {
+    string public constant name = "SampleERC20";
     string public constant symbol = "NEO";
     uint8 public constant decimals = 18;
 

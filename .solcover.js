@@ -1,7 +1,3 @@
 module.exports = {
-    skipFiles: [
-        'test/NEOToken.sol',
-        'test/KittyToken.sol',
-        'SetLib.sol'
-    ]
-}
+  skipFiles: ["test/SampleERC20.sol", "test/SampleERC721.sol", "SetLib.sol"]
+};
