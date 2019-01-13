@@ -25,7 +25,7 @@ contract MIXR is ERC20, ERC20Detailed, Ownable {
      * @dev (C2, C3) This is list of stablecoins that can be stored in the basket,
      * only if their proportion is set to > 0.
      */
-    SetLib.Data private basket; 
+    SetLib.Data private approvedTokens; 
 
     /**
      * @dev (C4) The proportion of each token we want in the basket,
@@ -37,34 +37,32 @@ contract MIXR is ERC20, ERC20Detailed, Ownable {
     /**
      * @dev Constructor with the details of the ERC20.
      */
-    constructor()
-        public
-        ERC20Detailed("MIXR", "MIXR", 18)
-    {
-        //   
+    constructor() public ERC20Detailed("MIXR", "MIXR", 18) {
     }
 
     /**
-     * @dev (C1) Whitelist of addresses that can do governance.
-     * Modifier to allow governance only to whitelisted addresses
+     * @dev Modifier that enforces that the transaction sender is
+     * whitelisted to perform governance.
      */
     modifier onlyGovernor() {
-        require(governors.contains(msg.sender), "User not allowed!");
+        require(
+            governors.contains(msg.sender),
+            "Message sender isn't part of the governance whitelist."
+        );
         _;
     }
 
     /**
-     * @dev Currently there's not a right way to find out if an address is
-     * an ERC20 token. One possible solutions is explained here
-     * https://stackoverflow.com/questions/45364197/
+     * @dev This is one of the possible solutions allowing to check
+     * if an address is an implementation of an interface.
+     * See https://stackoverflow.com/questions/45364197
      */
     modifier isValidERC20(address _token) {
         require(
-            IERC20(_token).balanceOf(_token) >= 0,
-            "This is not a valid ERC20 address.");
-        require(
+            IERC20(_token).balanceOf(_token) >= 0 &&
             IERC20(_token).totalSupply() >= 0,
-            "This is not a valid ERC20 address.");
+            "The provided address doesn't look like a valid ERC20 implementation."
+        );
         _;
     }
 
@@ -72,26 +70,27 @@ contract MIXR is ERC20, ERC20Detailed, Ownable {
      * @dev In order to make the code easier to read
      * this method is only a group of requires
      */
-    modifier isAvailableToken(address _token) {
+    modifier isAcceptedToken(address _token) {
         require(
-            basket.contains(_token),
-            "Deposit failed, token needs to be added to basket by a Rating Agent first.");
+            approvedTokens.contains(_token),
+            "The given token isn't listed as accepted."
+        );
         require(
             proportions[_token] > 0,
-            "Token not approved! Please configure the basket proportions to allow it.");
+            "The given token is accepted but doesn't have a target proportion yet."
+        );
         _;
     }
 
     /**
-     * @dev According to https://stackoverflow.com/a/40939341 by Manuel Aráoz
-     * one of the openzeppelin team by the moment I'm writting, is possible to
-     * check if an address is a contract.
+     * @dev According to https://stackoverflow.com/a/40939341 it is possible to
+     * check whether an address is a contract or not.
      */
     modifier isContract(address _verifyAddress) {
         uint size;
         // solium-disable-next-line security/no-inline-assembly
         assembly { size := extcodesize(_verifyAddress) }
-        require(size > 0, "Address is not a contract.");
+        require(size > 0, "The specified address doesn't look to a deployed contract.");
         _;
     }
 
@@ -99,7 +98,7 @@ contract MIXR is ERC20, ERC20Detailed, Ownable {
      * @dev Add new user to governors
      * @param _userAddress the user address to add
      */
-    function addToWhiteList(address _userAddress)
+    function addGovernor(address _userAddress)
         public
         onlyOwner
     {
@@ -110,7 +109,7 @@ contract MIXR is ERC20, ERC20Detailed, Ownable {
      * @dev Remove user from governors
      * @param _userAddress the user address to remove
      */
-    function removeFromWhiteList(address _userAddress)
+    function removeGovernor(address _userAddress)
         public
         onlyOwner
     {
@@ -118,19 +117,21 @@ contract MIXR is ERC20, ERC20Detailed, Ownable {
     }
 
     /**
-     * @dev (C11) This function allows to deposit to the MIXR basket an
-     * ERC20 token in the list, and returns a MIXR token in exchange.
+     * @dev (C11) This function allows to deposit an accepted ERC20 token
+     * in exchange for some MIXR tokens.
+     * It consists of several transactions that must be authorized by
+     * the user prior to calling this function (See ERC20 transferFrom spec).
      */
     function depositToken(address _token, uint256 _amount)
         public
-        isAvailableToken(_token)
+        isAcceptedToken(_token)
     {
         _mint(address(this), _amount);
         IERC20(address(this)).approve(address(this), _amount);
-        IERC20(_token).transferFrom(
-            msg.sender, address(this), _amount); // Receive the token that was sent
-        IERC20(address(this)).transferFrom(
-            address(this), msg.sender, _amount); // Send an equal number of MIXR tokens back
+        // Receive the token that was sent
+        IERC20(_token).transferFrom(msg.sender, address(this), _amount);
+        // Send an equal number of MIXR tokens back
+        IERC20(address(this)).transferFrom(address(this), msg.sender, _amount);
     }
 
     /**
@@ -141,38 +142,42 @@ contract MIXR is ERC20, ERC20Detailed, Ownable {
      * several different tokens that is managed from the frontend as
      * several consecutive but separate transactions.
      */
-    function redeemToken(address _token, uint256 _amount)
+    function redeemMIXR(address _token, uint256 _amount)
         public
-        isAvailableToken(_token)
+        isAcceptedToken(_token)
     {
         IERC20(_token).approve(address(this), _amount);
-        IERC20(address(this)).transferFrom(
-            msg.sender, address(this), _amount); // Receive the MIXR token that was sent
-        IERC20(_token).transferFrom(
-            address(this), msg.sender, _amount); // Send an equal number of selected tokens back
+        // Receive the MIXR token that was sent
+        IERC20(address(this)).transferFrom(msg.sender, address(this), _amount);
+        // Send an equal number of selected tokens back
+        IERC20(_token).transferFrom(address(this), msg.sender, _amount);
         _burn(address(this), _amount);
     }
 
-    /** @dev (C3) This function adds an ERC20 token to the approved tokens list */
-    function addToApprovedTokens(address _token)
+    /**
+     * @dev (C3) This function adds an ERC20 token to the approved tokens list.
+     */
+    function approveToken(address _token)
         public
-        onlyGovernor
+        onlyGovernor()
         isContract(_token)
         isValidERC20(_token)
     {
-        basket.insert(_token);
+        approvedTokens.insert(_token);
     }
 
     /**
      * @dev (C4) This function sets a proportion for a token in the basket,
-     * allowing this smart contract to receive them
+     * allowing this smart contract to receive them.
      */
-    function addToBasketTokens(address _token, uint256 _proportion)
+    function setTokenTargetProportion(address _token, uint256 _proportion)
         public
-        onlyGovernor
+        onlyGovernor()
     {
-        require(basket.contains(_token), "Token not approved!");
+        require(
+            approvedTokens.contains(_token),
+            "The given token isn't listed as accepted."
+        );
         proportions[_token] = _proportion;
     }
-
 }

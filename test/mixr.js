@@ -30,17 +30,17 @@ contract("MIXR", accounts => {
      */
   });
   beforeEach(async () => {
-    await MIXRInstance.addToWhiteList(userWhitelist, { from: accountOwner });
+    await MIXRInstance.addGovernor(userWhitelist, { from: accountOwner });
   });
   afterEach(async () => {
-    await MIXRInstance.removeFromWhiteList(userWhitelist, {
+    await MIXRInstance.removeGovernor(userWhitelist, {
       from: accountOwner
     });
   });
 
   describe("add and remove from whitelist", () => {
     before(async () => {
-      await MIXRInstance.removeFromWhiteList(userWhitelist, {
+      await MIXRInstance.removeGovernor(userWhitelist, {
         from: accountOwner
       });
     });
@@ -54,23 +54,23 @@ contract("MIXR", accounts => {
      * this is already tested by open-zeppelin.
      */
     it("add user using owner", async () => {
-      await MIXRInstance.addToWhiteList(userWhitelist, { from: accountOwner });
+      await MIXRInstance.addGovernor(userWhitelist, { from: accountOwner });
     });
     it("remove user using owner", async () => {
-      await MIXRInstance.removeFromWhiteList(userWhitelist, {
+      await MIXRInstance.removeGovernor(userWhitelist, {
         from: accountOwner
       });
     });
   });
   describe("add and remove erc20 to approved", () => {
     it("add erc20 to approved from whitelist user", async () => {
-      await MIXRInstance.addToApprovedTokens(SampleERC20Instance.address, {
+      await MIXRInstance.approveToken(SampleERC20Instance.address, {
         from: userWhitelist
       });
     });
     it("add erc20 to approved from non whitelist user", async () => {
       try {
-        await MIXRInstance.addToApprovedTokens(SampleERC20Instance.address, {
+        await MIXRInstance.approveToken(SampleERC20Instance.address, {
           from: accounts[2]
         });
         throw new Error(
@@ -92,7 +92,7 @@ contract("MIXR", accounts => {
     });
     it("add non erc20 to approved from whitelist user", async () => {
       try {
-        await MIXRInstance.addToApprovedTokens(SampleERC721Instance.address, {
+        await MIXRInstance.approveToken(SampleERC721Instance.address, {
           from: userWhitelist
         });
         throw new Error(
@@ -109,7 +109,7 @@ contract("MIXR", accounts => {
     });
     it("add non contract to approved from whitelist user", async () => {
       try {
-        await MIXRInstance.addToApprovedTokens(accounts[2], {
+        await MIXRInstance.approveToken(accounts[2], {
           from: userWhitelist
         });
         throw new Error(
@@ -133,9 +133,13 @@ contract("MIXR", accounts => {
   describe("add and remove erc20 to basket", async () => {
     it("add non approved erc20 to basket", async () => {
       try {
-        await MIXRInstance.addToBasketTokens(SampleERC721Instance.address, 1, {
-          from: userWhitelist
-        });
+        await MIXRInstance.setTokenTargetProportion(
+          SampleERC721Instance.address,
+          1,
+          {
+            from: userWhitelist
+          }
+        );
         throw new Error(
           "The test 'add non contract to approved " +
             "from whitelist user' isn't failing."
@@ -154,9 +158,13 @@ contract("MIXR", accounts => {
       }
     });
     it("add approved erc20 to basket", async () => {
-      await MIXRInstance.addToBasketTokens(SampleERC20Instance.address, 1, {
-        from: userWhitelist
-      });
+      await MIXRInstance.setTokenTargetProportion(
+        SampleERC20Instance.address,
+        1,
+        {
+          from: userWhitelist
+        }
+      );
     });
   });
   describe("deposit erc20", () => {
@@ -164,7 +172,7 @@ contract("MIXR", accounts => {
       const valueChange = "0.01";
       const one = web3.utils.toWei(valueChange, "ether");
       const oneBg = new BigNumber(web3.utils.toWei(valueChange, "ether"));
-      const previousNeoBalance = new BigNumber(
+      const previousERC20Balance = new BigNumber(
         await SampleERC20Instance.balanceOf(userWhitelist)
       );
       const previousMixrBalance = new BigNumber(
@@ -176,16 +184,16 @@ contract("MIXR", accounts => {
       await MIXRInstance.depositToken(SampleERC20Instance.address, one, {
         from: userWhitelist
       });
-      const newNeoBalance = new BigNumber(
+      const newERC20Balance = new BigNumber(
         await SampleERC20Instance.balanceOf(userWhitelist)
       );
       const newMixrBalance = new BigNumber(
         await MIXRInstance.balanceOf(userWhitelist)
       );
       assert.equal(
-        previousNeoBalance.minus(newNeoBalance).s,
+        previousERC20Balance.minus(newERC20Balance).s,
         oneBg.s,
-        "should have less one neo"
+        "should have less one ERC20"
       );
       assert.equal(
         newMixrBalance.minus(previousMixrBalance).s,
@@ -215,7 +223,7 @@ contract("MIXR", accounts => {
       const valueChange = "0.01";
       const one = web3.utils.toWei(valueChange, "ether");
       const oneBg = new BigNumber(web3.utils.toWei(valueChange, "ether"));
-      const previousNeoBalance = new BigNumber(
+      const previousERC20Balance = new BigNumber(
         await SampleERC20Instance.balanceOf(userWhitelist)
       );
       const previousMixrBalance = new BigNumber(
@@ -224,19 +232,19 @@ contract("MIXR", accounts => {
       await MIXRInstance.approve(MIXRInstance.address, one, {
         from: userWhitelist
       });
-      await MIXRInstance.redeemToken(SampleERC20Instance.address, one, {
+      await MIXRInstance.redeemMIXR(SampleERC20Instance.address, one, {
         from: userWhitelist
       });
-      const newNeoBalance = new BigNumber(
+      const newERC20Balance = new BigNumber(
         await SampleERC20Instance.balanceOf(userWhitelist)
       );
       const newMixrBalance = new BigNumber(
         await MIXRInstance.balanceOf(userWhitelist)
       );
       assert.equal(
-        newNeoBalance.minus(previousNeoBalance).s,
+        newERC20Balance.minus(previousERC20Balance).s,
         oneBg.s,
-        "should have less one neo"
+        "should have less one ERC20"
       );
       assert.equal(
         previousMixrBalance.minus(newMixrBalance).s,
@@ -248,7 +256,7 @@ contract("MIXR", accounts => {
       try {
         const valueChange = "0.01";
         const one = web3.utils.toWei(valueChange, "ether");
-        await MIXRInstance.redeemToken(SampleERC721Instance.address, one, {
+        await MIXRInstance.redeemMIXR(SampleERC721Instance.address, one, {
           from: userWhitelist
         });
         throw new Error("The test 'redeem invalid erc20' isn't failing.");
