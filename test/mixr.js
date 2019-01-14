@@ -3,270 +3,193 @@ const SampleERC20 = artifacts.require("./test/SampleERC20.sol");
 const SampleERC721 = artifacts.require("./test/SampleERC721.sol");
 
 const BigNumber = require("bignumber.js");
+const itShouldThrow = require("./utils").itShouldThrow;
 
 contract("MIXR", accounts => {
-  let MIXRInstance;
-  let SampleERC20Instance;
-  let SampleERC721Instance;
-  const userWhitelist = accounts[1];
-  /**
-   * In truffle, accounts[0] is the default account,
-   * which is the one used to deploy the contracts.
-   * The account that deploy the contracts is the owner account.
-   */
-  const accountOwner = accounts[0];
+  let mixr, someERC20, someERC721;
+  const owner = accounts[0],
+    governor = accounts[1],
+    user = accounts[2];
 
   before(async () => {
-    MIXRInstance = await MIXR.deployed();
-    SampleERC20Instance = await SampleERC20.deployed();
-    SampleERC721Instance = await SampleERC721.deployed();
-    /**
-     * An altenative to this would be to deploy ERC20 and then
-     * get the contract instance using the address.
-     *
-     * await ERC20.deployed();
-     * const instance = await SampleERC20.deployed();
-     * SampleERC20Instance = await ERC20.at(instance.address);
-     */
+    mixr = await MIXR.deployed();
+    someERC20 = await SampleERC20.deployed();
+    someERC721 = await SampleERC721.deployed();
   });
-  beforeEach(async () => {
-    await MIXRInstance.addGovernor(userWhitelist, { from: accountOwner });
-  });
-  afterEach(async () => {
-    await MIXRInstance.removeGovernor(userWhitelist, {
-      from: accountOwner
+
+  let governanceFixture = () => {
+    // All of our texts expect a governor to be added.
+    beforeEach(async () => {
+      await mixr.addGovernor(governor, { from: owner });
+    });
+
+    // After each test we want to remove the previously added governor.
+    afterEach(async () => {
+      await mixr.removeGovernor(governor, { from: owner });
+    });
+  };
+
+  describe("whitelist management", () => {
+    itShouldThrow(
+      "forbids an arbitrary user to add a governor",
+      async () => {
+        await mixr.addGovernor(accounts[3], { from: user });
+      },
+      "revert"
+    );
+
+    it("allows the contract to add and then remove an additional governor", async () => {
+      assert.equal(false, await mixr.isGovernor(accounts[3]));
+      await mixr.addGovernor(accounts[3], { from: owner });
+      assert.equal(true, await mixr.isGovernor(accounts[3]));
+      await mixr.removeGovernor(accounts[3], { from: owner });
+      assert.equal(false, await mixr.isGovernor(accounts[3]));
     });
   });
 
-  describe("add and remove from whitelist", () => {
-    before(async () => {
-      await MIXRInstance.removeGovernor(userWhitelist, {
-        from: accountOwner
-      });
+  describe("token approval", () => {
+    governanceFixture();
+
+    it("allows a governor to approve a valid token", async () => {
+      await mixr.approveToken(someERC20.address, { from: governor });
     });
-    /**
-     * We could have more tests, for example, using invalid address in *from*
-     * field, but that address is checked by web3.js and by the network. So,
-     * doesn't make sense be here testing something already tested.
-     */
-    /**
-     * We can also test with some other accounts that are not owners, but
-     * this is already tested by open-zeppelin.
-     */
-    it("add user using owner", async () => {
-      await MIXRInstance.addGovernor(userWhitelist, { from: accountOwner });
-    });
-    it("remove user using owner", async () => {
-      await MIXRInstance.removeGovernor(userWhitelist, {
-        from: accountOwner
+
+    itShouldThrow(
+      "forbids non-governors to approve a valid token",
+      async () => {
+        await mixr.approveToken(someERC20.address, { from: user });
+      },
+      "Message sender isn't part of the governance whitelist."
+    );
+
+    itShouldThrow(
+      "forbids approving a non-valid token",
+      async () => {
+        await mixr.approveToken(someERC721.address, { from: governor });
+      },
+      "revert"
+    );
+
+    itShouldThrow(
+      "forbids approving a non-valid token",
+      async () => {
+        await mixr.approveToken(user, { from: governor });
+      },
+      "The specified address doesn't look like a deployed contract."
+    );
+  });
+
+  describe("proportion management", async () => {
+    governanceFixture();
+
+    itShouldThrow(
+      "forbids to perform for non-accepted tokens",
+      async () => {
+        await mixr.setTokenTargetProportion(someERC721.address, 1, {
+          from: governor
+        });
+      },
+      "The given token isn't listed as accepted."
+    );
+
+    itShouldThrow(
+      "forbids to perform for non-governors",
+      async () => {
+        await mixr.setTokenTargetProportion(someERC20.address, 1, {
+          from: user
+        });
+      },
+      "Message sender isn't part of the governance whitelist."
+    );
+
+    it("allows a governor to set a proportion for an approved token", async () => {
+      await mixr.setTokenTargetProportion(someERC20.address, 1, {
+        from: governor
       });
     });
   });
-  describe("add and remove erc20 to approved", () => {
-    it("add erc20 to approved from whitelist user", async () => {
-      await MIXRInstance.approveToken(SampleERC20Instance.address, {
-        from: userWhitelist
-      });
-    });
-    it("add erc20 to approved from non whitelist user", async () => {
-      try {
-        await MIXRInstance.approveToken(SampleERC20Instance.address, {
-          from: accounts[2]
-        });
-        throw new Error(
-          "The test 'add erc20 to approved " +
-            "from non whitelist user' isn't failing."
-        );
-      } catch (e) {
-        if (e.message.indexOf("revert") < 0) {
-          throw new Error(e);
-        } else {
-          const reason = e.message.match("Reason given: (.*)\\.");
-          assert.equal(
-            "User not allowed!",
-            reason[1],
-            "Reason should be 'User not allowed!'"
-          );
-        }
-      }
-    });
-    it("add non erc20 to approved from whitelist user", async () => {
-      try {
-        await MIXRInstance.approveToken(SampleERC721Instance.address, {
-          from: userWhitelist
-        });
-        throw new Error(
-          "The test 'add non erc20 to approved " +
-            "from whitelist user' isn't failing."
-        );
-      } catch (e) {
-        if (e.message.indexOf("revert") < 0) {
-          throw new Error(e);
-        } else {
-          // error when trying to interface
-        }
-      }
-    });
-    it("add non contract to approved from whitelist user", async () => {
-      try {
-        await MIXRInstance.approveToken(accounts[2], {
-          from: userWhitelist
-        });
-        throw new Error(
-          "The test 'add non contract to approved " +
-            "from whitelist user' isn't failing."
-        );
-      } catch (e) {
-        if (e.message.indexOf("revert") < 0) {
-          throw new Error(e);
-        } else {
-          const reason = e.message.match("Reason given: (.*)\\.");
-          assert.equal(
-            "Address is not a contract.",
-            reason[1],
-            "Reason should be 'Address is not a contract.'"
-          );
-        }
-      }
-    });
-  });
-  describe("add and remove erc20 to basket", async () => {
-    it("add non approved erc20 to basket", async () => {
-      try {
-        await MIXRInstance.setTokenTargetProportion(
-          SampleERC721Instance.address,
-          1,
-          {
-            from: userWhitelist
-          }
-        );
-        throw new Error(
-          "The test 'add non contract to approved " +
-            "from whitelist user' isn't failing."
-        );
-      } catch (e) {
-        if (e.message.indexOf("revert") < 0) {
-          throw new Error(e);
-        } else {
-          const reason = e.message.match("Reason given: (.*)\\.");
-          assert.equal(
-            "Token not approved!",
-            reason[1],
-            "Reason should be 'Token not approved!'"
-          );
-        }
-      }
-    });
-    it("add approved erc20 to basket", async () => {
-      await MIXRInstance.setTokenTargetProportion(
-        SampleERC20Instance.address,
-        1,
-        {
-          from: userWhitelist
-        }
-      );
-    });
-  });
-  describe("deposit erc20", () => {
-    it("deposit valid erc20", async () => {
+
+  describe("deposit functionality", () => {
+    it("can accept approved ERC20 tokens", async () => {
       const valueChange = "0.01";
       const one = web3.utils.toWei(valueChange, "ether");
       const oneBg = new BigNumber(web3.utils.toWei(valueChange, "ether"));
       const previousERC20Balance = new BigNumber(
-        await SampleERC20Instance.balanceOf(userWhitelist)
+        await someERC20.balanceOf(governor)
       );
-      const previousMixrBalance = new BigNumber(
-        await MIXRInstance.balanceOf(userWhitelist)
-      );
-      await SampleERC20Instance.approve(MIXRInstance.address, one, {
-        from: userWhitelist
+      const previousMixrBalance = new BigNumber(await mixr.balanceOf(governor));
+      await someERC20.approve(mixr.address, one, { from: governor });
+      await mixr.depositToken(someERC20.address, one, {
+        from: governor
       });
-      await MIXRInstance.depositToken(SampleERC20Instance.address, one, {
-        from: userWhitelist
-      });
+
       const newERC20Balance = new BigNumber(
-        await SampleERC20Instance.balanceOf(userWhitelist)
+        await someERC20.balanceOf(governor)
       );
-      const newMixrBalance = new BigNumber(
-        await MIXRInstance.balanceOf(userWhitelist)
-      );
+      const newMixrBalance = new BigNumber(await mixr.balanceOf(governor));
+
       assert.equal(
         previousERC20Balance.minus(newERC20Balance).s,
         oneBg.s,
-        "should have less one ERC20"
+        "should have less one SampleERC20"
       );
+
       assert.equal(
         newMixrBalance.minus(previousMixrBalance).s,
         oneBg.s,
-        "should have one more mixr"
+        "should have one more MIXR"
       );
     });
-    it("deposit invalid erc20", async () => {
-      try {
+
+    itShouldThrow(
+      "forbids depositing bad ERC20",
+      async () => {
         const valueChange = "0.01";
         const one = web3.utils.toWei(valueChange, "ether");
-        await MIXRInstance.depositToken(SampleERC721Instance.address, one, {
-          from: userWhitelist
-        });
-        throw new Error("The test 'deposit invalid erc20' isn't failing.");
-      } catch (e) {
-        if (e.message.indexOf("revert") < 0) {
-          throw new Error(e);
-        } else {
-          //
-        }
-      }
-    });
+        await mixr.depositToken(someERC721.address, one, { from: governor });
+      },
+      "revert"
+    );
   });
-  describe("redeem erc20", () => {
-    it("redeem erc20", async () => {
+
+  describe("redemption functionality", () => {
+    it("allows to swap MIXR for something else", async () => {
       const valueChange = "0.01";
       const one = web3.utils.toWei(valueChange, "ether");
       const oneBg = new BigNumber(web3.utils.toWei(valueChange, "ether"));
       const previousERC20Balance = new BigNumber(
-        await SampleERC20Instance.balanceOf(userWhitelist)
+        await someERC20.balanceOf(governor)
       );
-      const previousMixrBalance = new BigNumber(
-        await MIXRInstance.balanceOf(userWhitelist)
-      );
-      await MIXRInstance.approve(MIXRInstance.address, one, {
-        from: userWhitelist
-      });
-      await MIXRInstance.redeemMIXR(SampleERC20Instance.address, one, {
-        from: userWhitelist
-      });
+      const previousMixrBalance = new BigNumber(await mixr.balanceOf(governor));
+      await mixr.approve(mixr.address, one, { from: governor });
+      await mixr.redeemMIXR(someERC20.address, one, { from: governor });
+
       const newERC20Balance = new BigNumber(
-        await SampleERC20Instance.balanceOf(userWhitelist)
+        await someERC20.balanceOf(governor)
       );
-      const newMixrBalance = new BigNumber(
-        await MIXRInstance.balanceOf(userWhitelist)
-      );
+      const newMixrBalance = new BigNumber(await mixr.balanceOf(governor));
+
       assert.equal(
         newERC20Balance.minus(previousERC20Balance).s,
         oneBg.s,
         "should have less one ERC20"
       );
+
       assert.equal(
         previousMixrBalance.minus(newMixrBalance).s,
         oneBg.s,
-        "should have one more mixr"
+        "should have one more MIXR"
       );
     });
-    it("redeem invalid erc20", async () => {
-      try {
+
+    itShouldThrow(
+      "forbids redeeming bad ERC20",
+      async () => {
         const valueChange = "0.01";
         const one = web3.utils.toWei(valueChange, "ether");
-        await MIXRInstance.redeemMIXR(SampleERC721Instance.address, one, {
-          from: userWhitelist
-        });
-        throw new Error("The test 'redeem invalid erc20' isn't failing.");
-      } catch (e) {
-        if (e.message.indexOf("revert") < 0) {
-          throw new Error(e);
-        } else {
-          //
-        }
-      }
-    });
+        await mixr.redeemMIXR(someERC721.address, one, { from: governor });
+      },
+      "revert"
+    );
   });
 });
