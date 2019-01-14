@@ -1,3 +1,8 @@
 module.exports = {
-  skipFiles: ["test/SampleERC20.sol", "test/SampleERC721.sol", "SetLib.sol"]
+  skipFiles: [
+    "contracts/Migrations.sol",
+    "test/SampleERC20.sol",
+    "test/SampleERC721.sol",
+    "SetLib.sol"
+  ]
 };
