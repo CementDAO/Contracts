@@ -20,12 +20,16 @@ contract("MIXR", accounts => {
   let governanceFixture = () => {
     // All of our texts expect a governor to be added.
     beforeEach(async () => {
-      await mixr.addGovernor(governor, { from: owner });
+      await mixr.addGovernor(governor, {
+        from: owner
+      });
     });
 
     // After each test we want to remove the previously added governor.
     afterEach(async () => {
-      await mixr.removeGovernor(governor, { from: owner });
+      await mixr.removeGovernor(governor, {
+        from: owner
+      });
     });
   };
 
@@ -33,16 +37,22 @@ contract("MIXR", accounts => {
     itShouldThrow(
       "forbids an arbitrary user to add a governor",
       async () => {
-        await mixr.addGovernor(accounts[3], { from: user });
+        await mixr.addGovernor(accounts[3], {
+          from: user
+        });
       },
       "revert"
     );
 
     it("allows the contract to add and then remove an additional governor", async () => {
       assert.equal(false, await mixr.isGovernor(accounts[3]));
-      await mixr.addGovernor(accounts[3], { from: owner });
+      await mixr.addGovernor(accounts[3], {
+        from: owner
+      });
       assert.equal(true, await mixr.isGovernor(accounts[3]));
-      await mixr.removeGovernor(accounts[3], { from: owner });
+      await mixr.removeGovernor(accounts[3], {
+        from: owner
+      });
       assert.equal(false, await mixr.isGovernor(accounts[3]));
     });
   });
@@ -51,13 +61,17 @@ contract("MIXR", accounts => {
     governanceFixture();
 
     it("allows a governor to approve a valid token", async () => {
-      await mixr.approveToken(someERC20.address, { from: governor });
+      await mixr.approveToken(someERC20.address, {
+        from: governor
+      });
     });
 
     itShouldThrow(
       "forbids non-governors to approve a valid token",
       async () => {
-        await mixr.approveToken(someERC20.address, { from: user });
+        await mixr.approveToken(someERC20.address, {
+          from: user
+        });
       },
       "Message sender isn't part of the governance whitelist."
     );
@@ -65,20 +79,26 @@ contract("MIXR", accounts => {
     itShouldThrow(
       "forbids approving a non-valid token",
       async () => {
-        await mixr.approveToken(someERC721.address, { from: governor });
+        await mixr.approveToken(someERC721.address, {
+          from: governor
+        });
       },
       "revert"
     );
 
     itShouldThrow(
-      "forbids approving a non-valid token",
+      "forbids approving a non-contract address",
       async () => {
-        await mixr.approveToken(user, { from: governor });
+        await mixr.approveToken(user, {
+          from: governor
+        });
       },
       "The specified address doesn't look like a deployed contract."
     );
   });
 
+  // These tests rely on another test to have changed the fixtures (ERC20 approval).
+  // If the tests order is changed, or if these tests are ran in isolation they will fail.
   describe("proportion management", async () => {
     governanceFixture();
 
@@ -109,8 +129,10 @@ contract("MIXR", accounts => {
     });
   });
 
+  // These tests rely on another test to have changed the fixtures (ERC20 approval).
+  // If the tests order is changed, or if these tests are ran in isolation they will fail.
   describe("deposit functionality", () => {
-    it("can accept approved ERC20 tokens", async () => {
+    it("can accept approved tokens", async () => {
       const valueChange = "0.01";
       const one = web3.utils.toWei(valueChange, "ether");
       const oneBg = new BigNumber(web3.utils.toWei(valueChange, "ether"));
@@ -118,7 +140,9 @@ contract("MIXR", accounts => {
         await someERC20.balanceOf(governor)
       );
       const previousMixrBalance = new BigNumber(await mixr.balanceOf(governor));
-      await someERC20.approve(mixr.address, one, { from: governor });
+      await someERC20.approve(mixr.address, one, {
+        from: governor
+      });
       await mixr.depositToken(someERC20.address, one, {
         from: governor
       });
@@ -142,16 +166,20 @@ contract("MIXR", accounts => {
     });
 
     itShouldThrow(
-      "forbids depositing bad ERC20",
+      "forbids depositing bad tokens",
       async () => {
         const valueChange = "0.01";
         const one = web3.utils.toWei(valueChange, "ether");
-        await mixr.depositToken(someERC721.address, one, { from: governor });
+        await mixr.depositToken(someERC721.address, one, {
+          from: governor
+        });
       },
       "revert"
     );
   });
 
+  // These tests rely on another test to have changed the fixtures (ERC20 approval).
+  // If the tests order is changed, or if these tests are ran in isolation they will fail.
   describe("redemption functionality", () => {
     it("allows to swap MIXR for something else", async () => {
       const valueChange = "0.01";
@@ -161,8 +189,12 @@ contract("MIXR", accounts => {
         await someERC20.balanceOf(governor)
       );
       const previousMixrBalance = new BigNumber(await mixr.balanceOf(governor));
-      await mixr.approve(mixr.address, one, { from: governor });
-      await mixr.redeemMIXR(someERC20.address, one, { from: governor });
+      await mixr.approve(mixr.address, one, {
+        from: governor
+      });
+      await mixr.redeemMIXR(someERC20.address, one, {
+        from: governor
+      });
 
       const newERC20Balance = new BigNumber(
         await someERC20.balanceOf(governor)
@@ -187,7 +219,9 @@ contract("MIXR", accounts => {
       async () => {
         const valueChange = "0.01";
         const one = web3.utils.toWei(valueChange, "ether");
-        await mixr.redeemMIXR(someERC721.address, one, { from: governor });
+        await mixr.redeemMIXR(someERC721.address, one, {
+          from: governor
+        });
       },
       "revert"
     );
