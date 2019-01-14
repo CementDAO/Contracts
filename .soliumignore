@@ -1,5 +1,1 @@
 node_modules/*
-contracts/Migrations.sol
-contracts/test/SampleERC20.sol
-contracts/test/SampleERC721.sol
-contracts/SetLib.sol
