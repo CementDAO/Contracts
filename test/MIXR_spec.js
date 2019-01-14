@@ -18,7 +18,7 @@ contract("MIXR", accounts => {
   });
 
   let governanceFixture = () => {
-    // All of our texts expect a governor to be added.
+    // All of our tests expect a governor to be added.
     beforeEach(async () => {
       await mixr.addGovernor(governor, {
         from: owner
