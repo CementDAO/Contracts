@@ -1,8 +1,8 @@
-const MIXR = artifacts.require('./MIXR.sol');
-const SetLib = artifacts.require('./SetLib.sol');
+const MIXR = artifacts.require("./MIXR.sol");
+const AddressSetLib = artifacts.require("./AddressSetLib.sol");
 
-module.exports = (deployer) => {
-    deployer.deploy(SetLib);
-    deployer.link(SetLib, MIXR);
-    deployer.deploy(MIXR);
+module.exports = deployer => {
+  deployer.deploy(AddressSetLib);
+  deployer.link(AddressSetLib, MIXR);
+  deployer.deploy(MIXR);
 };

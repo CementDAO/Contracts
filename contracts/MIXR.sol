@@ -4,7 +4,7 @@ import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
-import "./SetLib.sol";
+import "./AddressSetLib.sol";
 
 
 /**
@@ -14,18 +14,18 @@ import "./SetLib.sol";
  * can react to transfers of tokens other than itself
  */
 contract MIXR is ERC20, ERC20Detailed, Ownable {
-    using SetLib for SetLib.Data;
+    using AddressSetLib for AddressSetLib.Data;
 
     /**
      * @dev (C1) Whitelist of addresses that can do governance.
      */
-    SetLib.Data private governors;
+    AddressSetLib.Data private governors;
 
     /**
      * @dev (C2, C3) This is list of stablecoins that can be stored in the basket,
      * only if their proportion is set to > 0.
      */
-    SetLib.Data private approvedTokens; 
+    AddressSetLib.Data private approvedTokens; 
 
     /**
      * @dev (C4) The proportion of each token we want in the basket,

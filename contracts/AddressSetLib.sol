@@ -2,9 +2,9 @@ pragma solidity ^0.5.0;
 
 
 /**
- * @dev A library allowing to put things in a set and query it.
+ * @dev A library allowing to put addresses in a set and query it.
  */
-library SetLib {
+library AddressSetLib {
     struct Data { mapping(address => bool) flags; }
 
     /**

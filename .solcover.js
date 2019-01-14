@@ -3,6 +3,6 @@ module.exports = {
     "contracts/Migrations.sol",
     "test/SampleERC20.sol",
     "test/SampleERC721.sol",
-    "SetLib.sol"
+    "AddressSetLib.sol"
   ]
 };
