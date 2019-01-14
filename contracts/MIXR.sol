@@ -90,19 +90,33 @@ contract MIXR is ERC20, ERC20Detailed, Ownable {
         uint size;
         // solium-disable-next-line security/no-inline-assembly
         assembly { size := extcodesize(_verifyAddress) }
-        require(size > 0, "The specified address doesn't look to a deployed contract.");
+        require(
+            size > 0, "The specified address doesn't look like a deployed contract."
+        );
         _;
     }
 
     /**
      * @dev Add new user to governors
-     * @param _userAddress the user address to add
+     * @param _userAddress The user address to be added.
      */
     function addGovernor(address _userAddress)
         public
         onlyOwner
     {
         governors.insert(_userAddress);
+    }
+
+    /**
+     * @dev Allows to query whether or not a given address is a governor.
+     * @param _userAddress The address to be checked.
+     * @return true if the provided user is a governor, false otherwise.
+     */
+    function isGovernor(address _userAddress)
+    public
+    view
+    returns (bool) {
+        return governors.contains(_userAddress);
     }
 
     /**
