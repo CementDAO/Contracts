@@ -7,8 +7,11 @@
     "test": "test"
   },
   "scripts": {
-    "coverage": "./node_modules/.bin/solidity-coverage",
-    "solium": "./node_modules/.bin/solium -d contracts/"
+    "deploy": "truffle deploy",
+    "develop": "truffle develop",
+    "test": "truffle test",
+    "lint": "solium -d contracts",
+    "coverage": "solidity-coverage"
   },
   "keywords": [],
   "author": "",
