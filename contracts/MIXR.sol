@@ -77,7 +77,7 @@ contract MIXR is ERC20, ERC20Detailed, Ownable {
         );
         require(
             proportions[_token] > 0,
-            "The given token is accepted but doesn't have a target proportion yet."
+            "The given token is accepted but doesn't have a target proportion."
         );
         _;
     }
