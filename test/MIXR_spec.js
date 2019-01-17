@@ -133,50 +133,75 @@ contract('MIXR', (accounts) => {
     // These tests rely on another test to have changed the fixtures (ERC20 approval).
     // If the tests order is changed, or if these tests are ran in isolation they will fail.
     describe('deposit functionality', () => {
-        it('can accept approved tokens', async () => {
-            const valueChange = '0.01';
-            const one = web3.utils.toWei(valueChange, 'ether');
-            const oneBg = new BigNumber(web3.utils.toWei(valueChange, 'ether'));
-            const previousERC20Balance = new BigNumber(
-                await someERC20.balanceOf(governor),
-            );
-            const previousMixrBalance = new BigNumber(await mixr.balanceOf(governor));
-            await someERC20.approve(mixr.address, one, {
-                from: governor,
-            });
-            await mixr.depositToken(someERC20.address, one, {
-                from: governor,
+        describe('actions that should fail', () => {
+            beforeEach(async () => {
+                const mixrBalance = new BigNumber(await mixr.totalSupply());
+                assert.equal(mixrBalance.comparedTo(new BigNumber(0)), 0, 'should be 0.');
             });
 
-            const newERC20Balance = new BigNumber(
-                await someERC20.balanceOf(governor),
-            );
-            const newMixrBalance = new BigNumber(await mixr.balanceOf(governor));
+            afterEach(async () => {
+                const mixrBalance = new BigNumber(await mixr.totalSupply());
+                assert.equal(mixrBalance.comparedTo(new BigNumber(0)), 0, 'should be 0.');
+            });
 
-            assert.equal(
-                previousERC20Balance.minus(newERC20Balance).s,
-                oneBg.s,
-                'should have less one SampleERC20',
+            itShouldThrow(
+                'forbids depositing without allowance',
+                async () => {
+                    const valueChange = '0.01';
+                    const one = web3.utils.toWei(valueChange, 'ether');
+                    await mixr.depositToken(someERC20.address, one, {
+                        from: governor,
+                    });
+                },
+                'revert',
             );
 
-            assert.equal(
-                newMixrBalance.minus(previousMixrBalance).s,
-                oneBg.s,
-                'should have one more MIXR',
+            itShouldThrow(
+                'forbids depositing bad tokens',
+                async () => {
+                    const valueChange = '0.01';
+                    const one = web3.utils.toWei(valueChange, 'ether');
+                    await mixr.depositToken(someERC721.address, one, {
+                        from: governor,
+                    });
+                },
+                'revert',
             );
         });
-
-        itShouldThrow(
-            'forbids depositing bad tokens',
-            async () => {
+        describe('actions that should work', () => {
+            it('can accept approved tokens', async () => {
                 const valueChange = '0.01';
                 const one = web3.utils.toWei(valueChange, 'ether');
-                await mixr.depositToken(someERC721.address, one, {
+                const oneBg = new BigNumber(web3.utils.toWei(valueChange, 'ether'));
+                const previousERC20Balance = new BigNumber(
+                    await someERC20.balanceOf(governor),
+                );
+                const previousMixrBalance = new BigNumber(await mixr.balanceOf(governor));
+                await someERC20.approve(mixr.address, one, {
                     from: governor,
                 });
-            },
-            'revert',
-        );
+                await mixr.depositToken(someERC20.address, one, {
+                    from: governor,
+                });
+
+                const newERC20Balance = new BigNumber(
+                    await someERC20.balanceOf(governor),
+                );
+                const newMixrBalance = new BigNumber(await mixr.balanceOf(governor));
+
+                assert.equal(
+                    previousERC20Balance.minus(newERC20Balance).comparedTo(oneBg),
+                    0,
+                    'should have less one SampleERC20',
+                );
+
+                assert.equal(
+                    newMixrBalance.minus(previousMixrBalance).comparedTo(oneBg),
+                    0,
+                    'should have one more MIXR',
+                );
+            });
+        });
     });
 
     // These tests rely on another test to have changed the fixtures (ERC20 approval).
