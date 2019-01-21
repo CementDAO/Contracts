@@ -19,22 +19,10 @@ contract('MIXR', (accounts) => {
         someERC721 = await SampleERC721.deployed();
     });
 
-    const governanceFixture = () => {
-        // All of our tests expect a governor to be added.
-        beforeEach(async () => {
-            await mixr.addGovernor(governor, {
-                from: owner,
-            });
-        });
-        // After each test we want to remove the previously added governor.
-        afterEach(async () => {
-            await mixr.removeGovernor(governor, {
-                from: owner,
-            });
-        });
-    };
-
     describe('whitelist management', () => {
+        beforeEach(async () => {
+            mixr = await MIXR.new();
+        });
         itShouldThrow(
             'forbids an arbitrary user to add a governor',
             async () => {
@@ -59,7 +47,12 @@ contract('MIXR', (accounts) => {
     });
 
     describe('token approval', () => {
-        governanceFixture();
+        beforeEach(async () => {
+            mixr = await MIXR.new();
+            await mixr.addGovernor(governor, {
+                from: owner,
+            });
+        });
 
         it('allows a governor to approve a valid token', async () => {
             await mixr.approveToken(someERC20.address, {
@@ -101,7 +94,15 @@ contract('MIXR', (accounts) => {
     // These tests rely on another test to have changed the fixtures (ERC20 approval).
     // If the tests order is changed, or if these tests are ran in isolation they will fail.
     describe('proportion management', async () => {
-        governanceFixture();
+        beforeEach(async () => {
+            mixr = await MIXR.new();
+            await mixr.addGovernor(governor, {
+                from: owner,
+            });
+            await mixr.approveToken(someERC20.address, {
+                from: governor,
+            });
+        });
 
         itShouldThrow(
             'forbids to perform for non-accepted tokens',
@@ -133,12 +134,21 @@ contract('MIXR', (accounts) => {
     // These tests rely on another test to have changed the fixtures (ERC20 approval).
     // If the tests order is changed, or if these tests are ran in isolation they will fail.
     describe('deposit functionality', () => {
-        describe('actions that should fail', () => {
-            beforeEach(async () => {
-                const mixrBalance = new BigNumber(await mixr.totalSupply());
-                assert.equal(mixrBalance.comparedTo(new BigNumber(0)), 0, 'should be 0.');
+        beforeEach(async () => {
+            mixr = await MIXR.new();
+            await mixr.addGovernor(governor, {
+                from: owner,
             });
-
+            await mixr.approveToken(someERC20.address, {
+                from: governor,
+            });
+            await mixr.setTokenTargetProportion(someERC20.address, 1, {
+                from: governor,
+            });
+            const mixrBalance = new BigNumber(await mixr.totalSupply());
+            assert.equal(mixrBalance.comparedTo(new BigNumber(0)), 0, 'should be 0.');
+        });
+        describe('actions that should fail', () => {
             afterEach(async () => {
                 const mixrBalance = new BigNumber(await mixr.totalSupply());
                 assert.equal(mixrBalance.comparedTo(new BigNumber(0)), 0, 'should be 0.');
@@ -207,22 +217,39 @@ contract('MIXR', (accounts) => {
     // These tests rely on another test to have changed the fixtures (ERC20 approval).
     // If the tests order is changed, or if these tests are ran in isolation they will fail.
     describe('redemption functionality', () => {
-        describe('actions that should fail', () => {
-            beforeEach(async () => {
-                const mixrBalance = new BigNumber(await mixr.totalSupply());
-                assert.equal(mixrBalance.comparedTo(new BigNumber(0)), 0, 'should be 0.');
+        const valueChange = '0.01';
+        const one = web3.utils.toWei(valueChange, 'ether');
+        const oneBg = new BigNumber(web3.utils.toWei(valueChange, 'ether'));
+        beforeEach(async () => {
+            mixr = await MIXR.new();
+            await mixr.addGovernor(governor, {
+                from: owner,
             });
-
+            await mixr.approveToken(someERC20.address, {
+                from: governor,
+            });
+            await mixr.setTokenTargetProportion(someERC20.address, 1, {
+                from: governor,
+            });
+            // to redeem we actually need some funds
+            // so we should deposit first
+            await someERC20.approve(mixr.address, one, {
+                from: governor,
+            });
+            await mixr.depositToken(someERC20.address, one, {
+                from: governor,
+            });
+            const mixrBalance = new BigNumber(await mixr.totalSupply());
+            assert.equal(mixrBalance.comparedTo(oneBg), 0, 'should be 0.');
+        });
+        describe('actions that should fail', () => {
             afterEach(async () => {
                 const mixrBalance = new BigNumber(await mixr.totalSupply());
-                assert.equal(mixrBalance.comparedTo(new BigNumber(0)), 0, 'should be 0.');
+                assert.equal(mixrBalance.comparedTo(oneBg), 0, 'should be 0.');
             });
-
             itShouldThrow(
                 'forbids redeeming without allowance',
                 async () => {
-                    const valueChange = '0.01';
-                    const one = web3.utils.toWei(valueChange, 'ether');
                     await mixr.redeemMIXR(someERC20.address, one, {
                         from: governor,
                     });
@@ -233,8 +260,6 @@ contract('MIXR', (accounts) => {
             itShouldThrow(
                 'forbids redeeming bad ERC20',
                 async () => {
-                    const valueChange = '0.01';
-                    const one = web3.utils.toWei(valueChange, 'ether');
                     await mixr.redeemMIXR(someERC721.address, one, {
                         from: governor,
                     });
@@ -245,9 +270,6 @@ contract('MIXR', (accounts) => {
 
         describe('actions that should work', () => {
             it('allows to swap MIXR for something else', async () => {
-                const valueChange = '0.01';
-                const one = web3.utils.toWei(valueChange, 'ether');
-                const oneBg = new BigNumber(web3.utils.toWei(valueChange, 'ether'));
                 const previousERC20Balance = new BigNumber(
                     await someERC20.balanceOf(governor),
                 );
