@@ -57,7 +57,17 @@ contract MIXR is ERC20, ERC20Detailed, Ownable {
      * if an address is an implementation of an interface.
      * See https://stackoverflow.com/questions/45364197
      */
-    modifier isValidERC20(address _token) {
+    modifier isCompliantToken(address _token) {
+        uint size;
+        // See https://stackoverflow.com/a/40939341 to understand the following test.
+        // Make sure to never use this test alone, as it can yeld fake positives when
+        // inverted. It *must* be used in conjunction of other tests, eg methods existence.
+        // solium-disable-next-line security/no-inline-assembly
+        assembly { size := extcodesize(_verifyAddress) }
+        require(
+            size > 0, "The specified address doesn't look like a deployed contract."
+        );
+
         require(
             IERC20(_token).balanceOf(_token) >= 0 &&
             IERC20(_token).totalSupply() >= 0,
@@ -77,21 +87,7 @@ contract MIXR is ERC20, ERC20Detailed, Ownable {
         );
         require(
             proportions[_token] > 0,
-            "The given token is accepted but doesn't have a target proportion yet."
-        );
-        _;
-    }
-
-    /**
-     * @dev According to https://stackoverflow.com/a/40939341 it is possible to
-     * check whether an address is a contract or not.
-     */
-    modifier isContract(address _verifyAddress) {
-        uint size;
-        // solium-disable-next-line security/no-inline-assembly
-        assembly { size := extcodesize(_verifyAddress) }
-        require(
-            size > 0, "The specified address doesn't look like a deployed contract."
+            "The given token is accepted but doesn't have a target proportion."
         );
         _;
     }
@@ -174,8 +170,7 @@ contract MIXR is ERC20, ERC20Detailed, Ownable {
     function approveToken(address _token)
         public
         onlyGovernor()
-        isContract(_token)
-        isValidERC20(_token)
+        isCompliantToken(_token)
     {
         approvedTokens.insert(_token);
     }
