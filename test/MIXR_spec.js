@@ -167,6 +167,19 @@ contract('MIXR', (accounts) => {
             );
 
             itShouldThrow(
+                'forbids depositing unknow token',
+                async () => {
+                    const someOtherERC20 = await SampleERC20.new(user);
+                    const valueChange = '0.01';
+                    const one = web3.utils.toWei(valueChange, 'ether');
+                    await mixr.depositToken(someOtherERC20.address, one, {
+                        from: governor,
+                    });
+                },
+                'revert',
+            );
+
+            itShouldThrow(
                 'forbids depositing bad tokens',
                 async () => {
                     const valueChange = '0.01';
@@ -251,6 +264,17 @@ contract('MIXR', (accounts) => {
                 'forbids redeeming without allowance',
                 async () => {
                     await mixr.redeemMIXR(someERC20.address, one, {
+                        from: governor,
+                    });
+                },
+                'revert',
+            );
+
+            itShouldThrow(
+                'forbids redeeming unknow token',
+                async () => {
+                    const someOtherERC20 = await SampleERC20.new(user);
+                    await mixr.redeemMIXR(someOtherERC20.address, one, {
                         from: governor,
                     });
                 },
