@@ -4,6 +4,7 @@ import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "./fixidity/FixidityLib.sol";
 import "./AddressSetLib.sol";
 
 
@@ -11,10 +12,15 @@ import "./AddressSetLib.sol";
  * @title MIXR contract.
  * @dev MIXR is an ERC20 token which is created as a basket of tokens.
  * This means that in addition to the usual ERC20 features the MIXR token
- * can react to transfers of tokens other than itself
+ * can react to transfers of tokens other than itself.
+ * TODO: Change all hardcoded "36" to a constant.
  */
 contract MIXR is ERC20, ERC20Detailed, Ownable {
     using AddressSetLib for AddressSetLib.Data;
+    using FixidityLib for FixidityLib.Fixidity;
+    using SafeMath for uint256;
+
+    FixidityLib.Fixidity private fixidity;
 
     /**
      * @dev (C1) Whitelist of addresses that can do governance.
@@ -28,16 +34,26 @@ contract MIXR is ERC20, ERC20Detailed, Ownable {
     AddressSetLib.Data private approvedTokens; 
 
     /**
-     * @dev (C4) The proportion of each token we want in the basket,
-     * this is just an integer for each token, and then the proportion
-     * for token i is calculated as proportions[i] / sum(proportions)
+     * @dev (C4) The proportion of each token we want in the basket
+     * using fixidity units in a 0 to 10^36 range.
+     * ToDo: Change so that it can be sanity-checked that all proportions add
+     * up to 10^36. Otherwise we will have to do a costly conversion with each
+     * fee calculation.
      */
-    mapping(address => uint256) private proportions; 
+    mapping(address => int256) private proportions; 
 
     /**
-     * @dev Constructor with the details of the ERC20.
+     * @dev (C20) The base deposit fees for each token in the basket using 
+     * fixidity units in a 0 to 10^36 range.
+     */
+    mapping(address => int256) private depositFees; 
+
+    /**
+     * @dev Constructor with the details of the ERC20 and initialization of the
+     * floating-point Fixidity lib with 36 digits.
      */
     constructor() public ERC20Detailed("MIXR", "MIXR", 18) {
+        fixidity.init(36);
     }
 
     /**
@@ -182,9 +198,12 @@ contract MIXR is ERC20, ERC20Detailed, Ownable {
 
     /**
      * @dev (C4) This function sets a proportion for a token in the basket,
-     * allowing this smart contract to receive them.
+     * allowing this smart contract to receive them. This proportions are
+     * stored as fixidity units.
+     * TODO: Think on the user experience of changing proportions and how
+     * to sanity-check that they add up.
      */
-    function setTokenTargetProportion(address _token, uint256 _proportion)
+    function setTokenTargetProportion(address _token, int256 _proportion)
         public
         onlyGovernor()
     {
@@ -194,4 +213,61 @@ contract MIXR is ERC20, ERC20Detailed, Ownable {
         );
         proportions[_token] = _proportion;
     }
+
+    /**
+     * @dev (C20) Returns the total amount of tokens in the basket.
+     */
+    function balanceOfBasket()
+        public
+        view
+        returns (int256)
+    {
+        int256 balance = 0;
+        address[] memory tokensInBasket = approvedTokens.getKeys();
+
+        for ( uint256 i = 0; i < tokensInBasket.length; i += 1 )
+        {
+            balance += int256(IERC20(tokensInBasket[i]).balanceOf(address(this)));  // Overflow? Truncate?
+        }
+        return balance;
+    }
+
+    /**
+     * @dev (C20) Returns what would be the proportion of a token in the basket
+     * after adding a number of tokens. This function converts to fixidity
+     * units which in plain terms means that the comma is displaced 36 places
+     * to the right. The return value is between 0 and 10^36.
+     */
+    function proportionAfterDeposit(address _token, uint256 _amount)
+        public
+        view
+        returns (int256)
+    {
+        int256 tokenBalance = int256(IERC20(_token).balanceOf(address(this)).add(_amount));  // Truncate?
+        int256 basketBalance = balanceOfBasket();
+        return fixidity.divide(
+            tokenBalance * fixidity.fixed_1,
+            basketBalance * fixidity.fixed_1
+        );
+    }
+
+    /**
+     * @dev (C20) Returns what would be the deviation from the target 
+     * proportion of a token in the basket after adding a number of tokens.
+     * This function converts to fixidity units which in plain terms means 
+     * that the comma is displaced 36 places to the right. The return value
+     * is between 0 and 10^36.
+     */
+    function deviationAfterDeposit(address _token, uint256 _amount)
+        public
+        view
+        returns (int256)
+    {
+        return fixidity.subtract(
+            proportionAfterDeposit(_token, _amount),
+            proportions[_token]
+        );
+    }
+
+    
 }
