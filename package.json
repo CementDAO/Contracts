@@ -29,6 +29,7 @@
     "eslint-plugin-react": "^7.11.0",
     "ethlint": "^1.2.1",
     "solidity-coverage": "https://github.com/obernardovieira/solidity-coverage.git#bf55aed45574cb0f75bf59097a19f2fbf1c43773",
-    "truffle": "^5.0.0"
+    "truffle": "^5.0.0",
+    "fixidity": "https://github.com/extraterrestrial-tech/fixidity.git#c4d3d06326fd29ddf17aedbd0b73f3843f82e431"
   }
 }
