@@ -5,7 +5,10 @@ pragma solidity ^0.5.0;
  * @dev A library allowing to put addresses in a set and query it.
  */
 library AddressSetLib {
-    struct Data { mapping(address => bool) flags; }
+    struct Data {
+        mapping(address => bool) flags;
+        address[] keys;
+    }
 
     /**
      * @dev Inserts a value in the set if not already present.
@@ -20,6 +23,7 @@ library AddressSetLib {
         if (self.flags[value]) {
             return false;
         }
+        self.keys.push(value);
         self.flags[value] = true;
         return true;
     }
@@ -51,5 +55,25 @@ library AddressSetLib {
         returns (bool)
     {
         return self.flags[value];
+    }
+
+    /**
+     * @dev Returns an address array with the keys
+     */
+    function getKeys(Data storage self) 
+        public 
+        view 
+        returns(address[] memory) 
+    {
+        uint256 totalKeys = self.keys.length;
+        uint256 currentKeys = 0;
+        address[] memory _keys;
+        for (uint256 key = 0; key < totalKeys; key += 1) {
+            if (self.flags[self.keys[key]] == true) {
+                _keys[currentKeys] = self.keys[key];
+                currentKeys += 1; // Unlikely to overflow
+            }
+        }
+        return _keys;
     }
 }
