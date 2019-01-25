@@ -53,7 +53,7 @@ contract MIXR is ERC20, ERC20Detailed, Ownable {
      * @dev Constructor with the details of the ERC20 and initialization of the
      * floating-point Fixidity lib with 36 digits.
      */
-    constructor() public ERC20Detailed("MIXR", "MIXR", 18) {
+    constructor() public ERC20Detailed("MIX", "MIX", 18) {
         fixidity.init(36);
     }
 
