@@ -295,7 +295,8 @@ contract MIXR is ERC20, ERC20Detailed, Ownable {
 
         // Behaviour when we have very few of _token
         if (deviation <= lowerBound ) {
-            int256 lowerMultiplier = fixidity.log_any(
+            int256 lowerMultiplier = LogarithmLib.log_any(
+                fixidity,
                 10,
                 fixidity.divide(1,11)
             );
@@ -307,11 +308,9 @@ contract MIXR is ERC20, ERC20Detailed, Ownable {
                 )
             );
         // Normal behaviour
-        } else if (lowerBound < deviation < upperBound) {
+        } else if (lowerBound < deviation && deviation < upperBound) {
             int256 t2 = fixidity.divide(proportion,2);
-            int256 normalMultiplier = fixidity.log_any(
-                10,
-                fixidity.divide(
+            int256 someDivide = fixidity.divide(
                     fixidity.add(
                         deviation,
                         t2
@@ -320,7 +319,11 @@ contract MIXR is ERC20, ERC20Detailed, Ownable {
                         deviation,
                         t2
                     )
-                )
+                );
+            int256 normalMultiplier = LogarithmLib.log_any(
+                fixidity,
+                10,
+                someDivide
             );
             return fixidity.add(
                 base,
