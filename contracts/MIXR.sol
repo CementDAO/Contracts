@@ -5,6 +5,7 @@ import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "./fixidity/FixidityLib.sol";
+import "./fixidity/LogarithmLib.sol";
 import "./AddressSetLib.sol";
 
 
@@ -246,8 +247,8 @@ contract MIXR is ERC20, ERC20Detailed, Ownable {
         int256 tokenBalance = int256(IERC20(_token).balanceOf(address(this)).add(_amount));  // Truncate?
         int256 basketBalance = balanceOfBasket();
         return fixidity.divide(
-            tokenBalance * fixidity.fixed_1,
-            basketBalance * fixidity.fixed_1
+            fixidity.newFromInt256(tokenBalance),
+            fixidity.newFromInt256(basketBalance)
         );
     }
 
@@ -269,5 +270,69 @@ contract MIXR is ERC20, ERC20Detailed, Ownable {
         );
     }
 
-    
+    /**
+     * @dev (C20) Calculates the deposit fee as decribed in the CementDAO.
+     * whitepaper. Uses fixidity units which in plain terms means that the 
+     * comma is displaced 36 places to the right. The return value is between
+     * 0 and 10^36.
+     *  
+     */
+    function depositFee(address _token, uint256 _amount)
+        public
+        view
+        returns (int256) 
+    {
+        // Basket position after deposit
+        int256 deviation = deviationAfterDeposit(_token, _amount);
+        int256 proportion = proportions[_token];
+        int256 base = depositFees[_token];
+
+        // Very complex way to say -0.4
+        int256 lowerBound = fixidity.newFromInt256Fraction(-4,10);
+
+        // Very complex way to say 0.4
+        int256 upperBound = fixidity.newFromInt256Fraction(4,10);
+
+        // Behaviour when we have very few of _token
+        if (deviation <= lowerBound ) {
+            int256 lowerMultiplier = fixidity.log_any(
+                10,
+                fixidity.divide(1,11)
+            );
+            return fixidity.add(
+                base,
+                fixidity.multiply(
+                    base,
+                    lowerMultiplier
+                )
+            );
+        // Normal behaviour
+        } else if (lowerBound < deviation < upperBound) {
+            int256 t2 = fixidity.divide(proportion,2);
+            int256 normalMultiplier = fixidity.log_any(
+                10,
+                fixidity.divide(
+                    fixidity.add(
+                        deviation,
+                        t2
+                    ),
+                    fixidity.subtract(
+                        deviation,
+                        t2
+                    )
+                )
+            );
+            return fixidity.add(
+                base,
+                fixidity.multiply(
+                    base,
+                    normalMultiplier
+                )
+            );
+        }
+        // Behaviour when we have too many of _token
+	    else revert(
+            "Token not accepted, basket has too many."
+        );
+    }
 }
