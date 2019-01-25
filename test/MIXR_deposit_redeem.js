@@ -33,6 +33,7 @@ contract('MIXR deposit/redeem', (accounts) => {
             await mixr.setTokenTargetProportion(someERC20.address, 1, {
                 from: governor,
             });
+            await someERC20.transfer(user, web3.utils.toWei('1', 'ether'), { from: governor });
             const mixrBalance = new BigNumber(await mixr.totalSupply());
             assert.equal(mixrBalance.comparedTo(new BigNumber(0)), 0, 'should be 0.');
         });
@@ -48,7 +49,7 @@ contract('MIXR deposit/redeem', (accounts) => {
                     const valueChange = '0.01';
                     const one = web3.utils.toWei(valueChange, 'ether');
                     await mixr.depositToken(someERC20.address, one, {
-                        from: governor,
+                        from: user,
                     });
                 },
                 'revert',
@@ -61,7 +62,7 @@ contract('MIXR deposit/redeem', (accounts) => {
                     const valueChange = '0.01';
                     const one = web3.utils.toWei(valueChange, 'ether');
                     await mixr.depositToken(someOtherERC20.address, one, {
-                        from: governor,
+                        from: user,
                     });
                 },
                 'revert',
@@ -73,7 +74,7 @@ contract('MIXR deposit/redeem', (accounts) => {
                     const valueChange = '0.01';
                     const one = web3.utils.toWei(valueChange, 'ether');
                     await mixr.depositToken(someERC721.address, one, {
-                        from: governor,
+                        from: user,
                     });
                 },
                 'revert',
@@ -85,20 +86,20 @@ contract('MIXR deposit/redeem', (accounts) => {
                 const one = web3.utils.toWei(valueChange, 'ether');
                 const oneBg = new BigNumber(web3.utils.toWei(valueChange, 'ether'));
                 const previousERC20Balance = new BigNumber(
-                    await someERC20.balanceOf(governor),
+                    await someERC20.balanceOf(user),
                 );
-                const previousMixrBalance = new BigNumber(await mixr.balanceOf(governor));
+                const previousMixrBalance = new BigNumber(await mixr.balanceOf(user));
                 await someERC20.approve(mixr.address, one, {
-                    from: governor,
+                    from: user,
                 });
                 await mixr.depositToken(someERC20.address, one, {
-                    from: governor,
+                    from: user,
                 });
 
                 const newERC20Balance = new BigNumber(
-                    await someERC20.balanceOf(governor),
+                    await someERC20.balanceOf(user),
                 );
-                const newMixrBalance = new BigNumber(await mixr.balanceOf(governor));
+                const newMixrBalance = new BigNumber(await mixr.balanceOf(user));
 
                 assert.equal(
                     previousERC20Balance.minus(newERC20Balance).comparedTo(oneBg),
@@ -134,11 +135,12 @@ contract('MIXR deposit/redeem', (accounts) => {
             });
             // to redeem we actually need some funds
             // so we should deposit first
+            await someERC20.transfer(user, web3.utils.toWei('1', 'ether'), { from: governor });
             await someERC20.approve(mixr.address, one, {
-                from: governor,
+                from: user,
             });
             await mixr.depositToken(someERC20.address, one, {
-                from: governor,
+                from: user,
             });
             const mixrBalance = new BigNumber(await mixr.totalSupply());
             assert.equal(mixrBalance.comparedTo(oneBg), 0, 'should be 0.');
@@ -152,7 +154,7 @@ contract('MIXR deposit/redeem', (accounts) => {
                 'forbids redeeming without allowance',
                 async () => {
                     await mixr.redeemMIXR(someERC20.address, one, {
-                        from: governor,
+                        from: user,
                     });
                 },
                 'revert',
@@ -163,7 +165,7 @@ contract('MIXR deposit/redeem', (accounts) => {
                 async () => {
                     const someOtherERC20 = await SampleERC20.new(user);
                     await mixr.redeemMIXR(someOtherERC20.address, one, {
-                        from: governor,
+                        from: user,
                     });
                 },
                 'revert',
@@ -173,7 +175,7 @@ contract('MIXR deposit/redeem', (accounts) => {
                 'forbids redeeming bad ERC20',
                 async () => {
                     await mixr.redeemMIXR(someERC721.address, one, {
-                        from: governor,
+                        from: user,
                     });
                 },
                 'revert',
@@ -183,20 +185,20 @@ contract('MIXR deposit/redeem', (accounts) => {
         describe('actions that should work', () => {
             it('allows to swap MIXR for something else', async () => {
                 const previousERC20Balance = new BigNumber(
-                    await someERC20.balanceOf(governor),
+                    await someERC20.balanceOf(user),
                 );
-                const previousMixrBalance = new BigNumber(await mixr.balanceOf(governor));
+                const previousMixrBalance = new BigNumber(await mixr.balanceOf(user));
                 await mixr.approve(mixr.address, one, {
-                    from: governor,
+                    from: user,
                 });
                 await mixr.redeemMIXR(someERC20.address, one, {
-                    from: governor,
+                    from: user,
                 });
 
                 const newERC20Balance = new BigNumber(
-                    await someERC20.balanceOf(governor),
+                    await someERC20.balanceOf(user),
                 );
-                const newMixrBalance = new BigNumber(await mixr.balanceOf(governor));
+                const newMixrBalance = new BigNumber(await mixr.balanceOf(user));
 
                 assert.equal(
                     newERC20Balance.minus(previousERC20Balance).s,
