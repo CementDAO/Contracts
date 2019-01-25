@@ -287,10 +287,10 @@ contract MIXR is ERC20, ERC20Detailed, Ownable {
         int256 proportion = proportions[_token];
         int256 base = depositFees[_token];
 
-        // Very complex way to say -0.4
+        // When the deviation goes below this value the fee becomes constant
         int256 lowerBound = fixidity.newFromInt256Fraction(-4,10);
 
-        // Very complex way to say 0.4
+        // When the deviation goes above this value the deposit is rejected
         int256 upperBound = fixidity.newFromInt256Fraction(4,10);
 
         // Behaviour when we have very few of _token
