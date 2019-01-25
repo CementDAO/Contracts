@@ -80,7 +80,7 @@ contract MIXR is ERC20, ERC20Detailed, Ownable {
         // Make sure to never use this test alone, as it can yeld fake positives when
         // inverted. It *must* be used in conjunction of other tests, eg methods existence.
         // solium-disable-next-line security/no-inline-assembly
-        assembly { size := extcodesize(_verifyAddress) }
+        assembly { size := extcodesize(_token) }
         require(
             size > 0, "The specified address doesn't look like a deployed contract."
         );
