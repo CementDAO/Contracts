@@ -102,15 +102,19 @@ contract('MIXR deposit/redeem', (accounts) => {
                 const newMixrBalance = new BigNumber(await mixr.balanceOf(user));
 
                 assert.equal(
-                    previousERC20Balance.minus(newERC20Balance).comparedTo(oneBg),
+                    previousERC20Balance.minus(oneBg).comparedTo(newERC20Balance),
                     0,
                     'should have less one SampleERC20',
                 );
-
                 assert.equal(
-                    newMixrBalance.minus(previousMixrBalance).comparedTo(oneBg),
+                    previousMixrBalance.plus(oneBg).comparedTo(newMixrBalance),
                     0,
                     'should have one more MIXR',
+                );
+                assert.equal(
+                    new BigNumber(await someERC20.balanceOf(mixr.address)).comparedTo(oneBg),
+                    0,
+                    'MIXR contract should have the balance of 0.01 in someERC20 token',
                 );
             });
         });
@@ -188,6 +192,11 @@ contract('MIXR deposit/redeem', (accounts) => {
                     await someERC20.balanceOf(user),
                 );
                 const previousMixrBalance = new BigNumber(await mixr.balanceOf(user));
+                assert.equal(
+                    new BigNumber(await someERC20.balanceOf(mixr.address)).comparedTo(oneBg),
+                    0,
+                    'MIXR contract should have the balance of 0.01 in someERC20 token',
+                );
                 await mixr.approve(mixr.address, one, {
                     from: user,
                 });
@@ -201,15 +210,19 @@ contract('MIXR deposit/redeem', (accounts) => {
                 const newMixrBalance = new BigNumber(await mixr.balanceOf(user));
 
                 assert.equal(
-                    newERC20Balance.minus(previousERC20Balance).s,
-                    oneBg.s,
-                    'should have less one ERC20',
+                    previousERC20Balance.plus(oneBg).comparedTo(newERC20Balance),
+                    0,
+                    'should have one more SampleERC20',
                 );
-
                 assert.equal(
-                    previousMixrBalance.minus(newMixrBalance).s,
-                    oneBg.s,
-                    'should have one more MIXR',
+                    previousMixrBalance.minus(oneBg).comparedTo(newMixrBalance),
+                    0,
+                    'should have less one MIXR',
+                );
+                assert.equal(
+                    new BigNumber(await someERC20.balanceOf(mixr.address)).isZero(),
+                    true,
+                    'MIXR contract should have the balance of 0 in someERC20 token',
                 );
             });
         });
