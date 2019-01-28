@@ -224,7 +224,7 @@ contract MIXR is ERC20, ERC20Detailed, Ownable {
         returns (int256)
     {
         int256 balance = 0;
-        address[] memory tokensInBasket = approvedTokens.getKeys();
+        address[] memory tokensInBasket = approvedTokens.getAddresses();
 
         for ( uint256 i = 0; i < tokensInBasket.length; i += 1 )
         {

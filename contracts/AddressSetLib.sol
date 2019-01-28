@@ -7,7 +7,7 @@ pragma solidity ^0.5.0;
 library AddressSetLib {
     struct Data {
         mapping(address => bool) flags;
-        address[] keys;
+        address[] addresses;
     }
 
     /**
@@ -23,7 +23,7 @@ library AddressSetLib {
         if (self.flags[value]) {
             return false;
         }
-        self.keys.push(value);
+        self.addresses.push(value);
         self.flags[value] = true;
         return true;
     }
@@ -60,20 +60,20 @@ library AddressSetLib {
     /**
      * @dev Returns an address array with the keys
      */
-    function getKeys(Data storage self) 
+    function getAddresses(Data storage self) 
         public 
         view 
         returns(address[] memory) 
     {
-        uint256 totalKeys = self.keys.length;
-        uint256 currentKeys = 0;
-        address[] memory _keys;
-        for (uint256 key = 0; key < totalKeys; key += 1) {
-            if (self.flags[self.keys[key]] == true) {
-                _keys[currentKeys] = self.keys[key];
-                currentKeys += 1; // Unlikely to overflow
+        uint256 totalAddresses = self.addresses.length;
+        uint256 activeIndex = 0;
+        address[] memory _activeAddresses;
+        for (uint256 totalIndex = 0; totalIndex < totalAddresses; totalIndex += 1) {
+            if (self.flags[self.addresses[totalIndex]] == true) {
+                _activeAddresses[activeIndex] = self.addresses[totalIndex];
+                activeIndex += 1; // Unlikely to overflow
             }
         }
-        return _keys;
+        return _activeAddresses;
     }
 }
