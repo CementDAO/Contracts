@@ -14,10 +14,9 @@ import "./AddressSetLib.sol";
  */
 contract Fees {
     using AddressSetLib for AddressSetLib.Data;
-    using FixidityLib for FixidityLib.Fixidity;
     using SafeMath for uint256;
 
-    FixidityLib.Fixidity internal fixidity;
+    FixidityLib internal fixidity;
 
     /**
      * @dev (C1) Whitelist of addresses that can do governance.
@@ -61,6 +60,7 @@ contract Fees {
         {
             balance += int256(IERC20(tokensInBasket[i]).balanceOf(address(this)));  // Overflow? Truncate?
         }
+        assert(balance >= 0); // Basket balance must be positive
         return balance;
     }
 
