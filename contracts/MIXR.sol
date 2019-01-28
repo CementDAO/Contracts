@@ -37,7 +37,7 @@ contract MIXR is ERC20, ERC20Detailed, Ownable {
     /**
      * @dev Constructor with the details of the ERC20.
      */
-    constructor() public ERC20Detailed("MIXR", "MIXR", 18) {
+    constructor() public ERC20Detailed("MIX", "MIX", 18) {
     }
 
     /**
