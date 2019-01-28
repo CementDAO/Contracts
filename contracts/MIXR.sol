@@ -20,6 +20,14 @@ import "./AddressSetLib.sol";
 contract MIXR is ERC20, ERC20Detailed, Ownable, Fees {
 
     /**
+     * @dev Constructor with the details of the ERC20 and initialization of the
+     * floating-point Fixidity lib with 36 digits.
+     */
+    constructor() public ERC20Detailed("MIX", "MIX", 18) {
+    }
+
+
+    /**
      * @dev Modifier that enforces that the transaction sender is
      * whitelisted to perform governance.
      */
