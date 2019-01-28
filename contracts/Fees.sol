@@ -49,7 +49,7 @@ contract Fees {
     /**
      * @dev (C20) Returns the total amount of tokens in the basket.
      */
-    function balanceOfBasket()
+    function basketBalance()
         public
         view
         returns (int256)
@@ -76,10 +76,9 @@ contract Fees {
         returns (int256)
     {
         int256 tokenBalance = int256(IERC20(_token).balanceOf(address(this)).add(_amount));  // Truncate?
-        int256 basketBalance = balanceOfBasket();
         return fixidity.divide(
             fixidity.newFromInt256(tokenBalance),
-            fixidity.newFromInt256(basketBalance)
+            fixidity.newFromInt256(basketBalance())
         );
     }
 
@@ -141,7 +140,7 @@ contract Fees {
         // Normal behaviour
         } else if (lowerBound < deviation && deviation < upperBound) {
             int256 t2 = fixidity.divide(proportion,2);
-            int256 someDivide = fixidity.divide(
+            int256 deviationSlope = fixidity.divide(
                     fixidity.add(
                         deviation,
                         t2
@@ -154,7 +153,7 @@ contract Fees {
             int256 normalMultiplier = LogarithmLib.log_any(
                 fixidity,
                 10,
-                someDivide
+                deviationSlope
             );
             return fixidity.add(
                 base,
