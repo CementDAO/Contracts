@@ -1,9 +1,7 @@
 pragma solidity ^0.5.0;
 
 import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
-import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
-import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
-import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./fixidity/FixidityLib.sol";
 import "./fixidity/LogarithmLib.sol";
 import "./AddressSetLib.sol";
@@ -15,8 +13,6 @@ import "./AddressSetLib.sol";
 contract Fees {
     using AddressSetLib for AddressSetLib.Data;
     using SafeMath for uint256;
-
-    FixidityLib internal fixidity;
 
     /**
      * @dev (C1) Whitelist of addresses that can do governance.
@@ -76,9 +72,9 @@ contract Fees {
         returns (int256)
     {
         int256 tokenBalance = int256(IERC20(_token).balanceOf(address(this)).add(_amount));  // Truncate?
-        return fixidity.divide(
-            fixidity.newFromInt256(tokenBalance),
-            fixidity.newFromInt256(basketBalance())
+        return FixidityLib.divide(
+            FixidityLib.newFromInt256(tokenBalance),
+            FixidityLib.newFromInt256(basketBalance())
         );
     }
 
@@ -94,7 +90,7 @@ contract Fees {
         view
         returns (int256)
     {
-        return fixidity.subtract(
+        return FixidityLib.subtract(
             proportionAfterDeposit(_token, _amount),
             proportions[_token]
         );
@@ -118,46 +114,44 @@ contract Fees {
         int256 base = depositFees[_token];
 
         // When the deviation goes below this value the fee becomes constant
-        int256 lowerBound = fixidity.newFromInt256Fraction(-4,10);
+        int256 lowerBound = FixidityLib.newFromInt256Fraction(-4,10);
 
         // When the deviation goes above this value the deposit is rejected
-        int256 upperBound = fixidity.newFromInt256Fraction(4,10);
+        int256 upperBound = FixidityLib.newFromInt256Fraction(4,10);
 
         // Behaviour when we have very few of _token
         if (deviation <= lowerBound ) {
             int256 lowerMultiplier = LogarithmLib.log_any(
-                fixidity,
                 10,
-                fixidity.divide(1,11)
+                FixidityLib.divide(1,11)
             );
-            return fixidity.add(
+            return FixidityLib.add(
                 base,
-                fixidity.multiply(
+                FixidityLib.multiply(
                     base,
                     lowerMultiplier
                 )
             );
         // Normal behaviour
         } else if (lowerBound < deviation && deviation < upperBound) {
-            int256 t2 = fixidity.divide(proportion,2);
-            int256 deviationSlope = fixidity.divide(
-                    fixidity.add(
+            int256 t2 = FixidityLib.divide(proportion,2);
+            int256 deviationSlope = FixidityLib.divide(
+                    FixidityLib.add(
                         deviation,
                         t2
                     ),
-                    fixidity.subtract(
+                    FixidityLib.subtract(
                         deviation,
                         t2
                     )
                 );
             int256 normalMultiplier = LogarithmLib.log_any(
-                fixidity,
                 10,
                 deviationSlope
             );
-            return fixidity.add(
+            return FixidityLib.add(
                 base,
-                fixidity.multiply(
+                FixidityLib.multiply(
                     base,
                     normalMultiplier
                 )
