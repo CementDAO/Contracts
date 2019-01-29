@@ -29,11 +29,11 @@ contract('Fees', (accounts) => {
                 from: governor,
             });
 
-            const valueChange = '0.01';
+            const valueChange = '1';
             const one = web3.utils.toWei(valueChange, 'ether');
             // to redeem we actually need some funds
             // so we should deposit first
-            await someERC20.transfer(user, web3.utils.toWei('1', 'ether'), { from: governor });
+            await someERC20.transfer(user, web3.utils.toWei('2', 'ether'), { from: governor });
             await someERC20.approve(mixr.address, one, {
                 from: user,
             });

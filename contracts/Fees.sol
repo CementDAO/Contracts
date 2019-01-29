@@ -132,10 +132,11 @@ contract Fees {
 
         // Behaviour when we have very few of _token
         if (deviation <= lowerBound ) {
-            int256 lowerMultiplier = LogarithmLib.log_any(
+            /*int256 lowerMultiplier = LogarithmLib.log_any(
                 10,
-                FixidityLib.divide(FixidityLib.newFromInt256Fraction(1,11))
-            );
+                FixidityLib.newFromInt256Fraction(1,11)
+            );*/
+            int256 lowerMultiplier = FixidityLib.fixed_1();
             return FixidityLib.add(
                 base,
                 FixidityLib.multiply(
@@ -145,7 +146,7 @@ contract Fees {
             );
         // Normal behaviour
         } else if (lowerBound < deviation && deviation < upperBound) {
-            int256 t2 = FixidityLib.divide(proportion, FixidityLib.newFromInt256(2));
+            int256 t2 = FixidityLib.divide(proportion,FixidityLib.newFromInt256(2));
             int256 deviationSlope = FixidityLib.divide(
                     FixidityLib.add(
                         deviation,
@@ -156,17 +157,18 @@ contract Fees {
                         t2
                     )
                 );
-            int256 normalMultiplier = LogarithmLib.log_any(
+            /*int256 normalMultiplier = LogarithmLib.log_any(
                 10,
                 deviationSlope
-            );
-            /*return FixidityLib.add(
+            );*/
+            int256 normalMultiplier = FixidityLib.fixed_1();
+            return FixidityLib.add(
                 base,
                 FixidityLib.multiply(
                     base,
                     normalMultiplier
                 )
-            );*/
+            );
         }
         // Behaviour when we have too many of _token
 	    else revert(
