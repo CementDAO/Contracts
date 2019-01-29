@@ -54,7 +54,10 @@ contract Fees {
         int256 balance = 0;
         int256 tokenBalance;
         int256 uncheckedBalance;
-        address[] memory tokensInBasket = approvedTokens.getAddresses();
+        uint256 totalTokens;
+        address[] memory tokensInBasket;
+        
+        (tokensInBasket, totalTokens) = approvedTokens.getAddresses();
 
         for ( uint256 i = 0; i < tokensInBasket.length; i += 1 )
         {
@@ -142,7 +145,7 @@ contract Fees {
             );
         // Normal behaviour
         } else if (lowerBound < deviation && deviation < upperBound) {
-            int256 t2 = FixidityLib.divide(proportion,FixidityLib.newFromInt256(2));
+            int256 t2 = FixidityLib.divide(proportion, FixidityLib.newFromInt256(2));
             int256 deviationSlope = FixidityLib.divide(
                     FixidityLib.add(
                         deviation,
@@ -157,13 +160,13 @@ contract Fees {
                 10,
                 deviationSlope
             );
-            return FixidityLib.add(
+            /*return FixidityLib.add(
                 base,
                 FixidityLib.multiply(
                     base,
                     normalMultiplier
                 )
-            );
+            );*/
         }
         // Behaviour when we have too many of _token
 	    else revert(
