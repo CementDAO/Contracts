@@ -27,22 +27,24 @@ contract Fees {
 
     /**
      * @dev (C4) The proportion of each token we want in the basket
-     * using fixidity units in a 0 to 10^36 range.
+     * using fixed point units in a 0 to FixidityLib.fixed_1() range.
      * ToDo: Change so that it can be sanity-checked that all proportions add
-     * up to 10^36. Otherwise we will have to do a costly conversion with each
-     * fee calculation.
+     * up to FixidityLib.fixed_1(). Otherwise we will have to do a costly 
+     * conversion with each fee calculation.
      */
     mapping(address => int256) internal proportions; 
 
     /**
      * @dev (C20) The base deposit fees for each token in the basket using 
-     * fixidity units in a 0 to 10^36 range.
+     * fixidity units in a 0 to FixidityLib.max_fixed_mul() range.
      */
     mapping(address => int256) internal depositFees; 
 
 
     /**
      * @dev (C20) Returns the total amount of tokens in the basket.
+     * TODO: Make sure that no redemptions are accepted for a token if this would
+     * bring its balance in the basket below 0.
      */
     function basketBalance()
         public
@@ -50,28 +52,37 @@ contract Fees {
         returns (int256)
     {
         int256 balance = 0;
+        int256 tokenBalance;
+        int256 uncheckedBalance;
         address[] memory tokensInBasket = approvedTokens.getAddresses();
 
         for ( uint256 i = 0; i < tokensInBasket.length; i += 1 )
         {
-            balance += int256(IERC20(tokensInBasket[i]).balanceOf(address(this)));  // Overflow? Truncate?
+            tokenBalance = int256(IERC20(tokensInBasket[i]).balanceOf(address(this)));
+            uncheckedBalance = balance + tokenBalance;
+            // Protected against overflow
+            assert(uncheckedBalance - tokenBalance == balance);
+            balance = uncheckedBalance;
         }
-        assert(balance >= 0); // Basket balance must be positive
         return balance;
     }
 
     /**
      * @dev (C20) Returns what would be the proportion of a token in the basket
-     * after adding a number of tokens. This function converts to fixidity
-     * units which in plain terms means that the comma is displaced 36 places
-     * to the right. The return value is between 0 and 10^36.
+     * after adding a number of tokens. This function uses fixed point units 
+     * and is the reason for the maximum token balance to be 
+     * FixidityLib.max_fixed_div(). It won't allow deposits if the token
+     * balance goes above FixidityLib.max_fixed_div().
      */
     function proportionAfterDeposit(address _token, uint256 _amount)
         public
         view
         returns (int256)
     {
-        int256 tokenBalance = int256(IERC20(_token).balanceOf(address(this)).add(_amount));  // Truncate?
+        uint256 uncheckedBalance = IERC20(_token).balanceOf(address(this)).add(_amount);
+        assert(uncheckedBalance < uint256(FixidityLib.max_fixed_div())); // Safe cast
+
+        int256 tokenBalance = int256(uncheckedBalance);
         return FixidityLib.divide(
             FixidityLib.newFromInt256(tokenBalance),
             FixidityLib.newFromInt256(basketBalance())
@@ -81,9 +92,8 @@ contract Fees {
     /**
      * @dev (C20) Returns what would be the deviation from the target 
      * proportion of a token in the basket after adding a number of tokens.
-     * This function converts to fixidity units which in plain terms means 
-     * that the comma is displaced 36 places to the right. The return value
-     * is between 0 and 10^36.
+     * This function uses fixed point units in the 0 to FixidityLib.fixed_1()
+     * range.
      */
     function deviationAfterDeposit(address _token, uint256 _amount)
         public
@@ -98,10 +108,8 @@ contract Fees {
 
     /**
      * @dev (C20) Calculates the deposit fee as decribed in the CementDAO.
-     * whitepaper. Uses fixidity units which in plain terms means that the 
-     * comma is displaced 36 places to the right. The return value is between
-     * 0 and 10^36.
-     *  
+     * whitepaper. Uses fixed point units from FixidityLib.
+     * TODO: Check whether any FixidityLib maximums could be breached.
      */
     function depositFee(address _token, uint256 _amount)
         public
