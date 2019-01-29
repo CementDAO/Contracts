@@ -177,6 +177,7 @@ contract MIXR is ERC20, ERC20Detailed, Ownable, Fees {
             approvedTokens.contains(_token),
             "The given token isn't listed as accepted."
         );
-        proportions[_token] = _proportion;
+        // TODO: please don't!
+        proportions[_token] = _proportion * FixidityLib.fixed_1();
     }
 }
