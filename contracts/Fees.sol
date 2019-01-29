@@ -131,7 +131,7 @@ contract Fees {
         if (deviation <= lowerBound ) {
             int256 lowerMultiplier = LogarithmLib.log_any(
                 10,
-                FixidityLib.divide(1,11)
+                FixidityLib.divide(FixidityLib.newFromInt256Fraction(1,11))
             );
             return FixidityLib.add(
                 base,
@@ -142,7 +142,7 @@ contract Fees {
             );
         // Normal behaviour
         } else if (lowerBound < deviation && deviation < upperBound) {
-            int256 t2 = FixidityLib.divide(proportion,2);
+            int256 t2 = FixidityLib.divide(proportion,FixidityLib.newFromInt256(2));
             int256 deviationSlope = FixidityLib.divide(
                     FixidityLib.add(
                         deviation,
