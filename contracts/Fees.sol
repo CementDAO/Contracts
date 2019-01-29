@@ -146,20 +146,23 @@ contract Fees {
             );
         // Normal behaviour
         } else if (lowerBound < deviation && deviation < upperBound) {
-            int256 t2 = FixidityLib.divide(proportion,FixidityLib.newFromInt256(2));
-            int256 deviationSlope = FixidityLib.divide(
-                    FixidityLib.add(
-                        deviation,
-                        t2
-                    ),
-                    FixidityLib.subtract(
-                        deviation,
-                        t2
-                    )
-                );
+            int256 t2 = FixidityLib.divide(
+                proportion,
+                FixidityLib.newFromInt256(2)
+            );
+            int256 deviationLogit = FixidityLib.divide(
+                FixidityLib.add(
+                    deviation,
+                    t2
+                ),
+                FixidityLib.subtract(
+                    deviation,
+                    t2
+                )
+            );
             /*int256 normalMultiplier = LogarithmLib.log_any(
                 10,
-                deviationSlope
+                deviationLogit
             );*/
             int256 normalMultiplier = FixidityLib.fixed_1();
             return FixidityLib.add(
