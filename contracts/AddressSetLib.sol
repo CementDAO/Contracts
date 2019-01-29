@@ -63,17 +63,17 @@ library AddressSetLib {
     function getAddresses(Data storage self) 
         public 
         view 
-        returns(address[] memory) 
+        returns(address[] memory, uint256) 
     {
         uint256 totalAddresses = self.addresses.length;
         uint256 activeIndex = 0;
-        address[] memory _activeAddresses;
+        address[] memory _activeAddresses = new address[](totalAddresses);
         for (uint256 totalIndex = 0; totalIndex < totalAddresses; totalIndex += 1) {
             if (self.flags[self.addresses[totalIndex]] == true) {
                 _activeAddresses[activeIndex] = self.addresses[totalIndex];
                 activeIndex += 1; // Unlikely to overflow
             }
         }
-        return _activeAddresses;
+        return (_activeAddresses, activeIndex);
     }
 }
