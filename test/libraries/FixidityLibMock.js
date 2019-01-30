@@ -523,8 +523,73 @@ contract('FixidityLibMock', () => {
         });
     });
 
-    it('divide', async () => {
-        const result = await fixidityLibMock.divide(4, 2);
-        console.log(result.toString(36));
+    describe('divide', () => {
+        itShouldThrow('divide(fixed_1(),0)', async () => {
+            await fixidityLibMock.divide(
+                fixed_1.toString(10),
+                0,
+            );
+        });
+        it('divide(0,fixed_1())', async () => {
+            const result = new BigNumber(
+                await fixidityLibMock.divide(
+                    0,
+                    fixed_1.toString(10),
+                ),
+            );
+            result.should.be.bignumber.equal(
+                0,
+            );
+        });
+        it('divide(fixed_1(),fixed_1())', async () => {
+            const result = new BigNumber(
+                await fixidityLibMock.divide(
+                    fixed_1.toString(10),
+                    fixed_1.toString(10),
+                ),
+            );
+            result.should.be.bignumber.equal(
+                fixed_1,
+            );
+        });
+        it('divide(max_fixed_div(),fixed_1())', async () => {
+            const result = new BigNumber(
+                await fixidityLibMock.divide(
+                    max_fixed_div.toString(10),
+                    fixed_1.toString(10),
+                ),
+            );
+            result.should.be.bignumber.equal(
+                max_fixed_div,
+            );
+        });
+        it('divide(fixed_1(),max_fixed_div())', async () => {
+            const result = new BigNumber(
+                await fixidityLibMock.divide(
+                    fixed_1.toString(10),
+                    max_fixed_div.toString(10),
+                ),
+            );
+            result.should.be.bignumber.equal(
+                max_int256,
+            );
+        });
+        itShouldThrow('divide(fixed_1(),max_fixed_div()+1)', async () => {
+            await fixidityLibMock.divide(
+                fixed_1.toString(10),
+                max_fixed_div.plus(1).toString(10),
+            );
+        });
+        it('divide(max_fixed_div(),max_fixed_div())', async () => {
+            const result = new BigNumber(
+                await fixidityLibMock.divide(
+                    max_fixed_div.toString(10),
+                    max_fixed_div.toString(10),
+                ),
+            );
+            result.should.be.bignumber.equal(
+                fixed_1,
+            );
+        });
     });
 });
