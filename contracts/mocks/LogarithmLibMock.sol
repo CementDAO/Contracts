@@ -8,11 +8,11 @@ import "../fixidity/LogarithmLib.sol";
 
 contract LogarithmLibMock {
 
-    function log_e(int256 value) public pure returns (int256) {
-        return LogarithmLib.log_e(value);
+    function ln(int256 value) public pure returns (int256) {
+        return LogarithmLib.ln(value);
     }
 
-    function log_any(int256 base, int256 v) public pure returns (int256) {
-        return LogarithmLib.log_any(base, v);
+    function log_b(int256 b, int256 x) public pure returns (int256) {
+        return LogarithmLib.log_b(b, x);
     }
 }
