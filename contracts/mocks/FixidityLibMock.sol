@@ -9,6 +9,104 @@ import "../fixidity/FixidityLib.sol";
 contract FixidityLibMock {
 
     /**
+     * @dev Number of positions that the comma is shifted to the right.
+     */
+    function digits() public pure returns(uint8) {
+        return FixidityLib.digits();
+    }
+    
+    /**
+     * @dev This is 1 in the fixed point units used in this library.
+     * 10^digits()
+     * Hardcoded to 36 digits.
+     */
+    function fixed_1() public pure returns(int256) {
+        return FixidityLib.fixed_1();
+    }
+
+    /**
+     * @dev This is e in the fixed point units used in this library.
+     * Hardcoded to 36 digits.
+     */
+    function fixed_e() public pure returns(int256) {
+        return FixidityLib.fixed_e();
+    }
+
+    /**
+     * @dev This is pi in the fixed point units used in this library.
+     * Hardcoded to 36 digits.
+     */
+    function fixed_pi() public pure returns(int256) {
+        return FixidityLib.fixed_pi();
+    }
+
+    /**
+     * @dev fixed_exp_10
+     * Hardcoded to 36 digits.
+     */
+    function fixed_exp_10() public pure returns(int256) {
+        return FixidityLib.fixed_exp_10();
+    }
+
+    /**
+     * @dev Maximum value that can be represented in an int256
+     * 2^256 / 2 -1
+     * Hardcoded to 36 digits.
+     */
+    function max_int256() public pure returns(int256) {
+        return FixidityLib.max_int256();
+    }
+
+    /**
+     * @dev Minimum value that can be represented in an int256
+     * -1 * ((2^256 / 2)-2)
+     * Hardcoded to 36 digits.
+     */
+    function min_int256() public pure returns(int256) {
+        return -57896044618658097711785492504343953926634992332820282019728792003956564819966;
+    }
+
+    /**
+     * @dev Maximum value that can be converted to fixed point. Optimize for
+     * deployment. 
+     * max_int256() / fixed_1()
+     * Hardcoded to 36 digits.
+     * TODO: Rename to max_fixed_new()
+     */
+    function max_fixed_new() public pure returns(int256) {
+        return FixidityLib.max_fixed_new();
+    }
+
+    /**
+     * @dev Maximum value that can be safely used as a multiplication operator.
+     * sqrt(max_fixed_new())
+     * Hardcoded to 36 digits.
+     */
+    function max_fixed_mul() public pure returns(int256) {
+        return FixidityLib.max_fixed_mul();
+    }
+
+    /**
+     * @dev Maximum value that can be safely used as a dividend.
+     * divide(max_fixed_div,newFromInt256Fraction(1,fixed_1())) = max_int256().
+     * max_int256()/fixed_1()
+     * Hardcoded to 36 digits.
+     */
+    function max_fixed_div() public pure returns(int256) {
+        return FixidityLib.max_fixed_div();
+    }
+
+    /**
+     * @dev Maximum value that can be safely used as an addition operator.
+     * max_int256() / 2
+     * Hardcoded to 36 digits.
+     */
+    function max_fixed_add() public pure returns(int256) {
+        return FixidityLib.max_fixed_add();
+    }
+
+
+    /**
      * @dev Converts an int256 to fixed point units, equivalent to multiplying
      * by 10^digits().
      */
