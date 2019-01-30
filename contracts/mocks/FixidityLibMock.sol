@@ -63,7 +63,7 @@ contract FixidityLibMock {
      * Hardcoded to 36 digits.
      */
     function min_int256() public pure returns(int256) {
-        return -57896044618658097711785492504343953926634992332820282019728792003956564819966;
+        return FixidityLib.min_int256();
     }
 
     /**
@@ -114,6 +114,14 @@ contract FixidityLibMock {
         return FixidityLib.max_fixed_add();
     }
 
+    /**
+     * @dev Maximum negative value that can be safely in a subtraction.
+     * Test max_fixed_sub() equals min_int256() / 2
+     * Hardcoded to 36 digits.
+     */
+    function max_fixed_sub() public pure returns(int256) {
+        return FixidityLib.max_fixed_sub();
+    }
 
     /**
      * @dev Converts an int256 to fixed point units, equivalent to multiplying
