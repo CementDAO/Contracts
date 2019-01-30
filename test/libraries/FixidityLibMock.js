@@ -191,9 +191,39 @@ contract('FixidityLibMock', () => {
         });
     });
 
-    it('abs', async () => {
-        const result = await fixidityLibMock.abs(-5);
-        console.log(result.toString(36));
+    describe('abs', () => {
+        it('abs(0)', async () => {
+            const result = new BigNumber(await fixidityLibMock.abs(0));
+            result.should.be.bignumber.equal(0);
+        });
+        it('abs(fixed_1())', async () => {
+            const result = new BigNumber(await fixidityLibMock.abs(fixed_1.toString(10)));
+            result.should.be.bignumber.equal(fixed_1);
+        });
+        it('abs(-fixed_1())', async () => {
+            const result = new BigNumber(
+                await fixidityLibMock.abs(fixed_1.multipliedBy(-1).toString(10)),
+            );
+            result.should.be.bignumber.equal(fixed_1);
+        });
+        it('abs(newFromInt256(max_fixed_new()))', async () => {
+            const newFromMaxFixedNew = new BigNumber(
+                await fixidityLibMock.newFromInt256(max_fixed_new.toString(10)),
+            );
+            const result = new BigNumber(
+                await fixidityLibMock.abs(newFromMaxFixedNew.toString(10)),
+            );
+            result.should.be.bignumber.equal(newFromMaxFixedNew.multipliedBy(fixed_1));
+        });
+        it('abs(newFromInt256(-max_fixed_new()))', async () => {
+            const newFromMaxFixedNew = new BigNumber(
+                await fixidityLibMock.newFromInt256(max_fixed_new.toString(10)),
+            );
+            const result = new BigNumber(
+                await fixidityLibMock.abs(newFromMaxFixedNew.multipliedBy(-1).toString(10)),
+            );
+            result.should.be.bignumber.equal(newFromMaxFixedNew.multipliedBy(fixed_1));
+        });
     });
 
     it('multiply', async () => {
