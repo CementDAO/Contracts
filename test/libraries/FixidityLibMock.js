@@ -15,6 +15,10 @@ contract('FixidityLibMock', () => {
     let max_fixed_new;
     // eslint-disable-next-line camelcase
     let max_fixed_div;
+    // eslint-disable-next-line camelcase
+    let max_fixed_add;
+    // eslint-disable-next-line camelcase
+    let max_int256;
 
     before(async () => {
         fixidityLibMock = await FixidityLibMock.deployed();
@@ -24,6 +28,10 @@ contract('FixidityLibMock', () => {
         max_fixed_new = new BigNumber(await fixidityLibMock.max_fixed_new());
         // eslint-disable-next-line camelcase
         max_fixed_div = new BigNumber(await fixidityLibMock.max_fixed_div());
+        // eslint-disable-next-line camelcase
+        max_fixed_add = new BigNumber(await fixidityLibMock.max_fixed_add());
+        // eslint-disable-next-line camelcase
+        max_int256 = new BigNumber(await fixidityLibMock.max_int256());
     });
 
     it('fixed_1', async () => {
@@ -226,6 +234,118 @@ contract('FixidityLibMock', () => {
         });
     });
 
+    describe('add', () => {
+        it('add(0,0)', async () => {
+            const result = new BigNumber(
+                await fixidityLibMock.add(0, 0),
+            );
+            result.should.be.bignumber.equal(0);
+        });
+        it('add(max_fixed_add(),0)', async () => {
+            const result = new BigNumber(
+                await fixidityLibMock.add(max_fixed_add.toString(10), 0),
+            );
+            result.should.be.bignumber.equal(max_fixed_add);
+        });
+        it('add(0,max_fixed_add())', async () => {
+            const result = new BigNumber(
+                await fixidityLibMock.add(0, max_fixed_add.toString(10)),
+            );
+            result.should.be.bignumber.equal(max_fixed_add);
+        });
+        it('add(max_fixed_add()-1,max_fixed_add())', async () => {
+            const result = new BigNumber(
+                await fixidityLibMock.add(
+                    max_fixed_add.minus(1).toString(10),
+                    max_fixed_add.toString(10),
+                ),
+            );
+            result.should.be.bignumber.equal(max_int256.minus(1));
+        });
+        it('add(max_fixed_add(),max_fixed_add()-1)', async () => {
+            const result = new BigNumber(
+                await fixidityLibMock.add(
+                    max_fixed_add.toString(10),
+                    max_fixed_add.minus(1).toString(10),
+                ),
+            );
+            result.should.be.bignumber.equal(max_int256.minus(1));
+        });
+        it('add(max_fixed_add(),max_fixed_add())', async () => {
+            const result = new BigNumber(
+                await fixidityLibMock.add(
+                    max_fixed_add.toString(10),
+                    max_fixed_add.toString(10),
+                ),
+            );
+            result.should.be.bignumber.equal(max_int256);
+        });
+        itShouldThrow('add(max_fixed_add() + 1,max_fixed_add())', async () => {
+            await fixidityLibMock.add(
+                max_fixed_add.plus(1).toString(10),
+                max_fixed_add.toString(10),
+            );
+        }, 'revert');
+        it('add(-max_fixed_add(),0)', async () => {
+            const result = new BigNumber(
+                await fixidityLibMock.add(
+                    max_fixed_add.multipliedBy(-1).toString(10),
+                    0,
+                ),
+            );
+            result.should.be.bignumber.equal(max_fixed_add.multipliedBy(-1));
+        });
+        it('add(0,-max_fixed_add())', async () => {
+            const result = new BigNumber(
+                await fixidityLibMock.add(
+                    0,
+                    max_fixed_add.multipliedBy(-1).toString(10),
+                ),
+            );
+            result.should.be.bignumber.equal(max_fixed_add.multipliedBy(-1));
+        });
+        it('add(max_fixed_add(),-max_fixed_add())', async () => {
+            const result = new BigNumber(
+                await fixidityLibMock.add(
+                    max_fixed_add.toString(10),
+                    max_fixed_add.multipliedBy(-1).toString(10),
+                ),
+            );
+            result.should.be.bignumber.equal(0);
+        });
+        it('add(-max_fixed_add(),max_fixed_add())', async () => {
+            const result = new BigNumber(
+                await fixidityLibMock.add(
+                    max_fixed_add.multipliedBy(-1).toString(10),
+                    max_fixed_add.toString(10),
+                ),
+            );
+            result.should.be.bignumber.equal(0);
+        });
+        it('add(-max_fixed_add(),-max_fixed_add()+1)', async () => {
+            const result = new BigNumber(
+                await fixidityLibMock.add(
+                    max_fixed_add.multipliedBy(-1).toString(10),
+                    max_fixed_add.multipliedBy(-1).plus(1).toString(10),
+                ),
+            );
+            result.should.be.bignumber.equal(new BigNumber(1).minus(max_int256));
+        });
+        itShouldThrow('add(-max_fixed_add(),-max_fixed_add())', async () => {
+            await fixidityLibMock.add(
+                max_fixed_add.multipliedBy(-1).toString(10),
+                max_fixed_add.multipliedBy(-1).toString(10),
+            );
+        }, 'revert');
+    });
+
+    describe('subtract', () => {
+        it('subtract', async () => {
+            const result = await fixidityLibMock.subtract(4, 2);
+            console.log(result.toString(36));
+        });
+    });
+
     it('multiply', async () => {
         const result = await fixidityLibMock.multiply(2, 3);
         console.log(result.toString(36));
@@ -238,16 +358,6 @@ contract('FixidityLibMock', () => {
 
     it('divide', async () => {
         const result = await fixidityLibMock.divide(4, 2);
-        console.log(result.toString(36));
-    });
-
-    it('add', async () => {
-        const result = await fixidityLibMock.add(4, 2);
-        console.log(result.toString(36));
-    });
-
-    it('subtract', async () => {
-        const result = await fixidityLibMock.subtract(4, 2);
         console.log(result.toString(36));
     });
 });
