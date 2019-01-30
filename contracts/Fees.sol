@@ -15,6 +15,18 @@ contract Fees {
     using SafeMath for uint256;
 
     /**
+     * @dev Scaling factor for the calculation of fees, expressed in fixed 
+     * point units.
+     */
+    int256 constant public scalingFactor = 1000000000000000000000000000000000000;
+
+    /**
+     * @dev Minimum that can be returned when calculating a fee, expressed in
+     * fixed point units.
+     */
+    int256 constant public minimumFee = 1000000000000000000000000000000;
+
+    /**
      * @dev (C1) Whitelist of addresses that can do governance.
      */
     AddressSetLib.Data internal governors;
@@ -112,6 +124,7 @@ contract Fees {
     /**
      * @dev (C20) Calculates the deposit fee as decribed in the CementDAO.
      * whitepaper. Uses fixed point units from FixidityLib.
+     * TODO: Draft tests
      * TODO: Check whether any FixidityLib maximums could be breached.
      */
     function depositFee(address _token, uint256 _amount)
@@ -119,7 +132,7 @@ contract Fees {
         view
         returns (int256) 
     {
-        // Basket position after deposit
+        // Basket position after deposit, make sure these are fixed point units
         int256 deviation = deviationAfterDeposit(_token, _amount);
         int256 proportion = proportions[_token];
         int256 base = depositFees[_token];
@@ -130,17 +143,21 @@ contract Fees {
         // When the deviation goes above this value the deposit is rejected
         int256 upperBound = FixidityLib.newFromInt256Fraction(4,10);
 
+        int256 fee = minimumFee;
+
         // Behaviour when we have very few of _token
         if (deviation <= lowerBound ) {
-            /*int256 lowerMultiplier = LogarithmLib.log_any(
+            int256 lowerMultiplier = LogarithmLib.log_b(
                 10,
                 FixidityLib.newFromInt256Fraction(1,11)
-            );*/
-            int256 lowerMultiplier = FixidityLib.fixed_1();
-            return FixidityLib.add(
+            );
+            fee = FixidityLib.add(
                 base,
                 FixidityLib.multiply(
-                    base,
+                    FixidityLib.multiply(
+                        base,
+                        scalingFactor
+                    ),
                     lowerMultiplier
                 )
             );
@@ -160,15 +177,17 @@ contract Fees {
                     t2
                 )
             );
-            /*int256 normalMultiplier = LogarithmLib.log_any(
+            int256 normalMultiplier = LogarithmLib.log_b(
                 10,
                 deviationLogit
-            );*/
-            int256 normalMultiplier = FixidityLib.fixed_1();
-            return FixidityLib.add(
+            );
+            fee = FixidityLib.add(
                 base,
                 FixidityLib.multiply(
-                    base,
+                    FixidityLib.multiply(
+                        base,
+                        scalingFactor
+                    ),
                     normalMultiplier
                 )
             );
@@ -177,5 +196,7 @@ contract Fees {
 	    else revert(
             "Token not accepted, basket has too many."
         );
+        if (fee > minimumFee) return fee;
+        else return minimumFee;
     }
 }
