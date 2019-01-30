@@ -55,7 +55,8 @@ contract('FixidityLibMock', () => {
             'revert',
         );
     });
-    describe('newFromInt256Fraction', async () => {
+
+    describe('newFromInt256Fraction', () => {
         itShouldThrow(
             'newFromInt256Fraction(max_fixed_div()+1,1)',
             async () => {
@@ -112,9 +113,48 @@ contract('FixidityLibMock', () => {
         });
     });
 
-    it('integer', async () => {
-        const result = await fixidityLibMock.integer(new BigNumber(2).pow(36));
-        console.log(result.toString(36));
+    describe('integer', () => {
+        it('integer(0)', async () => {
+            const result = new BigNumber(await fixidityLibMock.integer(0));
+            assert.equal(result.comparedTo(new BigNumber(0)), 0, 'should be zero!');
+        });
+        it('integer(fixed_1())', async () => {
+            const result = new BigNumber(await fixidityLibMock.integer(fixed_1.toString(10)));
+            assert.equal(result.comparedTo(fixed_1), 0, 'should be fixed_1!');
+        });
+        it('integer(newFromInt256(max_fixed_new()))', async () => {
+            const newFromMaxFixedNew = new BigNumber(
+                await fixidityLibMock.newFromInt256(max_fixed_new.toString(10)),
+            );
+            const result = new BigNumber(
+                await fixidityLibMock.integer(newFromMaxFixedNew.toString(10)),
+            );
+            assert.equal(
+                result.comparedTo(max_fixed_new.multipliedBy(fixed_1)),
+                0,
+                'should be max_fixed_new()*fixed_1()!',
+            );
+        });
+        it('integer(-fixed_1())', async () => {
+            const negativeFixed1 = fixed_1.multipliedBy(-1);
+            const result = new BigNumber(
+                await fixidityLibMock.integer(negativeFixed1.toString(10)),
+            );
+            assert.equal(result.comparedTo(negativeFixed1), 0, 'should be -fixed_1()!');
+        });
+        it('integer(newFromInt256(-max_fixed_new()))', async () => {
+            const newFromNegativeMaxFixedNew = new BigNumber(
+                await fixidityLibMock.newFromInt256(max_fixed_new.toString(10)),
+            ).multipliedBy(-1);
+            const result = new BigNumber(
+                await fixidityLibMock.integer(newFromNegativeMaxFixedNew.toString(10)),
+            );
+            assert.equal(
+                result.comparedTo(newFromNegativeMaxFixedNew.multipliedBy(fixed_1)),
+                0,
+                'should be -max_fixed_new()*fixed_1()!',
+            );
+        });
     });
 
     it('fractional', async () => {
