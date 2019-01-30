@@ -467,9 +467,60 @@ contract('FixidityLibMock', () => {
         });
     }); */
 
-    it('reciprocal', async () => {
-        const result = await fixidityLibMock.reciprocal(2);
-        console.log(result.toString(36));
+    describe('reciprocal', () => {
+        itShouldThrow('reciprocal(0)', async () => {
+            await fixidityLibMock.reciprocal(0);
+        }, 'revert');
+        it('reciprocal(fixed_1())', async () => {
+            const result = new BigNumber(
+                await fixidityLibMock.reciprocal(
+                    fixed_1.toString(10),
+                ),
+            );
+            result.should.be.bignumber.equal(
+                fixed_1,
+            );
+        });
+        it('reciprocal(fixed_1()*2)', async () => {
+            const result = new BigNumber(
+                await fixidityLibMock.reciprocal(
+                    fixed_1.multipliedBy(2).toString(10),
+                ),
+            );
+            result.should.be.bignumber.equal(
+                fixed_1.dividedBy(2),
+            );
+        });
+        it('reciprocal(fixed_e())', async () => {
+            const result = new BigNumber(
+                await fixidityLibMock.reciprocal(
+                    fixed_e.toString(10),
+                ),
+            );
+            result.should.be.bignumber.equal(
+                fixed_1.dividedBy(fixed_e),
+            );
+        });
+        it('reciprocal(fixed_1()*fixed_1())', async () => {
+            const result = new BigNumber(
+                await fixidityLibMock.reciprocal(
+                    fixed_1.multipliedBy(fixed_1).toString(10),
+                ),
+            );
+            result.should.be.bignumber.equal(
+                1,
+            );
+        });
+        it('reciprocal(2*fixed_1()*fixed_1())', async () => {
+            const result = new BigNumber(
+                await fixidityLibMock.reciprocal(
+                    new BigNumber(2).multipliedBy(fixed_1).multipliedBy(fixed_1).toString(10),
+                ),
+            );
+            result.should.be.bignumber.equal(
+                0,
+            );
+        });
     });
 
     it('divide', async () => {
