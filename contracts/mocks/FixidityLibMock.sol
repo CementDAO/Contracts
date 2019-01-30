@@ -71,10 +71,19 @@ contract FixidityLibMock {
      * deployment. 
      * max_int256() / fixed_1()
      * Hardcoded to 36 digits.
-     * TODO: Rename to max_fixed_new()
      */
     function max_fixed_new() public pure returns(int256) {
         return FixidityLib.max_fixed_new();
+    }
+
+    /**
+     * @dev Maximum value that can be converted to fixed point. Optimize for
+     * deployment. 
+     * -(max_int256()-1) / fixed_1()
+     * Hardcoded to 36 digits.
+     */
+    function min_fixed_new() public pure returns(int256) {
+        return FixidityLib.min_fixed_new();
     }
 
     /**
