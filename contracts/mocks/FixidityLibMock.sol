@@ -42,22 +42,6 @@ contract FixidityLibMock {
     }
 
     /**
-     * @dev This is pi in the fixed point units used in this library.
-     * Hardcoded to 36 digits.
-     */
-    function fixed_pi() public pure returns(int256) {
-        return FixidityLib.fixed_pi();
-    }
-
-    /**
-     * @dev fixed_exp_10
-     * Hardcoded to 36 digits.
-     */
-    function fixed_exp_10() public pure returns(int256) {
-        return FixidityLib.fixed_exp_10();
-    }
-
-    /**
      * @dev Maximum value that can be represented in an int256
      * 2^256 / 2 -1
      * Hardcoded to 36 digits.
