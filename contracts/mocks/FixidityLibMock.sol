@@ -25,6 +25,15 @@ contract FixidityLibMock {
     }
 
     /**
+     * @dev The amount of decimals lost on each multiplication operand.
+     * Test mul_precision() equals sqrt(fixed_1)
+     * Hardcoded to 36 digits.
+     */
+    function mul_precision() public pure returns(int256) {
+        return FixidityLib.mul_precision();
+    }
+
+    /**
      * @dev This is e in the fixed point units used in this library.
      * Hardcoded to 36 digits.
      */
