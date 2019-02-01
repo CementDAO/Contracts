@@ -42,7 +42,7 @@ contract Base {
          * up to FixidityLib.fixed_1(). Otherwise we will have to do a costly 
          * conversion with each fee calculation.
          */
-        int256 proportion;
+        int256 targetProportion;
         /**
          * @dev (C20) The base deposit fees for each token in the basket using 
          * fixidity units in a 0 to FixidityLib.max_fixed_mul() range.
@@ -93,7 +93,7 @@ contract Base {
             "The given token isn't listed as accepted."
         );
         require(
-            token.proportion > 0,
+            token.targetProportion > 0,
             "The given token is accepted but doesn't have a target proportion."
         );
         _;

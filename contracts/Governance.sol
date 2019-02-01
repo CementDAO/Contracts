@@ -87,7 +87,7 @@ contract Governance is Base, Ownable {
             "The given token isn't listed as accepted."
         );
         // TODO: please don't!
-        token.proportion = _proportion;
+        token.targetProportion = _proportion;
         tokens[_token] = token;
     }
 }
