@@ -73,7 +73,7 @@ contract MIXR is ERC20, ERC20Detailed, Ownable, Fees {
             "The given token isn't listed as accepted."
         );
         require(
-            token.proportion > 0,
+            token.targetProportion > 0,
             "The given token is accepted but doesn't have a target proportion."
         );
         _;
@@ -168,7 +168,9 @@ contract MIXR is ERC20, ERC20Detailed, Ownable, Fees {
     /**
      * @dev (C4) This function sets a proportion for a token in the basket,
      * allowing this smart contract to receive them. This proportions are
-     * stored as fixidity units.
+     * stored as fixidity units. Enter 10**FixidityLib.digits() to store 1
+     * TODO: Set checks to ensure that the proportion is set between 0 and 
+     * 10**FixidityLib.digits()
      * TODO: Think on the user experience of changing proportions and how
      * to sanity-check that they add up.
      */
@@ -182,7 +184,7 @@ contract MIXR is ERC20, ERC20Detailed, Ownable, Fees {
             "The given token isn't listed as accepted."
         );
         // TODO: please don't!
-        token.proportion = _proportion * FixidityLib.fixed_1();
+        token.targetProportion = _proportion;
         tokens[_token] = token;
     }
 }

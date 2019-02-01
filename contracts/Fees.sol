@@ -44,7 +44,7 @@ contract Fees {
          * up to FixidityLib.fixed_1(). Otherwise we will have to do a costly 
          * conversion with each fee calculation.
          */
-        int256 proportion;
+        int256 targetProportion;
         /**
          * @dev (C20) The base deposit fees for each token in the basket using 
          * fixidity units in a 0 to FixidityLib.max_fixed_mul() range.
@@ -153,7 +153,7 @@ contract Fees {
         TokenData memory token = tokens[_token];
         return FixidityLib.subtract(
             proportionAfterDeposit(_token, _amount),
-            token.proportion
+            token.targetProportion
         );
     }
 
@@ -182,8 +182,6 @@ contract Fees {
         // Basket position after deposit, make sure these are fixed point units
         TokenData memory token = tokens[_token];
         int256 deviation = deviationAfterDeposit(_token, _amount);
-        int256 proportion = token.proportion;
-        int256 base = token.depositFee;
 
         // When the deviation goes below this value the fee becomes constant
         int256 lowerBound = FixidityLib.newFromInt256Fraction(-4,10);
@@ -200,10 +198,10 @@ contract Fees {
                 FixidityLib.newFromInt256Fraction(1,11)
             );
             fee = FixidityLib.add(
-                base,
+                token.depositFee,
                 FixidityLib.multiply(
                     FixidityLib.multiply(
-                        base,
+                        token.depositFee,
                         scalingFactor
                     ),
                     lowerMultiplier
@@ -212,7 +210,7 @@ contract Fees {
         // Normal behaviour
         } else if (lowerBound < deviation && deviation < upperBound) {
             int256 t2 = FixidityLib.divide(
-                proportion,
+                token.targetProportion,
                 FixidityLib.newFromInt256(2)
             );
             int256 deviationLogit = FixidityLib.divide(
@@ -230,10 +228,10 @@ contract Fees {
                 deviationLogit
             );
             fee = FixidityLib.add(
-                base,
+                token.depositFee,
                 FixidityLib.multiply(
                     FixidityLib.multiply(
-                        base,
+                        token.depositFee,
                         scalingFactor
                     ),
                     normalMultiplier
