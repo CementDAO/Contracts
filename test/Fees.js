@@ -47,6 +47,8 @@ contract('Fees', (accounts) => {
                     from: governor,
                 },
             );
+            await mixr.setDepositFee(someERC20.address, 1, { from: governor });
+
             const valueToDeposit = web3.utils.toWei('90', 'ether');
             await someERC20.transfer(user, valueToDeposit, { from: governor });
             await someERC20.approve(mixr.address, valueToDeposit, {

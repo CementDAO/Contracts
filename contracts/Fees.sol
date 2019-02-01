@@ -61,6 +61,22 @@ contract Fees {
     address[] internal tokensList;
 
     /**
+     * @dev (C5) As a Governance Function, I would like a API, which may only
+     * be accessed by the whitelisted addresses, and which allows me
+     * to set the base fee for deposit transactions
+     */
+    function setDepositFee(address _token, int256 _fee)
+        public
+        // TODO: uncomment!
+        //isAcceptedToken(_token)
+        //onlyGovernor()
+    {
+        TokenData memory token = tokens[_token];
+        token.depositFee = _fee;
+        tokens[_token] = token;
+    }
+
+    /**
      * @dev Returns an address array of approved tokens, and it's size
      */
     function getApprovedTokens() 
