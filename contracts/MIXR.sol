@@ -7,7 +7,6 @@ import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "./fixidity/FixidityLib.sol";
 import "./fixidity/LogarithmLib.sol";
 import "./Fees.sol";
-import "./AddressSetLib.sol";
 
 
 /**
@@ -33,7 +32,7 @@ contract MIXR is ERC20, ERC20Detailed, Ownable, Fees {
      */
     modifier onlyGovernor() {
         require(
-            governors.contains(msg.sender),
+            governors[msg.sender] == true,
             "Message sender isn't part of the governance whitelist."
         );
         _;
@@ -68,12 +67,13 @@ contract MIXR is ERC20, ERC20Detailed, Ownable, Fees {
      * this method is only a group of requires
      */
     modifier isAcceptedToken(address _token) {
+        TokenData memory token = tokens[_token];
         require(
-            approvedTokens.contains(_token),
+            token.approved == true,
             "The given token isn't listed as accepted."
         );
         require(
-            proportions[_token] > 0,
+            token.proportion > 0,
             "The given token is accepted but doesn't have a target proportion."
         );
         _;
@@ -87,7 +87,7 @@ contract MIXR is ERC20, ERC20Detailed, Ownable, Fees {
         public
         onlyOwner
     {
-        governors.insert(_userAddress);
+        governors[_userAddress] = true;
     }
 
     /**
@@ -99,7 +99,7 @@ contract MIXR is ERC20, ERC20Detailed, Ownable, Fees {
     public
     view
     returns (bool) {
-        return governors.contains(_userAddress);
+        return governors[_userAddress];
     }
 
     /**
@@ -110,7 +110,7 @@ contract MIXR is ERC20, ERC20Detailed, Ownable, Fees {
         public
         onlyOwner
     {
-        governors.remove(_userAddress);
+        delete governors[_userAddress];
     }
 
     /**
@@ -159,7 +159,10 @@ contract MIXR is ERC20, ERC20Detailed, Ownable, Fees {
         onlyGovernor()
         isCompliantToken(_token)
     {
-        approvedTokens.insert(_token);
+        TokenData memory token = tokens[_token];
+        require(token.approved == false, "Token is already approved!");
+        token.approved = true;
+        tokens[_token] = token;
     }
 
     /**
@@ -173,11 +176,13 @@ contract MIXR is ERC20, ERC20Detailed, Ownable, Fees {
         public
         onlyGovernor()
     {
+        TokenData memory token = tokens[_token];
         require(
-            approvedTokens.contains(_token),
+            token.approved == true,
             "The given token isn't listed as accepted."
         );
         // TODO: please don't!
-        proportions[_token] = _proportion * FixidityLib.fixed_1();
+        token.proportion = _proportion * FixidityLib.fixed_1();
+        tokens[_token] = token;
     }
 }
