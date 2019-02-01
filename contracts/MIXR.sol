@@ -163,6 +163,7 @@ contract MIXR is ERC20, ERC20Detailed, Ownable, Fees {
         require(token.approved == false, "Token is already approved!");
         token.approved = true;
         tokens[_token] = token;
+        tokensList.push(_token);
     }
 
     /**

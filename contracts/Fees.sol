@@ -101,7 +101,7 @@ contract Fees {
         for ( uint256 i = 0; i < totalTokens; i += 1 )
         {
             tokenBalance = IERC20(tokensInBasket[i]).balanceOf(address(this));
-            balance.add(tokenBalance);
+            balance = balance.add(tokenBalance);
         }
         return balance;
     }
