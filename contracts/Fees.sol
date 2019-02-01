@@ -14,6 +14,14 @@ contract Fees is Governance {
     using SafeMath for uint256;
 
     /**
+     * @dev (C13) As a Stablecoin Holder, I would like to be
+     * able to pay any fees with any of the stablecoins on the basket list
+     */
+    function setPayFeesWith(address _token) public {
+        payFeesWith[msg.sender] = _token;
+    }
+
+    /**
      * @dev (C5) As a Governance Function, I would like a API, which may only
      * be accessed by the whitelisted addresses, and which allows me
      * to set the base fee for deposit transactions

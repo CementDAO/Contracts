@@ -59,6 +59,12 @@ contract Base {
     address[] internal tokensList;
 
     /**
+     * @dev (C13) As a Stablecoin Holder, I would like to be able to pay any
+     * fees with any of the stablecoins on the basket list
+     */
+    mapping(address => address) internal payFeesWith;
+
+    /**
      * @dev This is one of the possible solutions allowing to check
      * if an address is an implementation of an interface.
      * See https://stackoverflow.com/questions/45364197
