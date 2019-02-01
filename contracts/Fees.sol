@@ -17,12 +17,14 @@ contract Fees {
     /**
      * @dev Scaling factor for the calculation of fees, expressed in fixed 
      * point units.
+     * Test scalingFactor = FixidityLib.fixed_1()
      */
     int256 constant public scalingFactor = 1000000000000000000000000000000000000;
 
     /**
      * @dev Minimum that can be returned when calculating a fee, expressed in
      * fixed point units.
+     * Test minimumFee = FixidityLib.fixed_1()/(10**6)
      */
     int256 constant public minimumFee = 1000000000000000000000000000000;
 
@@ -61,11 +63,10 @@ contract Fees {
     function basketBalance()
         public
         view
-        returns (int256)
+        returns (uint256)
     {
-        int256 balance = 0;
-        int256 tokenBalance;
-        int256 uncheckedBalance;
+        uint256 balance = 0;
+        uint256 tokenBalance;
         uint256 totalTokens;
         address[] memory tokensInBasket;
         
@@ -73,42 +74,50 @@ contract Fees {
 
         for ( uint256 i = 0; i < tokensInBasket.length; i += 1 )
         {
-            tokenBalance = int256(IERC20(tokensInBasket[i]).balanceOf(address(this)));
-            uncheckedBalance = balance + tokenBalance;
-            // Protected against overflow
-            assert(uncheckedBalance - tokenBalance == balance);
-            balance = uncheckedBalance;
+            tokenBalance = IERC20(tokensInBasket[i]).balanceOf(address(this));
+            balance.add(tokenBalance);
         }
         return balance;
     }
 
     /**
+     * @dev (C20) Cast safely from uint256 (token balances) to int256 (proportions and fees)
+     */
+    function safeCast(uint256 x) 
+        public 
+        pure 
+        returns(int256)
+    {
+        assert(x >= 0);
+        assert(x <= 115792089237316195423570985008687907853269984665640564039457584007913129639935); 
+        return int256(x);
+    } 
+
+    /**
      * @dev (C20) Returns what would be the proportion of a token in the basket
-     * after adding a number of tokens. This function uses fixed point units 
-     * and is the reason for the maximum token balance to be 
-     * FixidityLib.max_fixed_div(). It won't allow deposits if the token
-     * balance goes above FixidityLib.max_fixed_div().
+     * after adding a number of tokens. This function uses FixidityLib fixed 
+     * point units and will throw if the token balance goes above 
+     * FixidityLib.max_fixed_div().
+     * This function returns values in the [0,fixed_1()] range.
      */
     function proportionAfterDeposit(address _token, uint256 _amount)
         public
         view
         returns (int256)
     {
-        uint256 uncheckedBalance = IERC20(_token).balanceOf(address(this)).add(_amount);
-        assert(uncheckedBalance < uint256(FixidityLib.max_fixed_div())); // Safe cast
+        int256 tokenBalance = safeCast(IERC20(_token).balanceOf(address(this)).add(_amount));
+        assert(tokenBalance < FixidityLib.max_fixed_div()); // Should I use require here?
 
-        int256 tokenBalance = int256(uncheckedBalance);
         return FixidityLib.divide(
             FixidityLib.newFromInt256(tokenBalance),
-            FixidityLib.newFromInt256(basketBalance())
+            FixidityLib.newFromInt256(safeCast(basketBalance()))
         );
     }
 
     /**
      * @dev (C20) Returns what would be the deviation from the target 
      * proportion of a token in the basket after adding a number of tokens.
-     * This function uses fixed point units in the 0 to FixidityLib.fixed_1()
-     * range.
+     * This function returns values in the [-fixed_1(),fixed_1()] range.
      */
     function deviationAfterDeposit(address _token, uint256 _amount)
         public
@@ -124,7 +133,18 @@ contract Fees {
     /**
      * @dev (C20) Calculates the deposit fee as decribed in the CementDAO.
      * whitepaper. Uses fixed point units from FixidityLib.
-     * TODO: Draft tests
+     * Test deviation = -0.4, proportion = 0.5, base = fixed_1()/10
+     *      proportionAfterDeposit = 0.1, proportion = 0.5
+     *      Set proportion to 0.5 for token x. Set basket to contain just 90 tokens of token y. Call depositFee(x,10);
+     * Test deviation = -0.39, proportion = 0.5, base = fixed_1()/10
+     *      proportionAfterDeposit = 0.11, proportion = 0.5
+     *      Set proportion to 0.5 for token x. Set basket to contain just 89 tokens of token y. Call depositFee(x,11);
+     * Test deviation = 0.39, proportion = 0.5, base = fixed_1()/10
+     *      proportionAfterDeposit = 0.89, proportion = 0.5
+     *      Set proportion to 0.5 for token x. Set basket to contain just 11 tokens of token y. Call depositFee(x,89);
+     * Test deviation = 0.4, proportion = 0.5, base = fixed_1()/10
+     *      proportionAfterDeposit = 0.9, proportion = 0.5
+     *      Set proportion to 0.5 for token x. Set basket to contain just 10 tokens of token y. Call depositFee(x,90);
      * TODO: Check whether any FixidityLib maximums could be breached.
      */
     function depositFee(address _token, uint256 _amount)
