@@ -16,101 +16,13 @@ import "./Fees.sol";
  * can react to transfers of tokens other than itself.
  * TODO: Change all hardcoded "36" to a constant.
  */
-contract MIXR is ERC20, ERC20Detailed, Ownable, Fees {
+contract MIXR is ERC20, ERC20Detailed, Fees {
 
     /**
      * @dev Constructor with the details of the ERC20 and initialization of the
      * floating-point Fixidity lib with 36 digits.
      */
     constructor() public ERC20Detailed("MIX", "MIX", 18) {
-    }
-
-
-    /**
-     * @dev Modifier that enforces that the transaction sender is
-     * whitelisted to perform governance.
-     */
-    modifier onlyGovernor() {
-        require(
-            governors[msg.sender] == true,
-            "Message sender isn't part of the governance whitelist."
-        );
-        _;
-    }
-
-    /**
-     * @dev This is one of the possible solutions allowing to check
-     * if an address is an implementation of an interface.
-     * See https://stackoverflow.com/questions/45364197
-     */
-    modifier isCompliantToken(address _token) {
-        uint size;
-        // See https://stackoverflow.com/a/40939341 to understand the following test.
-        // Make sure to never use this test alone, as it can yeld fake positives when
-        // inverted. It *must* be used in conjunction of other tests, eg methods existence.
-        // solium-disable-next-line security/no-inline-assembly
-        assembly { size := extcodesize(_token) }
-        require(
-            size > 0, "The specified address doesn't look like a deployed contract."
-        );
-
-        require(
-            IERC20(_token).balanceOf(_token) >= 0 &&
-            IERC20(_token).totalSupply() >= 0,
-            "The provided address doesn't look like a valid ERC20 implementation."
-        );
-        _;
-    }
-
-    /**
-     * @dev In order to make the code easier to read
-     * this method is only a group of requires
-     */
-    modifier isAcceptedToken(address _token) {
-        TokenData memory token = tokens[_token];
-        require(
-            token.approved == true,
-            "The given token isn't listed as accepted."
-        );
-        require(
-            token.targetProportion > 0,
-            "The given token is accepted but doesn't have a target proportion."
-        );
-        _;
-    }
-
-    /**
-     * @dev Add new user to governors
-     * @param _userAddress The user address to be added.
-     */
-    function addGovernor(address _userAddress)
-        public
-        onlyOwner
-    {
-        governors[_userAddress] = true;
-    }
-
-    /**
-     * @dev Allows to query whether or not a given address is a governor.
-     * @param _userAddress The address to be checked.
-     * @return true if the provided user is a governor, false otherwise.
-     */
-    function isGovernor(address _userAddress)
-    public
-    view
-    returns (bool) {
-        return governors[_userAddress];
-    }
-
-    /**
-     * @dev Remove user from governors
-     * @param _userAddress the user address to remove
-     */
-    function removeGovernor(address _userAddress)
-        public
-        onlyOwner
-    {
-        delete governors[_userAddress];
     }
 
     /**
@@ -149,43 +61,5 @@ contract MIXR is ERC20, ERC20Detailed, Ownable, Fees {
         // Send an equal number of selected tokens back
         IERC20(_token).transferFrom(address(this), msg.sender, _amount);
         _burn(address(this), _amount);
-    }
-
-    /**
-     * @dev (C3) This function adds an ERC20 token to the approved tokens list.
-     */
-    function approveToken(address _token)
-        public
-        onlyGovernor()
-        isCompliantToken(_token)
-    {
-        TokenData memory token = tokens[_token];
-        require(token.approved == false, "Token is already approved!");
-        token.approved = true;
-        tokens[_token] = token;
-        tokensList.push(_token);
-    }
-
-    /**
-     * @dev (C4) This function sets a proportion for a token in the basket,
-     * allowing this smart contract to receive them. This proportions are
-     * stored as fixidity units. Enter 10**FixidityLib.digits() to store 1
-     * TODO: Set checks to ensure that the proportion is set between 0 and 
-     * 10**FixidityLib.digits()
-     * TODO: Think on the user experience of changing proportions and how
-     * to sanity-check that they add up.
-     */
-    function setTokenTargetProportion(address _token, int256 _proportion)
-        public
-        onlyGovernor()
-    {
-        TokenData memory token = tokens[_token];
-        require(
-            token.approved == true,
-            "The given token isn't listed as accepted."
-        );
-        // TODO: please don't!
-        token.targetProportion = _proportion;
-        tokens[_token] = token;
     }
 }

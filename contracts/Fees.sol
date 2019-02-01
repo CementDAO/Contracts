@@ -4,61 +4,14 @@ import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./fixidity/FixidityLib.sol";
 import "./fixidity/LogarithmLib.sol";
+import "./Governance.sol";
 
 
 /**
  * @title Fees contract.
  */
-contract Fees {
+contract Fees is Governance {
     using SafeMath for uint256;
-
-    /**
-     * @dev Scaling factor for the calculation of fees, expressed in fixed 
-     * point units.
-     * Test scalingFactor = FixidityLib.fixed_1()
-     */
-    int256 constant public scalingFactor = 1000000000000000000000000000000000000;
-
-    /**
-     * @dev Minimum that can be returned when calculating a fee, expressed in
-     * fixed point units.
-     * Test minimumFee = FixidityLib.fixed_1()/(10**6)
-     */
-    int256 constant public minimumFee = 1000000000000000000000000000000;
-
-    /**
-     * @dev (C1) Whitelist of addresses that can do governance.
-     */
-    mapping(address => bool) internal governors;
-
-    struct TokenData {
-        /**
-         * @dev (C2, C3) This is list of stablecoins that can be stored in the basket,
-         * only if their proportion is set to > 0.
-         */
-        bool approved;
-        /**
-         * @dev (C4) The proportion of each token we want in the basket
-         * using fixed point units in a 0 to FixidityLib.fixed_1() range.
-         * ToDo: Change so that it can be sanity-checked that all proportions add
-         * up to FixidityLib.fixed_1(). Otherwise we will have to do a costly 
-         * conversion with each fee calculation.
-         */
-        int256 targetProportion;
-        /**
-         * @dev (C20) The base deposit fees for each token in the basket using 
-         * fixidity units in a 0 to FixidityLib.max_fixed_mul() range.
-         */
-        int256 depositFee;
-    }
-
-    mapping(address => TokenData) internal tokens;
-    /**
-     * Since it's not possible to iterate over a mapping, it's necessary
-     * to have an array, so we can iterate over it and verify all the
-     * information on the mapping.
-     */
-    address[] internal tokensList;
 
     /**
      * @dev (C5) As a Governance Function, I would like a API, which may only
@@ -67,73 +20,13 @@ contract Fees {
      */
     function setDepositFee(address _token, int256 _fee)
         public
-        // TODO: uncomment!
-        //isAcceptedToken(_token)
-        //onlyGovernor()
+        isAcceptedToken(_token)
+        onlyGovernor()
     {
         TokenData memory token = tokens[_token];
         token.depositFee = _fee;
         tokens[_token] = token;
     }
-
-    /**
-     * @dev Returns an address array of approved tokens, and it's size
-     */
-    function getApprovedTokens() 
-        public 
-        view 
-        returns(address[] memory, uint256) 
-    {
-        uint256 totalAddresses = tokensList.length;
-        uint256 activeIndex = 0;
-        address[] memory activeAddresses = new address[](totalAddresses);
-        for (uint256 totalIndex = 0; totalIndex < totalAddresses; totalIndex += 1) {
-            TokenData memory token = tokens[tokensList[totalIndex]];
-            if (token.approved == true) {
-                activeAddresses[activeIndex] = tokensList[totalIndex];
-                activeIndex += 1; // Unlikely to overflow
-            }
-        }
-        return (activeAddresses, activeIndex);
-    }
-
-    /**
-     * @dev (C20) Returns the total amount of tokens in the basket.
-     * TODO: Make sure that no redemptions are accepted for a token if this would
-     * bring its balance in the basket below 0.
-     */
-    function basketBalance()
-        public
-        view
-        returns (uint256)
-    {
-        uint256 balance = 0;
-        uint256 tokenBalance;
-        uint256 totalTokens;
-        address[] memory tokensInBasket;
-        
-        (tokensInBasket, totalTokens) = getApprovedTokens();
-
-        for ( uint256 i = 0; i < totalTokens; i += 1 )
-        {
-            tokenBalance = IERC20(tokensInBasket[i]).balanceOf(address(this));
-            balance = balance.add(tokenBalance);
-        }
-        return balance;
-    }
-
-    /**
-     * @dev (C20) Cast safely from uint256 (token balances) to int256 (proportions and fees)
-     */
-    function safeCast(uint256 x) 
-        public 
-        pure 
-        returns(int256)
-    {
-        assert(x >= 0);
-        assert(x <= 115792089237316195423570985008687907853269984665640564039457584007913129639935); 
-        return int256(x);
-    } 
 
     /**
      * @dev (C20) Returns what would be the proportion of a token in the basket
