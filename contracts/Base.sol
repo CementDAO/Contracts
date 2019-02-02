@@ -45,7 +45,8 @@ contract Base {
         int256 targetProportion;
         /**
          * @dev (C20) The base deposit fees for each token in the basket using 
-         * fixidity units in a 0 to FixidityLib.max_fixed_mul() range.
+         * fixidity units in a FixidityLib.fixed_1()/1000000 to 
+         * FixidityLib.max_fixed_mul() range.
          */
         int256 depositFee;
     }
@@ -130,6 +131,12 @@ contract Base {
      * @dev (C20) Returns the total amount of tokens in the basket.
      * TODO: Make sure that no redemptions are accepted for a token if this would
      * bring its balance in the basket below 0.
+     * Test basketBalance() = 0 before introducing any tokens.
+     * Test basketBalance() = 1 after introducing 1 wei of x type
+     * Test basketBalance() = 2 after introducing 1 wei of x type
+     * Test basketBalance() = 3 after introducing 1 wei of y type
+     * Test basketBalance() = 13 after introducing 10 wei of y type
+     * Test basketBalance() = 2 after removing 11 wei of y type
      */
     function basketBalance()
         public
@@ -148,6 +155,8 @@ contract Base {
             tokenBalance = IERC20(tokensInBasket[i]).balanceOf(address(this));
             balance = balance.add(tokenBalance);
         }
+        assert(balance >= 0);
+        assert(balance <= 57896044618658097711785492504343953926634992332820282019728792003956564819967); 
         return balance;
     }
 
@@ -160,7 +169,7 @@ contract Base {
         returns(int256)
     {
         assert(x >= 0);
-        assert(x <= 115792089237316195423570985008687907853269984665640564039457584007913129639935); 
+        assert(x <= 57896044618658097711785492504343953926634992332820282019728792003956564819967); 
         return int256(x);
     } 
 }
