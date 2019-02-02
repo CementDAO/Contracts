@@ -131,12 +131,13 @@ contract Base {
      * @dev (C20) Returns the total amount of tokens in the basket.
      * TODO: Make sure that no redemptions are accepted for a token if this would
      * bring its balance in the basket below 0.
+     * Make token x to have 18 decimals and y 20 decimals
      * Test basketBalance() = 0 before introducing any tokens.
-     * Test basketBalance() = 1 after introducing 1 wei of x type
-     * Test basketBalance() = 2 after introducing 1 wei of x type
-     * Test basketBalance() = 3 after introducing 1 wei of y type
-     * Test basketBalance() = 13 after introducing 10 wei of y type
-     * Test basketBalance() = 2 after removing 11 wei of y type
+     * Test basketBalance() = fixed_1() after introducing 1 token of x type
+     * Test basketBalance() = 2*fixed_1() after introducing 1 token of x type
+     * Test basketBalance() = 3*fixed_1() after introducing 1 token of y type
+     * Test basketBalance() = 13*fixed_1() after introducing 10 token of y type
+     * Test basketBalance() = 2*fixed_1() after removing 11 token of y type
      */
     function basketBalance()
         public
