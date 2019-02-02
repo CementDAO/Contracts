@@ -2,7 +2,7 @@ pragma solidity ^0.5.0;
 
 import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-
+import "./fixidity/FixidityLib.sol";
 
 /**
  * @title Base contract.
@@ -129,6 +129,7 @@ contract Base {
 
     /**
      * @dev (C20) Returns the total amount of tokens in the basket.
+     * README: Make sure that any tokens in basket have a uint8 decimals member
      * TODO: Make sure that no redemptions are accepted for a token if this would
      * bring its balance in the basket below 0.
      * Make token x to have 18 decimals and y 20 decimals
@@ -144,16 +145,31 @@ contract Base {
         view
         returns (uint256)
     {
-        uint256 balance = 0;
-        uint256 tokenBalance;
+        int256 balance = 0;
+        int256 tokenBalance;
         uint256 totalTokens;
         address[] memory tokensInBasket;
-        
+        uint8 tokenDecimals;
+        uint8 decimalDifference;
+
         (tokensInBasket, totalTokens) = getApprovedTokens();
 
         for ( uint256 i = 0; i < totalTokens; i += 1 )
         {
-            tokenBalance = IERC20(tokensInBasket[i]).balanceOf(address(this));
+            tokenBalance = safeCast(IERC20(tokensInBasket[i]).balanceOf(address(this)));
+            tokenDecimals = IERC20(tokensInBasket[i]).decimals;
+            if ( tokenDecimals < FixidityLib.digits() ){
+                decimalDifference = FixidityLib.digits() - tokenDecimals;
+                tokenBalance = tokenBalance*(10**decimalDifference);
+            }
+            else if ( tokenDecimals > FixidityLib.digits() ){
+                decimalDifference = tokenDecimals - FixidityLib.digits();
+                tokenBalance = tokenBalance/(10**decimalDifference);
+            }
+            else {
+                // If tokenDecimals == FixidityLib.digits() no conversion is required
+                break;
+            }
             balance = balance.add(tokenBalance);
         }
         assert(balance >= 0);
