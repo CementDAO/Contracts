@@ -74,8 +74,12 @@ contract Governance is Base, Ownable {
      * @dev (C4) This function sets a proportion for a token in the basket,
      * allowing this smart contract to receive them. This proportions are
      * stored as fixidity units.
-     * TODO: Think on the user experience of changing proportions and how
-     * to sanity-check that they add up.
+     * Test setTokenTargetProportions() throws if the proportions passed on the parameter don’t add up to FixidityLib.fixed_1()
+     * Test setTokenTargetProportions() throws if the proportions passed on the parameter don’t exactly match the approved tokens.
+     * Test setTokenTargetProportions() throws if any of the proportions passed on the parameter is below 0
+     * Test setTokenTargetProportions([FixidityLib.fixed_1()]) works for one approved token.
+     * Test setTokenTargetProportions([FixidityLib.fixed_1()/2,FixidityLib.fixed_1()/2]) works for two approved tokens.
+     * Test setTokenTargetProportions([FixidityLib.fixed_1(),0]) works for two approved tokens.
      */
     function setTokenTargetProportion(address _token, int256 _proportion)
         public

@@ -24,13 +24,17 @@ contract Fees is Governance {
     /**
      * @dev (C5) As a Governance Function, I would like a API, which may only
      * be accessed by the whitelisted addresses, and which allows me
-     * to set the base fee for deposit transactions
+     * to set the base fee for deposit transactions. The fee is set in fixed
+     * point units in which fixed_1() is equal to 1.
+     * Test setDepositFee(minimumFee) works and token.depositFee returns minimumFee
+     * Test setDepositFee(minimumFee-1) throws
      */
     function setDepositFee(address _token, int256 _fee)
         public
         isAcceptedToken(_token)
         onlyGovernor()
     {
+        require(_fee >= minimumFee, "Fees can't be set to less than the minimum fee.");
         TokenData memory token = tokens[_token];
         token.depositFee = _fee;
         tokens[_token] = token;
@@ -42,6 +46,12 @@ contract Fees is Governance {
      * point units and will throw if the token balance goes above 
      * FixidityLib.max_fixed_div().
      * This function returns values in the [0,fixed_1()] range.
+     * With an empty basket.
+     * Test proportionAfterDeposit(token,1) returns fixed_1
+     * Assuming tokens x and y have the same number of decimals
+     * Introduce 1 token of x into the basket.
+     * Test proportionAfterDeposit(x,1) returns fixed_1
+     * Test proportionAfterDeposit(y,1) returns fixed_1/2
      */
     function proportionAfterDeposit(address _token, uint256 _amount)
         public
@@ -51,16 +61,25 @@ contract Fees is Governance {
         int256 tokenBalance = safeCast(IERC20(_token).balanceOf(address(this)).add(_amount));
         assert(tokenBalance < FixidityLib.max_fixed_div()); // Should I use require here?
 
-        return FixidityLib.divide(
+        int256 result = FixidityLib.divide(
             FixidityLib.newFromInt256(tokenBalance),
             FixidityLib.newFromInt256(safeCast(basketBalance()))
         );
+        assert(result >= 0 && result <= FixidityLib.fixed_1());
+        return result;
     }
 
     /**
      * @dev (C20) Returns what would be the deviation from the target 
      * proportion of a token in the basket after adding a number of tokens.
      * This function returns values in the [-fixed_1(),fixed_1()] range.
+     * With an empty basket:
+     * Set targetProportion of token x to 1
+     * Test deviationAfterDeposit(x,1) returns 1
+     * Introduce 1 token of type y (not x) to the basket.
+     * Test deviationAfterDeposit(x,1) returns -0.5
+     * Set targetProportion of token x to 0
+     * Test deviationAfterDeposit(x,1) returns 0.5
      */
     function deviationAfterDeposit(address _token, uint256 _amount)
         public
@@ -68,10 +87,15 @@ contract Fees is Governance {
         returns (int256)
     {
         TokenData memory token = tokens[_token];
-        return FixidityLib.subtract(
+        int256 result = FixidityLib.subtract(
             proportionAfterDeposit(_token, _amount),
             token.targetProportion
         );
+        assert(
+            result >= FixidityLib.fixed_1()*(-1) && 
+            result <= FixidityLib.fixed_1()
+        );
+        return result;
     }
 
     /**
