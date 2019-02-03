@@ -1,9 +1,5 @@
 pragma solidity ^0.5.0;
 
-import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
-import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
-import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
-import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "./fixidity/FixidityLib.sol";
 import "./fixidity/LogarithmLib.sol";
 import "./Fees.sol";
@@ -16,14 +12,7 @@ import "./Fees.sol";
  * can react to transfers of tokens other than itself.
  * TODO: Change all hardcoded "36" to a constant.
  */
-contract MIXR is ERC20, ERC20Detailed, Fees {
-
-    /**
-     * @dev Constructor with the details of the ERC20 and initialization of the
-     * floating-point Fixidity lib with 36 digits.
-     */
-    constructor() public ERC20Detailed("MIX", "MIX", 18) {
-    }
+contract MIXR is Fees {
 
     /**
      * @dev (C11) This function allows to deposit an accepted ERC20 token

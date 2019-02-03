@@ -42,11 +42,12 @@ contract Fees is Governance {
 
     /**
      * @dev (C20) Returns what would be the proportion of a token in the basket
-     * after adding a number of tokens. This function uses FixidityLib fixed 
-     * point units and will throw if the token balance goes above 
+     * after adding a number of tokens. This function takes the amount of tokens
+     * will throw if the amount of tokens deposited is greater than
+     * FixidityLib.max_fixed_add() or the token balance goes above 
      * FixidityLib.max_fixed_div().
      * This function returns values in the [0,fixed_1()] range.
-     * With an empty basket.
+     * Testing: With an empty basket.
      * Test proportionAfterDeposit(token,1) returns fixed_1
      * Assuming tokens x and y have the same number of decimals
      * Introduce 1 token of x into the basket.
@@ -58,12 +59,31 @@ contract Fees is Governance {
         view
         returns (int256)
     {
-        int256 tokenBalance = safeCast(IERC20(_token).balanceOf(address(this)).add(_amount));
+        //assert(tokenBalance < FixidityLib.max_fixed_add());
+        //assert(amount < FixidityLib.max_fixed_add());
+        int256 tokenBalance = FixidityLib.newFixed(
+            // The command below returns the balance of _token with this.decimals precision
+            convertTokens(_token, address(this)), 
+            // We specify that this already uses a fixed point representation of decimals 
+            // to convert to the library representation and be able to use the add function
+            this.decimals()
+        );
+        int256 amount = FixidityLib.newFixed(
+            convertTokens(_token, address(this), _amount), 
+            this.decimals()
+        );
+        tokenBalance = FixidityLib.add(
+            tokenBalance, 
+            amount
+        );
+        
         assert(tokenBalance < FixidityLib.max_fixed_div()); // Should I use require here?
-
         int256 result = FixidityLib.divide(
-            FixidityLib.newFromInt256(tokenBalance),
-            FixidityLib.newFromInt256(safeCast(basketBalance()))
+            tokenBalance,
+            FixidityLib.newFixed(
+                safeCast(basketBalance()),
+                this.decimals()
+            )
         );
         assert(result >= 0 && result <= FixidityLib.fixed_1());
         return result;
@@ -125,10 +145,10 @@ contract Fees is Governance {
         int256 deviation = deviationAfterDeposit(_token, _amount);
 
         // When the deviation goes below this value the fee becomes constant
-        int256 lowerBound = FixidityLib.newFromInt256Fraction(-4,10);
+        int256 lowerBound = FixidityLib.newFixedFraction(-4,10);
 
         // When the deviation goes above this value the deposit is rejected
-        int256 upperBound = FixidityLib.newFromInt256Fraction(4,10);
+        int256 upperBound = FixidityLib.newFixedFraction(4,10);
 
         int256 fee = minimumFee;
 
@@ -136,7 +156,7 @@ contract Fees is Governance {
         if (deviation <= lowerBound ) {
             int256 lowerMultiplier = LogarithmLib.log_b(
                 10,
-                FixidityLib.newFromInt256Fraction(1,11)
+                FixidityLib.newFixedFraction(1,11)
             );
             fee = FixidityLib.add(
                 token.depositFee,
@@ -152,7 +172,7 @@ contract Fees is Governance {
         } else if (lowerBound < deviation && deviation < upperBound) {
             int256 t2 = FixidityLib.divide(
                 token.targetProportion,
-                FixidityLib.newFromInt256(2)
+                FixidityLib.newFixed(2)
             );
             int256 deviationLogit = FixidityLib.divide(
                 FixidityLib.add(

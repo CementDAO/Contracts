@@ -95,25 +95,4 @@ contract Governance is Base, Ownable {
         token.targetProportion = _proportion;
         tokens[_token] = token;
     }
-    
-    /**
-     * @dev (C20) This function allows to set the decimals for a token.
-     * Test setting the decimals for x to 18 and then reading the value back.
-     */
-    function setTokenDecimals(address _token, uint8 _decimals)
-        public
-        onlyGovernor()
-    {
-        TokenData memory token = tokens[_token];
-        require(
-            token.approved == true,
-            "The given token isn't listed as accepted."
-        );
-        require(
-            _decimals <= 38,
-            "Only tokens with 38 decimals or less are allowed."
-        );
-        token.decimals = _decimals;
-        tokens[_token] = token;
-    }
 }

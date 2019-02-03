@@ -1,13 +1,16 @@
 pragma solidity ^0.5.0;
 
 import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
+import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./fixidity/FixidityLib.sol";
 
 /**
  * @title Base contract.
  */
-contract Base {
+contract Base is ERC20, ERC20Detailed {
     using SafeMath for uint256;
 
     /**
@@ -35,11 +38,6 @@ contract Base {
          * only if their proportion is set to > 0.
          */
         bool approved;
-        /**
-         * @dev (C20) The decimals supported by the token. Given that this is
-         * not a ERC20 standard they must be entered manually.
-         */
-        uint8 decimals;        
         /**
          * @dev (C4) The proportion of each token we want in the basket
          * using fixed point units in a 0 to FixidityLib.fixed_1() range.
@@ -69,6 +67,13 @@ contract Base {
      * fees with any of the stablecoins on the basket list
      */
     mapping(address => address) internal payFeesWith;
+
+
+    /**
+     * @dev Constructor with the details of the ERC20.
+     */
+    constructor() public ERC20Detailed("MIX", "MIX", 24) {
+    }
 
     /**
      * @dev This is one of the possible solutions allowing to check
@@ -108,10 +113,6 @@ contract Base {
             token.targetProportion > 0,
             "The given token is accepted but doesn't have a target proportion."
         );
-        require(
-            token.decimals > 0,
-            "The given token is accepted but its number of decimals hasn't been provided."
-        );
         _;
     }
 
@@ -137,53 +138,62 @@ contract Base {
     }
 
     /**
-     * @dev (C20) Converts a token amount to the decimal representation
-     * used in the basket.
+     * @dev (C20) Converts a token amount from the precision of _originToken
+     * to that of _destinationToken. Use the address of the MIXR contract to
+     * convert to and from MIX.
      */
-    function convertBalance(address _token, uint256 _amount)
+    function convertTokens(
+        address _originToken, 
+        address _destinationToken, 
+        uint256 _amount
+    )
         public
         view
         returns (int256)
     {
-        uint8 decimalDifference;
-        uint8 tokenDecimals;
-        int256 amount;
+        uint8 originTokenDecimals;
+        uint8 destinationTokenDecimals;
 
-        tokenDecimals = tokens[_token].decimals;
-        assert(tokenDecimals <= 38);
-        if ( tokenDecimals < FixidityLib.digits() ){
-            decimalDifference = FixidityLib.digits() - tokenDecimals;
-            // Cast uint8 -> uint128 is safe
-            // Exponentiation is safe:
-            //     Token.decimals limited to 38 or less
-            //     decimalDifference = abs(FixidityLib.digits() - token.decimals)
-            //     decimalDifference < 38
-            //     10**38 < 2**128-1
-            amount = safeCast(
-                _amount*(uint128(10)**uint128(decimalDifference))
-            );
+        if ( _originToken == address(this)) {
+            originTokenDecimals = this.decimals();
         }
-        else if ( tokenDecimals > FixidityLib.digits() ){
-            decimalDifference = tokenDecimals - FixidityLib.digits();
-            amount = safeCast(
-                _amount/(uint128(10)**uint128(decimalDifference))
-            );
+        else {
+            // assert(tokens.contains(_originToken))
+            originTokenDecimals = ERC20Detailed(_originToken).decimals();
         }
-        // If tokenDecimals == FixidityLib.digits() no conversion is required
 
-        return amount;
+        if ( _destinationToken == address(this)) {
+            destinationTokenDecimals = this.decimals();
+        }
+        else {
+            // assert(tokens.contains(_destinationToken))
+            destinationTokenDecimals = ERC20Detailed(_originToken).decimals();
+        }
+
+        return FixidityLib.convertFixed(
+            safeCast(_amount), 
+            originTokenDecimals, 
+            destinationTokenDecimals
+        );
     } 
 
     /**
-     * @dev (C20) Returns the balance of a token in the decimal representation
-     * used in the basket.
+     * @dev (C20) Returns the _originToken balance in the precision of
+     * _destinationToken. Use the address of the MIXR contract to
+     * convert to and from MIX.
      */
-    function standardizedBalance(address _token)
+    function convertTokens(
+        address _originToken, 
+        address _destinationToken
+    )
         public
         view
         returns (int256)
     {
-        return convertBalance(_token, IERC20(_token).balanceOf(address(this)));
+        return convertTokens(
+            _originToken, 
+            _destinationToken, 
+            IERC20(_originToken).balanceOf(address(this)));
     }
 
     /**
@@ -198,16 +208,16 @@ contract Base {
      * bring its balance in the basket below 0.
      * Make token x to have 18 decimals and y 20 decimals
      * Test basketBalance() = 0 before introducing any tokens.
-     * Test basketBalance() = fixed_1() after introducing 1 token of x type
-     * Test basketBalance() = 2*fixed_1() after introducing 1 token of x type
-     * Test basketBalance() = 3*fixed_1() after introducing 1 token of y type
-     * Test basketBalance() = 13*fixed_1() after introducing 10 token of y type
-     * Test basketBalance() = 2*fixed_1() after removing 11 token of y type
+     * Test basketBalance() = (10**decimals) after introducing 1 token of x type
+     * Test basketBalance() = 2*(10**decimals) after introducing 1 token of x type
+     * Test basketBalance() = 3*(10**decimals) after introducing 1 token of y type
+     * Test basketBalance() = 13*(10**decimals) after introducing 10 token of y type
+     * Test basketBalance() = 2*(10**decimals) after removing 11 token of y type
      */
     function basketBalance()
         public
         view
-        returns (int256)
+        returns (uint256)
     {
         int256 balance = 0;
         uint256 totalTokens;
@@ -217,10 +227,20 @@ contract Base {
 
         for ( uint256 i = 0; i < totalTokens; i += 1 )
         {
-            balance = FixidityLib.add(balance, standardizedBalance(tokensInBasket[i]));
+            balance = FixidityLib.add(
+                balance, 
+                FixidityLib.newFixed(
+                    // convertTokens below returns the balance in the basket decimals
+                    convertTokens(tokensInBasket[i], address(this)), 
+                    // We create a new fixed point number from basket decimals to the
+                    // library precision to be able to use the add function
+                    this.decimals()
+                )
+            );
         }
         assert(balance >= 0);
-        return balance;
+        // We convert back from library precision to basket precision and to uint
+        return uint256(FixidityLib.fromFixed(balance, this.decimals()));
     }
 
     /**
