@@ -7,7 +7,7 @@ const { itShouldThrow } = require('../../utils');
 chai.use(require('chai-bignumber')()).should();
 
 
-contract('FixidityLibMock - newFromInt256Fraction', () => {
+contract('FixidityLibMock - newFixedFraction', () => {
     let fixidityLibMock;
     // eslint-disable-next-line camelcase
     let fixed_1;
@@ -22,59 +22,59 @@ contract('FixidityLibMock - newFromInt256Fraction', () => {
         max_fixed_div = new BigNumber(await fixidityLibMock.max_fixed_div());
     });
 
-    describe('newFromInt256Fraction', () => {
+    describe('newFixedFraction', () => {
         itShouldThrow(
-            'newFromInt256Fraction(max_fixed_div()+1,1)',
+            'newFixedFraction(max_fixed_div()+1,1)',
             async () => {
                 await fixidityLibMock
-                    .newFromInt256Fraction(max_fixed_div.plus(1).toString(10), 1);
+                    .newFixedFraction(max_fixed_div.plus(1).toString(10), 1);
             },
             'revert',
         );
         itShouldThrow(
-            'newFromInt256Fraction(1,max_fixed_div()+1)',
+            'newFixedFraction(1,max_fixed_div()+1)',
             async () => {
                 await fixidityLibMock
-                    .newFromInt256Fraction(1, max_fixed_div.plus(1).toString(10));
+                    .newFixedFraction(1, max_fixed_div.plus(1).toString(10));
             },
             'revert',
         );
         itShouldThrow(
-            'newFromInt256Fraction(1,0)',
+            'newFixedFraction(1,0)',
             async () => {
                 await fixidityLibMock
-                    .newFromInt256Fraction(1, 0);
+                    .newFixedFraction(1, 0);
             },
             'revert',
         );
-        it('newFromInt256Fraction(0,1)', async () => {
+        it('newFixedFraction(0,1)', async () => {
             const result = new BigNumber(
-                await fixidityLibMock.newFromInt256Fraction(0, 1),
+                await fixidityLibMock.newFixedFraction(0, 1),
             );
             result.should.be.bignumber.equal(0);
         });
-        it('newFromInt256Fraction(1,1)', async () => {
+        it('newFixedFraction(1,1)', async () => {
             const result = new BigNumber(
-                await fixidityLibMock.newFromInt256Fraction(1, 1),
+                await fixidityLibMock.newFixedFraction(1, 1),
             );
             result.should.be.bignumber.equal(fixed_1);
         });
-        it('newFromInt256Fraction(max_fixed_div(),1)', async () => {
+        it('newFixedFraction(max_fixed_div(),1)', async () => {
             const result = new BigNumber(
-                await fixidityLibMock.newFromInt256Fraction(max_fixed_div.toString(10), 1),
+                await fixidityLibMock.newFixedFraction(max_fixed_div.toString(10), 1),
             );
             result.should.be.bignumber.equal(max_fixed_div.multipliedBy(fixed_1));
         });
-        /* it('newFromInt256Fraction(100,fixed_1())', async () => {
+        /* it('newFixedFraction(100,fixed_1())', async () => {
             const result = new BigNumber(
-                await fixidityLibMock.newFromInt256Fraction(1, fixed_1.toString(10)),
+                await fixidityLibMock.newFixedFraction(1, fixed_1.toString(10)),
             );
             console.log(result.toString(10));
             assert.equal(result.comparedTo(new BigNumber(1)), 0, 'should be one!');
         }); */
-        it('newFromInt256Fraction(10,fixed_1()+1)', async () => {
+        it('newFixedFraction(10,fixed_1()+1)', async () => {
             const result = new BigNumber(
-                await fixidityLibMock.newFromInt256Fraction(1, fixed_1.plus(1).toString(10)),
+                await fixidityLibMock.newFixedFraction(1, fixed_1.plus(1).toString(10)),
             );
             result.should.be.bignumber.equal(0);
         });

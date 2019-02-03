@@ -90,7 +90,7 @@ contract FixidityLibMock {
 
     /**
      * @dev Maximum value that can be safely used as a dividend.
-     * divide(max_fixed_div,newFromInt256Fraction(1,fixed_1())) = max_int256().
+     * divide(max_fixed_div,newFixedFraction(1,fixed_1())) = max_int256().
      * max_int256()/fixed_1()
      * Hardcoded to 36 digits.
      */
@@ -120,19 +120,19 @@ contract FixidityLibMock {
      * @dev Converts an int256 to fixed point units, equivalent to multiplying
      * by 10^digits().
      */
-    function newFromInt256(int256 x)
+    function newFixed(int256 x)
         public
         pure
         returns (int256)
     {
-        return FixidityLib.newFromInt256(x);
+        return FixidityLib.newFixed(x);
     }
 
     /**
      * @dev Converts two int256 representing a fraction to fixed point units,
      * equivalent to multiplying dividend and divisor by 10^digits().
      */
-    function newFromInt256Fraction(
+    function newFixedFraction(
         int256 numerator, 
         int256 denominator
         )
@@ -140,7 +140,7 @@ contract FixidityLibMock {
         pure
         returns (int256)
     {
-        return FixidityLib.newFromInt256Fraction(numerator, denominator);
+        return FixidityLib.newFixedFraction(numerator, denominator);
     }
 
     /**

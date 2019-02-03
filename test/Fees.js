@@ -42,7 +42,7 @@ contract('Fees', (accounts) => {
             });
             await mixr.setTokenTargetProportion(
                 someERC20.address,
-                new BigNumber(await fixidityLibMock.newFromInt256Fraction(1, 4)).toString(10),
+                new BigNumber(await fixidityLibMock.newFixedFraction(1, 4)).toString(10),
                 {
                     from: governor,
                 },
@@ -69,7 +69,7 @@ contract('Fees', (accounts) => {
             await someOtherERC20.transfer(user, web3.utils.toWei('50', 'ether'), { from: governor });
             await mixr.setTokenTargetProportion(
                 someOtherERC20.address,
-                new BigNumber(await fixidityLibMock.newFromInt256Fraction(1, 2)).toString(10),
+                new BigNumber(await fixidityLibMock.newFixedFraction(1, 2)).toString(10),
                 {
                     from: governor,
                 },

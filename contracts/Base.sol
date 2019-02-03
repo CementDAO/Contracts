@@ -36,6 +36,11 @@ contract Base {
          */
         bool approved;
         /**
+         * @dev (C20) The decimals supported by the token. Given that this is
+         * not a ERC20 standard they must be entered manually.
+         */
+        uint8 decimals;        
+        /**
          * @dev (C4) The proportion of each token we want in the basket
          * using fixed point units in a 0 to FixidityLib.fixed_1() range.
          * ToDo: Change so that it can be sanity-checked that all proportions add
@@ -103,6 +108,10 @@ contract Base {
             token.targetProportion > 0,
             "The given token is accepted but doesn't have a target proportion."
         );
+        require(
+            token.decimals > 0,
+            "The given token is accepted but its number of decimals hasn't been provided."
+        );
         _;
     }
 
@@ -128,8 +137,63 @@ contract Base {
     }
 
     /**
-     * @dev (C20) Returns the total amount of tokens in the basket.
-     * README: Make sure that any tokens in basket have a uint8 decimals member
+     * @dev (C20) Converts a token amount to the decimal representation
+     * used in the basket.
+     */
+    function convertBalance(address _token, uint256 _amount)
+        public
+        view
+        returns (int256)
+    {
+        uint8 decimalDifference;
+        uint8 tokenDecimals;
+        int256 amount;
+
+        tokenDecimals = tokens[_token].decimals;
+        assert(tokenDecimals <= 38);
+        if ( tokenDecimals < FixidityLib.digits() ){
+            decimalDifference = FixidityLib.digits() - tokenDecimals;
+            // Cast uint8 -> uint128 is safe
+            // Exponentiation is safe:
+            //     Token.decimals limited to 38 or less
+            //     decimalDifference = abs(FixidityLib.digits() - token.decimals)
+            //     decimalDifference < 38
+            //     10**38 < 2**128-1
+            amount = safeCast(
+                _amount*(uint128(10)**uint128(decimalDifference))
+            );
+        }
+        else if ( tokenDecimals > FixidityLib.digits() ){
+            decimalDifference = tokenDecimals - FixidityLib.digits();
+            amount = safeCast(
+                _amount/(uint128(10)**uint128(decimalDifference))
+            );
+        }
+        // If tokenDecimals == FixidityLib.digits() no conversion is required
+
+        return amount;
+    } 
+
+    /**
+     * @dev (C20) Returns the balance of a token in the decimal representation
+     * used in the basket.
+     */
+    function standardizedBalance(address _token)
+        public
+        view
+        returns (int256)
+    {
+        return convertBalance(_token, IERC20(_token).balanceOf(address(this)));
+    }
+
+    /**
+     * @dev (C20) Returns the total amount of tokens in the basket. Tokens 
+     * always use a kind of fixed point representation were a whole token 
+     * equals a value of something like 10**18 in the balance, with a uint8
+     * decimals member. This function finds the difference in decimals between
+     * the fixed point library and the token definition and multiplies or 
+     * divides accordingly to be able to aggregate the balances of all the
+     * tokens to the same fixed point standard.
      * TODO: Make sure that no redemptions are accepted for a token if this would
      * bring its balance in the basket below 0.
      * Make token x to have 18 decimals and y 20 decimals
@@ -143,34 +207,17 @@ contract Base {
     function basketBalance()
         public
         view
-        returns (uint256)
+        returns (int256)
     {
         int256 balance = 0;
-        int256 tokenBalance;
         uint256 totalTokens;
         address[] memory tokensInBasket;
-        uint8 tokenDecimals;
-        uint8 decimalDifference;
 
         (tokensInBasket, totalTokens) = getApprovedTokens();
 
         for ( uint256 i = 0; i < totalTokens; i += 1 )
         {
-            tokenBalance = safeCast(IERC20(tokensInBasket[i]).balanceOf(address(this)));
-            tokenDecimals = IERC20(tokensInBasket[i]).decimals;
-            if ( tokenDecimals < FixidityLib.digits() ){
-                decimalDifference = FixidityLib.digits() - tokenDecimals;
-                tokenBalance = tokenBalance*(10**decimalDifference);
-            }
-            else if ( tokenDecimals > FixidityLib.digits() ){
-                decimalDifference = tokenDecimals - FixidityLib.digits();
-                tokenBalance = tokenBalance/(10**decimalDifference);
-            }
-            else {
-                // If tokenDecimals == FixidityLib.digits() no conversion is required
-                break;
-            }
-            balance = balance.add(tokenBalance);
+            balance = FixidityLib.add(balance, standardizedBalance(tokensInBasket[i]));
         }
         assert(balance >= 0);
         return balance;
