@@ -141,11 +141,11 @@ contract Base is ERC20, ERC20Detailed {
      * README: Stablecoins need to be ERC20Detailed
      * Test:
      * Create a token x with 18 decimals and a token y with 20 decimals
-     * Test convertTokens(x, y, 1) = 100
-     * Test convertTokens(y, x, 100) = 1
-     * Test convertTokens(y, x, 110) = 1
+     * Test convertTokensAmount(x, y, 1) = 100
+     * Test convertTokensAmount(y, x, 100) = 1
+     * Test convertTokensAmount(y, x, 110) = 1
      */
-    function convertTokens(
+    function convertTokensAmount(
         address _originToken, 
         address _destinationToken, 
         uint256 _amount
@@ -198,10 +198,10 @@ contract Base is ERC20, ERC20Detailed {
         view
         returns (int256)
     {
-        return convertTokens(
+        return convertTokensAmount(
             _originToken, 
             _destinationToken, 
-            IERC20(_originToken).balanceOf(address(_originToken)));
+            IERC20(_originToken).balanceOf(address(this)));
     }
 
     /**

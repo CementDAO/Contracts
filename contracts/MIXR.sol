@@ -33,7 +33,7 @@ contract MIXR is Fees {
         // Receive the token that was sent
         IERC20(_token).transferFrom(msg.sender, address(this), _amount);
         // Send an equal number of MIXR tokens back
-        int256 basketWei = convertTokens(_token, address(this), _amount);
+        int256 basketWei = convertTokensAmount(_token, address(this), _amount);
         assert(basketWei >= 0);
         _mint(address(this), uint256(basketWei));
         IERC20(address(this)).approve(address(this), uint256(basketWei));
@@ -55,7 +55,7 @@ contract MIXR is Fees {
         // Receive the MIXR token that was sent
         IERC20(address(this)).transferFrom(msg.sender, address(this), _amount);
         // Send an equal number of selected tokens back
-        int256 tokenWei = convertTokens(address(this), _token, _amount);
+        int256 tokenWei = convertTokensAmount(address(this), _token, _amount);
         assert(tokenWei >= 0);
         IERC20(_token).approve(address(this), uint256(tokenWei));
         IERC20(_token).transferFrom(address(this), msg.sender, uint256(tokenWei));
