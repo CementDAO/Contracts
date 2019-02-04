@@ -69,7 +69,7 @@ contract Fees is Governance {
             this.decimals()
         );
         int256 amount = FixidityLib.newFixed(
-            convertTokens(_token, address(this), _amount), 
+            convertTokensAmount(_token, address(this), _amount), 
             this.decimals()
         );
         tokenBalance = FixidityLib.add(

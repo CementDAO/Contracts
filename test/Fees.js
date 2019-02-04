@@ -25,8 +25,9 @@ contract('Fees', (accounts) => {
         someOtherERC20 = await SampleOtherERC20.deployed();
     });
 
-    describe('deposit fee functionality', () => {
+    describe('proportion after deposit functionality', () => {
         beforeEach(async () => {
+            const amountToUser = new BigNumber(10).pow(18).multipliedBy(80);
             mixr = await MIXR.new();
             await mixr.addGovernor(governor, {
                 from: owner,
@@ -36,7 +37,9 @@ contract('Fees', (accounts) => {
              * We will simulate that there's already some other token in the basket and we will
              * deposit a new one.
              */
-            someERC20 = await SampleERC20.new(governor);
+            someERC20 = await SampleERC20.new(governor,
+                new BigNumber(10).pow(18).multipliedBy(100).toString(10),
+                18);
             await mixr.approveToken(someERC20.address, {
                 from: governor,
             });
@@ -47,26 +50,18 @@ contract('Fees', (accounts) => {
                     from: governor,
                 },
             );
-            await mixr.setDepositFee(someERC20.address, 1, { from: governor });
-
-            const valueToDeposit = web3.utils.toWei('90', 'ether');
-            await someERC20.transfer(user, valueToDeposit, { from: governor });
-            await someERC20.approve(mixr.address, valueToDeposit, {
-                from: user,
-            });
-            await mixr.depositToken(someERC20.address, valueToDeposit, {
-                from: user,
-            });
+            await someERC20.transfer(user, amountToUser.toString(10), { from: governor });
 
             /**
              * token to deposit
              */
-            someOtherERC20 = await SampleOtherERC20.new(governor);
+            someOtherERC20 = await SampleOtherERC20.new(governor,
+                new BigNumber(10).pow(18).multipliedBy(100).toString(10),
+                18);
             await mixr.approveToken(someOtherERC20.address, {
                 from: governor,
             });
 
-            await someOtherERC20.transfer(user, web3.utils.toWei('50', 'ether'), { from: governor });
             await mixr.setTokenTargetProportion(
                 someOtherERC20.address,
                 new BigNumber(await fixidityLibMock.newFixedFraction(1, 2)).toString(10),
@@ -74,61 +69,27 @@ contract('Fees', (accounts) => {
                     from: governor,
                 },
             );
+            await someOtherERC20.transfer(user, amountToUser.toString(10), { from: governor });
         });
-        /**
-         * Test deviation = -0.4, proportion = 0.5, base = fixed_1()/10
-         *      proportionAfterDeposit = 0.1, proportion = 0.5
-         *      Set proportion to 0.5 for token x. Set basket to contain just 90 tokens of token y.
-         *          Call depositFee(x,10);
-         */
-        describe('deposit fee -> 10', () => {
-            it('basketBalance', async () => {
-                const result = new BigNumber(
-                    web3.utils.fromWei(await mixr.basketBalance(), 'ether'),
-                );
-                result.should.be.bignumber.equal(new BigNumber(90));
-            });
-            it('proportionAfterDeposit', async () => {
-                const valueToTransfer = web3.utils.toWei('10', 'ether');
-                const result = new BigNumber(
-                    await mixr.proportionAfterDeposit(
-                        someERC20.address,
-                        valueToTransfer,
-                        {
-                            from: user,
-                        },
-                    ),
-                );
-                result.should.be.bignumber
-                    .equal(new BigNumber('1111111111111111100000000000000000000'));
-            });
-            it('deviationAfterDeposit', async () => {
-                const valueToTransfer = web3.utils.toWei('10', 'ether');
-                const result = new BigNumber(
-                    await mixr.deviationAfterDeposit(
-                        someERC20.address,
-                        valueToTransfer,
-                        {
-                            from: user,
-                        },
-                    ),
-                );
-                result.should.be.bignumber
-                    .equal(new BigNumber('861111111111111100000000000000000000'));
-            });
-            it('depositFee', async () => {
-                const valueToTransfer = web3.utils.toWei('10', 'ether');
-                const result = new BigNumber(
-                    await mixr.depositFee(
-                        someERC20.address,
-                        valueToTransfer,
-                        {
-                            from: user,
-                        },
-                    ),
-                );
-                console.log(result.toString(10));
-            });
+        it('proportionAfterDeposit(token,1) with an empty basket', async () => {
+            const valueToTransfer = new BigNumber(10).pow(18);
+            const result = new BigNumber(
+                await mixr.proportionAfterDeposit(
+                    someERC20.address,
+                    valueToTransfer.toString(10),
+                    {
+                        from: user,
+                    },
+                ),
+            );
+            result.should.be.bignumber
+                .equal(new BigNumber('1111111111111111100000000000000000000'));
+        });
+        it('proportionAfterDeposit(x,1) with one token of x', async () => {
+            //
+        });
+        it('proportionAfterDeposit(y,1) with one token of x', async () => {
+            //
         });
     });
 });
