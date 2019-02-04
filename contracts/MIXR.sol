@@ -1,5 +1,7 @@
 pragma solidity ^0.5.0;
 
+import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
 import "./fixidity/FixidityLib.sol";
 import "./fixidity/LogarithmLib.sol";
 import "./Fees.sol";
@@ -12,7 +14,7 @@ import "./Fees.sol";
  * can react to transfers of tokens other than itself.
  * TODO: Change all hardcoded "36" to a constant.
  */
-contract MIXR is Fees {
+contract MIXR is Fees, ERC20, ERC20Detailed {
 
     /**
      * @dev Constructor with the details of the ERC20.

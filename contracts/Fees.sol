@@ -1,6 +1,7 @@
 pragma solidity ^0.5.0;
 
 import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./fixidity/FixidityLib.sol";
 import "./fixidity/LogarithmLib.sol";
@@ -66,11 +67,11 @@ contract Fees is Governance {
             convertTokens(_token, address(this)), 
             // We specify that this already uses a fixed point representation of decimals 
             // to convert to the library representation and be able to use the add function
-            this.decimals()
+            ERC20Detailed(address(this)).decimals()
         );
         int256 amount = FixidityLib.newFixed(
             convertTokensAmount(_token, address(this), _amount), 
-            this.decimals()
+            ERC20Detailed(address(this)).decimals()
         );
         tokenBalance = FixidityLib.add(
             tokenBalance, 
@@ -82,7 +83,7 @@ contract Fees is Governance {
             tokenBalance,
             FixidityLib.newFixed(
                 safeCast(basketBalance()),
-                this.decimals()
+                ERC20Detailed(address(this)).decimals()
             )
         );
         assert(result >= 0 && result <= FixidityLib.fixed_1());

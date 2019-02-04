@@ -1,7 +1,6 @@
 pragma solidity ^0.5.0;
 
 import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
-import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
@@ -14,7 +13,7 @@ import "./fixidity/FixidityLib.sol";
  * Governance   = How to set parameters using a DAO
  * MIXR         = Stablecoin
  */
-contract Base is ERC20, ERC20Detailed {
+contract Base {
     using SafeMath for uint256;
 
     /**
@@ -158,7 +157,7 @@ contract Base is ERC20, ERC20Detailed {
         uint8 destinationTokenDecimals;
 
         if ( _originToken == address(this)) {
-            originTokenDecimals = this.decimals();
+            originTokenDecimals = ERC20Detailed(address(this)).decimals();
         }
         else {
             // assert(tokens.contains(_originToken))
@@ -166,7 +165,7 @@ contract Base is ERC20, ERC20Detailed {
         }
 
         if ( _destinationToken == address(this)) {
-            destinationTokenDecimals = this.decimals();
+            destinationTokenDecimals = ERC20Detailed(address(this)).decimals();
         }
         else {
             // assert(tokens.contains(_destinationToken))
@@ -245,13 +244,13 @@ contract Base is ERC20, ERC20Detailed {
                     convertTokens(tokensInBasket[i], address(this)), 
                     // We create a new fixed point number from basket decimals to the
                     // library precision to be able to use the add function
-                    this.decimals()
+                    ERC20Detailed(address(this)).decimals()
                 )
             );
         }
         assert(balance >= 0);
         // We convert back from library precision to basket precision and to uint
-        return uint256(FixidityLib.fromFixed(balance, this.decimals()));
+        return uint256(FixidityLib.fromFixed(balance, ERC20Detailed(address(this)).decimals()));
     }
 
     /**
