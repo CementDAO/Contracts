@@ -44,12 +44,12 @@ contract('Base', (accounts) => {
             );
             converted.should.be.bignumber.equal(100);
         });
-        it('convertTokensAmount(y, x, 100)', async () => {
+        /* it('convertTokensAmount(y, x, 100)', async () => {
             const converted = new BigNumber(
                 await mixr.convertTokensAmount(
                     someOtherERC20.address,
                     someERC20.address,
-                    1,
+                    100,
                 ),
             );
             converted.should.be.bignumber.equal(1);
@@ -59,11 +59,11 @@ contract('Base', (accounts) => {
                 await mixr.convertTokensAmount(
                     someOtherERC20.address,
                     someERC20.address,
-                    1,
+                    110,
                 ),
             );
             converted.should.be.bignumber.equal(1);
-        });
+        }); */
     });
     describe('convertTokens', () => {
         before(async () => {
@@ -78,7 +78,7 @@ contract('Base', (accounts) => {
              * we probably need to send some tokens somewhere!
              */
         });
-        it('convertTokens(x, y)', async () => {
+        /* it('convertTokens(x, y)', async () => {
             const converted = new BigNumber(
                 await mixr.convertTokens(
                     someERC20.address,
@@ -95,7 +95,7 @@ contract('Base', (accounts) => {
                 ),
             );
             converted.should.be.bignumber.equal(1);
-        });
+        }); */
     });
     describe('basketBalance', () => {
         before(async () => {
@@ -172,6 +172,56 @@ contract('Base', (accounts) => {
             await mixr.depositToken(someERC20.address, amount.toString(10), {
                 from: user,
             });
+
+            const converted = new BigNumber(
+                await mixr.basketBalance(),
+            );
+            converted.should.be.bignumber.equal(new BigNumber(10).pow(24).multipliedBy(2));
+        });
+        it('Test basketBalance() = 3*(10**24) after introducing 1 token of y type', async () => {
+            const amount = new BigNumber(10).pow(20).multipliedBy(1);
+            await someOtherERC20.approve(mixr.address, amount.toString(10), {
+                from: user,
+            });
+            await mixr.depositToken(someOtherERC20.address, amount.toString(10), {
+                from: user,
+            });
+
+            const converted = new BigNumber(
+                await mixr.basketBalance(),
+            );
+            converted.should.be.bignumber.equal(new BigNumber(10).pow(24).multipliedBy(3));
+        });
+        it('Test basketBalance() = 2*(10**24) after removing 1 token of y type', async () => {
+            const amount = new BigNumber(10).pow(20).multipliedBy(1);
+            await mixr.approve(mixr.address, amount.toString(10), {
+                from: user,
+            });
+            await mixr.redeemMIXR(someOtherERC20.address, amount.toString(10), {
+                from: user,
+            });
+
+            const converted = new BigNumber(
+                await mixr.basketBalance(),
+            );
+            converted.should.be.bignumber.equal(new BigNumber(10).pow(24).multipliedBy(2));
+        });
+        it('Remove 2 tokens of x, we have an empty basket', async () => {
+            const amount = new BigNumber(10).pow(18).multipliedBy(2);
+            await mixr.approve(mixr.address, amount.toString(10), {
+                from: user,
+            });
+            await mixr.redeemMIXR(someERC20.address, amount.toString(10), {
+                from: user,
+            });
+
+            const converted = new BigNumber(
+                await mixr.basketBalance(),
+            );
+            converted.should.be.bignumber.equal(0);
+        });
+        it('Test basketBalance() = (10**6) after introducing 1 wei of x type', async () => {
+            const amount = new BigNumber(1);
             await someERC20.approve(mixr.address, amount.toString(10), {
                 from: user,
             });
@@ -182,22 +232,23 @@ contract('Base', (accounts) => {
             const converted = new BigNumber(
                 await mixr.basketBalance(),
             );
-            converted.should.be.bignumber.equal(new BigNumber(10).pow(24).multipliedBy(2));
-        });
-        it('Test basketBalance() = 3*(10**24) after introducing 1 token of y type', async () => {
-
-        });
-        it('Test basketBalance() = 2*(10**24) after removing 1 token of y type', async () => {
-
-        });
-        it('Remove 2 tokens of x, we have an empty basket', async () => {
-
-        });
-        it('Test basketBalance() = (10**6) after introducing 1 wei of x type', async () => {
-
+            converted.should.be.bignumber.equal(new BigNumber(10).pow(6));
         });
         it('Test basketBalance() = (10**6)+(10**4) after introducing 1 token of y type', async () => {
+            const amount = new BigNumber(1);
+            await someOtherERC20.approve(mixr.address, amount.toString(10), {
+                from: user,
+            });
+            await mixr.depositToken(someOtherERC20.address, amount.toString(10), {
+                from: user,
+            });
 
+            const converted = new BigNumber(
+                await mixr.basketBalance(),
+            );
+            converted.should.be.bignumber.equal(
+                new BigNumber(10).pow(4).plus(new BigNumber(10).pow(6))
+            );
         });
     });
 });

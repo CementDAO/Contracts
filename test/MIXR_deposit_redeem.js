@@ -153,7 +153,7 @@ contract('MIXR deposit/redeem', (accounts) => {
             );
 
             itShouldThrow(
-                'forbids redeeming unknow token',
+                'forbids redeeming unknown token',
                 async () => {
                     const someOtherERC20 = await SampleERC20.new(user);
                     await mixr.redeemMIXR(someOtherERC20.address, oneBgERC20.toString(10), {
