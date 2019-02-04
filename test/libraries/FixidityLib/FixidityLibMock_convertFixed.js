@@ -10,22 +10,10 @@ chai.use(require('chai-bignumber')()).should();
 contract('FixidityLibMock - newFixed', () => {
     let fixidityLibMock;
     // eslint-disable-next-line camelcase
-    let fixed_1;
-    // eslint-disable-next-line camelcase
-    let max_fixed_new;
-    // eslint-disable-next-line camelcase
-    let min_fixed_new;
-    // eslint-disable-next-line camelcase
     let max_int256;
 
     before(async () => {
         fixidityLibMock = await FixidityLibMock.deployed();
-        // eslint-disable-next-line camelcase
-        fixed_1 = new BigNumber(await fixidityLibMock.fixed_1());
-        // eslint-disable-next-line camelcase
-        max_fixed_new = new BigNumber(await fixidityLibMock.max_fixed_new());
-        // eslint-disable-next-line camelcase
-        min_fixed_new = new BigNumber(await fixidityLibMock.min_fixed_new());
         // eslint-disable-next-line camelcase
         max_int256 = new BigNumber(await fixidityLibMock.max_int256());
     });
@@ -113,7 +101,9 @@ contract('FixidityLibMock - newFixed', () => {
             const result = new BigNumber(
                 await fixidityLibMock.convertFixed(max_int256.toString(10), 38, 0),
             );
-            result.should.be.bignumber.equal(max_int256.dividedBy((new BigNumber(10).pow(38))).dp(0, 1));
+            result.should.be.bignumber.equal(
+                max_int256.dividedBy((new BigNumber(10).pow(38))).dp(0, 1),
+            );
         });
         it('convertFixed(1,0,38)', async () => {
             const result = new BigNumber(

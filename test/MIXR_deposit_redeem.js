@@ -197,7 +197,9 @@ contract('MIXR deposit/redeem', (accounts) => {
 
                 newERC20Balance.should.be.bignumber.equal(previousERC20Balance.plus(oneBgERC20));
                 newMixrBalance.should.be.bignumber.equal(previousMixrBalance.minus(oneBgMIXR));
-                // new BigNumber(await someERC20.balanceOf(mixr.address)).should.be.bignumber.isZero();
+                /* new BigNumber(
+                    await someERC20.balanceOf(mixr.address),
+                ).should.be.bignumber.isZero(); */
             });
         });
     });
