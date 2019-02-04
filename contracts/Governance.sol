@@ -39,9 +39,10 @@ contract Governance is Base, Ownable {
      * @return true if the provided user is a governor, false otherwise.
      */
     function isGovernor(address _userAddress)
-    public
-    view
-    returns (bool) {
+        public
+        view
+        returns (bool)
+    {
         return governors[_userAddress];
     }
 
@@ -91,7 +92,6 @@ contract Governance is Base, Ownable {
             token.approved == true,
             "The given token isn't listed as accepted."
         );
-        // TODO: please don't!
         token.targetProportion = _proportion;
         tokens[_token] = token;
     }

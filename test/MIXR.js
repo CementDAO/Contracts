@@ -10,7 +10,7 @@ chai.use(require('chai-bignumber')()).should();
 
 const { itShouldThrow } = require('./utils');
 
-contract('MIXR deposit/redeem', (accounts) => {
+contract('MIXR', (accounts) => {
     let mixr;
     let someERC20;
     let someERC721;
@@ -64,7 +64,9 @@ contract('MIXR deposit/redeem', (accounts) => {
             itShouldThrow(
                 'forbids depositing unknow token',
                 async () => {
-                    const someOtherERC20 = await SampleERC20.new(user);
+                    const someOtherERC20 = await SampleERC20.new(user,
+                        new BigNumber(10).pow(18).multipliedBy(100).toString(10),
+                        18);
                     const one = web3.utils.toWei('1', 'ether');
                     await mixr.depositToken(someOtherERC20.address, one, {
                         from: user,
@@ -155,7 +157,9 @@ contract('MIXR deposit/redeem', (accounts) => {
             itShouldThrow(
                 'forbids redeeming unknown token',
                 async () => {
-                    const someOtherERC20 = await SampleERC20.new(user);
+                    const someOtherERC20 = await SampleERC20.new(user,
+                        new BigNumber(10).pow(18).multipliedBy(100).toString(10),
+                        18);
                     await mixr.redeemMIXR(someOtherERC20.address, oneBgERC20.toString(10), {
                         from: user,
                     });
