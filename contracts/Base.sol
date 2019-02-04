@@ -9,6 +9,10 @@ import "./fixidity/FixidityLib.sol";
 
 /**
  * @title Base contract.
+ * Base         = Basket Token which contains other tokens
+ * Fees         = How to calculate values based on basket
+ * Governance   = How to set parameters using a DAO
+ * MIXR         = Stablecoin
  */
 contract Base is ERC20, ERC20Detailed {
     using SafeMath for uint256;
@@ -67,13 +71,6 @@ contract Base is ERC20, ERC20Detailed {
      * fees with any of the stablecoins on the basket list
      */
     mapping(address => address) internal payFeesWith;
-
-
-    /**
-     * @dev Constructor with the details of the ERC20.
-     */
-    constructor() public ERC20Detailed("MIX", "MIX", 24) {
-    }
 
     /**
      * @dev This is one of the possible solutions allowing to check
@@ -141,6 +138,7 @@ contract Base is ERC20, ERC20Detailed {
      * @dev (C20) Converts a token amount from the precision of _originToken
      * to that of _destinationToken. Use the address of the MIXR contract to
      * convert to and from MIX.
+     * README: Stablecoins need to be ERC20Detailed
      */
     function convertTokens(
         address _originToken, 
@@ -181,6 +179,7 @@ contract Base is ERC20, ERC20Detailed {
      * @dev (C20) Returns the _originToken balance in the precision of
      * _destinationToken. Use the address of the MIXR contract to
      * convert to and from MIX.
+     * TODO: Is there an issue with the balance of the contract and the precision of the tokens?
      */
     function convertTokens(
         address _originToken, 

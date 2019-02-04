@@ -84,7 +84,7 @@ contract('MIXR deposit/redeem', (accounts) => {
             it('can accept approved tokens', async () => {
                 const valueChange = '0.01';
                 const one = web3.utils.toWei(valueChange, 'ether');
-                const oneBg = new BigNumber(web3.utils.toWei(valueChange, 'ether'));
+                const oneBgERC20 = new BigNumber(web3.utils.toWei(valueChange, 'ether'));
                 const previousERC20Balance = new BigNumber(
                     await someERC20.balanceOf(user),
                 );
@@ -99,20 +99,20 @@ contract('MIXR deposit/redeem', (accounts) => {
                 const newERC20Balance = new BigNumber(
                     await someERC20.balanceOf(user),
                 );
-                const newMixrBalance = new BigNumber(await mixr.balanceOf(user));
+                const newMixrBalance = new BigNumber(await mixr.balanceOf(user)).dividedBy(1000000);
 
                 assert.equal(
-                    previousERC20Balance.minus(oneBg).comparedTo(newERC20Balance),
+                    previousERC20Balance.minus(oneBgERC20).comparedTo(newERC20Balance),
                     0,
                     'should have less one SampleERC20',
                 );
                 assert.equal(
-                    previousMixrBalance.plus(oneBg).comparedTo(newMixrBalance),
+                    previousMixrBalance.plus(oneBgERC20).comparedTo(newMixrBalance),
                     0,
                     'should have one more MIXR',
                 );
                 assert.equal(
-                    new BigNumber(await someERC20.balanceOf(mixr.address)).comparedTo(oneBg),
+                    new BigNumber(await someERC20.balanceOf(mixr.address)).comparedTo(oneBgERC20),
                     0,
                     'MIXR contract should have the balance of 0.01 in someERC20 token',
                 );

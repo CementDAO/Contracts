@@ -15,6 +15,12 @@ import "./Fees.sol";
 contract MIXR is Fees {
 
     /**
+     * @dev Constructor with the details of the ERC20.
+     */
+    constructor() public ERC20Detailed("MIX", "MIX", 24) {
+    }
+
+    /**
      * @dev (C11) This function allows to deposit an accepted ERC20 token
      * in exchange for some MIXR tokens.
      * It consists of several transactions that must be authorized by
@@ -24,12 +30,14 @@ contract MIXR is Fees {
         public
         isAcceptedToken(_token)
     {
-        _mint(address(this), _amount);
-        IERC20(address(this)).approve(address(this), _amount);
         // Receive the token that was sent
         IERC20(_token).transferFrom(msg.sender, address(this), _amount);
         // Send an equal number of MIXR tokens back
-        IERC20(address(this)).transferFrom(address(this), msg.sender, _amount);
+        int256 basketWei = convertTokens(_token, address(this), _amount);
+        assert(basketWei >= 0);
+        _mint(address(this), uint256(basketWei));
+        IERC20(address(this)).approve(address(this), uint256(basketWei));
+        IERC20(address(this)).transferFrom(address(this), msg.sender, uint256(basketWei));
     }
 
     /**
@@ -44,11 +52,14 @@ contract MIXR is Fees {
         public
         isAcceptedToken(_token)
     {
-        IERC20(_token).approve(address(this), _amount);
         // Receive the MIXR token that was sent
         IERC20(address(this)).transferFrom(msg.sender, address(this), _amount);
         // Send an equal number of selected tokens back
-        IERC20(_token).transferFrom(address(this), msg.sender, _amount);
+        int256 tokenWei = convertTokens(address(this), _token, _amount);
+        assert(tokenWei >= 0);
+        IERC20(_token).approve(address(this), uint256(tokenWei));
+        IERC20(_token).transferFrom(address(this), msg.sender, uint256(tokenWei));
+        // We always mint and burn MIX amounts
         _burn(address(this), _amount);
     }
 }
