@@ -139,6 +139,11 @@ contract Base is ERC20, ERC20Detailed {
      * to that of _destinationToken. Use the address of the MIXR contract to
      * convert to and from MIX.
      * README: Stablecoins need to be ERC20Detailed
+     * Test:
+     * Create a token x with 18 decimals and a token y with 20 decimals
+     * Test convertTokens(x, y, 1) = 100
+     * Test convertTokens(y, x, 100) = 1
+     * Test convertTokens(y, x, 110) = 1
      */
     function convertTokens(
         address _originToken, 
@@ -179,6 +184,11 @@ contract Base is ERC20, ERC20Detailed {
      * @dev (C20) Returns the _originToken balance in the precision of
      * _destinationToken. Use the address of the MIXR contract to
      * convert to and from MIX.
+     * Test:
+     * Create a token x with 18 decimals and a token y with 20 decimals
+     * Mint 1 wei for x and 100 wei for y
+     * Test convertTokens(x, y) = 100
+     * Test convertTokens(y, x) = 1
      */
     function convertTokens(
         address _originToken, 
@@ -205,12 +215,15 @@ contract Base is ERC20, ERC20Detailed {
      * TODO: Make sure that no redemptions are accepted for a token if this would
      * bring its balance in the basket below 0.
      * Make token x to have 18 decimals and y 20 decimals
+     * Make sure the MIX basket is constructed with 24 decimals
      * Test basketBalance() = 0 before introducing any tokens.
-     * Test basketBalance() = (10**decimals) after introducing 1 token of x type
-     * Test basketBalance() = 2*(10**decimals) after introducing 1 token of x type
-     * Test basketBalance() = 3*(10**decimals) after introducing 1 token of y type
-     * Test basketBalance() = 13*(10**decimals) after introducing 10 token of y type
-     * Test basketBalance() = 2*(10**decimals) after removing 11 token of y type
+     * Test basketBalance() = (10**24) after introducing 1 token of x type
+     * Test basketBalance() = 2*(10**24) after introducing 1 token of x type
+     * Test basketBalance() = 3*(10**24) after introducing 1 token of y type
+     * Test basketBalance() = 2*(10**24) after removing 1 token of y type
+     * Remove 2 tokens of x, we have an empty basket
+     * Test basketBalance() = (10**6) after introducing 1 wei of x type
+     * Test basketBalance() = (10**6)+(10**4) after introducing 1 token of y type
      */
     function basketBalance()
         public
