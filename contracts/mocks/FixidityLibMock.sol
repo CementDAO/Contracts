@@ -141,6 +141,20 @@ contract FixidityLibMock {
     }
 
     /**
+     * @dev Converts an int256 which is already in some fixed point 
+     * representation to a different fixed precision representation.
+     * Both the origin and destination precisions must be 38 or less digits.
+     * Origin values with a precision higher than the destination precision
+     * will be truncated accordingly.
+     */
+    function convertFixed(int256 x, uint8 _originDigits, uint8 _destinationDigits)
+        public
+        pure
+        returns (int256)
+    {
+        return FixidityLib.convertFixed(x, _originDigits, _destinationDigits);
+    }
+    /**
      * @dev Converts two int256 representing a fraction to fixed point units,
      * equivalent to multiplying dividend and divisor by 10^digits().
      */
