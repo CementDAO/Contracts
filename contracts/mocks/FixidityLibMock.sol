@@ -129,6 +129,18 @@ contract FixidityLibMock {
     }
 
     /**
+     * @dev Converts an int256 in the fixed point representation of this 
+     * library to a non decimal. All decimal digits will be truncated.
+     */
+    function fromFixed(int256 x)
+        public
+        pure
+        returns (int256)
+    {
+        return FixidityLib.fromFixed(x);
+    }
+
+    /**
      * @dev Converts two int256 representing a fraction to fixed point units,
      * equivalent to multiplying dividend and divisor by 10^digits().
      */
