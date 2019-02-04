@@ -179,7 +179,6 @@ contract Base is ERC20, ERC20Detailed {
      * @dev (C20) Returns the _originToken balance in the precision of
      * _destinationToken. Use the address of the MIXR contract to
      * convert to and from MIX.
-     * TODO: Is there an issue with the balance of the contract and the precision of the tokens?
      */
     function convertTokens(
         address _originToken, 
@@ -192,7 +191,7 @@ contract Base is ERC20, ERC20Detailed {
         return convertTokens(
             _originToken, 
             _destinationToken, 
-            IERC20(_originToken).balanceOf(address(this)));
+            IERC20(_originToken).balanceOf(address(_originToken)));
     }
 
     /**
