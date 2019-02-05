@@ -17,12 +17,17 @@ contract('Fees', (accounts) => {
     const owner = accounts[0];
     const governor = accounts[1];
     const user = accounts[2];
+    // eslint-disable-next-line camelcase
+    let fixed_1;
 
     before(async () => {
         mixr = await MIXR.deployed();
         fixidityLibMock = await FixidityLibMock.deployed();
         someERC20 = await SampleERC20.deployed();
         someOtherERC20 = await SampleOtherERC20.deployed();
+        // eslint-disable-next-line camelcase
+        fixed_1 = new BigNumber(await fixidityLibMock.fixed_1());
+
     });
 
     describe('proportion after deposit functionality', () => {
@@ -72,24 +77,40 @@ contract('Fees', (accounts) => {
             await someOtherERC20.transfer(user, amountToUser.toString(10), { from: governor });
         });
         it('proportionAfterDeposit(token,1) with an empty basket', async () => {
-            const valueToTransfer = new BigNumber(10).pow(18);
             const result = new BigNumber(
                 await mixr.proportionAfterDeposit(
                     someERC20.address,
-                    valueToTransfer.toString(10),
-                    {
-                        from: user,
-                    },
+                    1,
                 ),
             );
             result.should.be.bignumber
-                .equal(new BigNumber('1111111111111111100000000000000000000'));
+                .equal(new BigNumber(fixed_1));
         });
-        it('proportionAfterDeposit(x,1) with one token of x', async () => {
-            //
+        it('proportionAfterDeposit(x,1) with one wei of x already in the basket', async () => {
+            await someERC20.transfer(mixr.address, 1, {
+                from: governor,
+            });
+            const result = new BigNumber(
+                await mixr.proportionAfterDeposit(
+                    someERC20.address,
+                    1,
+                ),
+            );
+            result.should.be.bignumber
+                .equal(new BigNumber(fixed_1));
         });
-        it('proportionAfterDeposit(y,1) with one token of x', async () => {
-            //
+        it('proportionAfterDeposit(y,1) with one wei of x', async () => {
+            await someERC20.transfer(mixr.address, 1, {
+                from: governor,
+            });
+            const result = new BigNumber(
+                await mixr.proportionAfterDeposit(
+                    someOtherERC20.address,
+                    1,
+                ),
+            );
+            result.should.be.bignumber
+                .equal(new BigNumber(fixed_1).dividedBy(2));
         });
     });
 });

@@ -55,13 +55,13 @@ contract Fees is Governance {
      * Test proportionAfterDeposit(x,1) returns fixed_1
      * Test proportionAfterDeposit(y,1) returns fixed_1/2
      */
-    function proportionAfterDeposit(address _token, uint256 _amount)
+    function proportionAfterDeposit(address _token, uint256 _deposit)
         public
         view
         returns (int256)
     {
-        //assert(tokenBalance < FixidityLib.max_fixed_add());
         //assert(amount < FixidityLib.max_fixed_add());
+        //assert(tokenBalance < FixidityLib.max_fixed_add());
         int256 tokenBalance = FixidityLib.newFixed(
             // The command below returns the balance of _token with this.decimals precision
             convertTokens(_token, address(this)), 
@@ -69,22 +69,33 @@ contract Fees is Governance {
             // to convert to the library representation and be able to use the add function
             ERC20Detailed(address(this)).decimals()
         );
-        int256 amount = FixidityLib.newFixed(
-            convertTokensAmount(_token, address(this), _amount), 
+        int256 deposit = FixidityLib.newFixed(
+            convertTokensAmount(_token, address(this), _deposit), 
             ERC20Detailed(address(this)).decimals()
         );
-        tokenBalance = FixidityLib.add(
+        // Add the token balance to the amount to deposit, in fixidity units
+        int256 tokenBalanceAfterDeposit = FixidityLib.add(
             tokenBalance, 
-            amount
+            deposit
         );
+
+        // The amount to deposit needs to be added to the basket balance to avoid
+        // dividing by zero on an empty basket.
         
-        assert(tokenBalance < FixidityLib.max_fixed_div()); // Should I use require here?
-        int256 result = FixidityLib.divide(
-            tokenBalance,
-            FixidityLib.newFixed(
+        int256 basketBeforeDeposit = FixidityLib.newFixed(
                 safeCast(basketBalance()),
                 ERC20Detailed(address(this)).decimals()
-            )
+        );
+        assert(basketBeforeDeposit < FixidityLib.max_fixed_add());
+        int256 basketAfterDeposit = FixidityLib.add(
+            basketBeforeDeposit, 
+            deposit
+        );
+
+        assert(tokenBalanceAfterDeposit < FixidityLib.max_fixed_div()); // Should I use require here?
+        int256 result = FixidityLib.divide(
+            tokenBalanceAfterDeposit,
+            basketAfterDeposit
         );
         assert(result >= 0 && result <= FixidityLib.fixed_1());
         return result;
