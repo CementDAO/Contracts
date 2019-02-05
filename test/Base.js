@@ -67,6 +67,11 @@ contract('Base', (accounts) => {
     });
     describe('convertTokens', () => {
         before(async () => {
+            mixr = await MIXR.new();
+            await mixr.addGovernor(governor, {
+                from: owner,
+            });
+
             someERC20 = await SampleERC20.new(governor,
                 new BigNumber(10).pow(18).multipliedBy(100).toString(10),
                 18);
@@ -75,10 +80,58 @@ contract('Base', (accounts) => {
                 20);
 
             /**
-             * we probably need to send some tokens somewhere!
+             * approve tokens!
              */
+            await mixr.approveToken(someERC20.address, {
+                from: governor,
+            });
+            await mixr.approveToken(someOtherERC20.address, {
+                from: governor,
+            });
+
+            await mixr.setTokenTargetProportion(
+                someERC20.address,
+                new BigNumber(await fixidityLibMock.newFixedFraction(1, 4)).toString(10),
+                {
+                    from: governor,
+                },
+            );
+            await mixr.setTokenTargetProportion(
+                someOtherERC20.address,
+                new BigNumber(await fixidityLibMock.newFixedFraction(1, 4)).toString(10),
+                {
+                    from: governor,
+                },
+            );
+
+            /**
+             * give some to user for test purposes
+             */
+            await someERC20.transfer(user,
+                new BigNumber(10).pow(18).multipliedBy(90).toString(10), { from: governor });
+            await someOtherERC20.transfer(user,
+                new BigNumber(10).pow(20).multipliedBy(80).toString(10), { from: governor });
+
+            /**
+             * send some tokens
+             */
+            let amount = new BigNumber(1);
+            await someERC20.approve(mixr.address, amount.toString(10), {
+                from: user,
+            });
+            await mixr.depositToken(someERC20.address, amount.toString(10), {
+                from: user,
+            });
+
+            amount = new BigNumber(100);
+            await someOtherERC20.approve(mixr.address, amount.toString(10), {
+                from: user,
+            });
+            await mixr.depositToken(someOtherERC20.address, amount.toString(10), {
+                from: user,
+            });
         });
-        /* it('convertTokens(x, y)', async () => {
+        it('convertTokens(x, y)', async () => {
             const converted = new BigNumber(
                 await mixr.convertTokens(
                     someERC20.address,
@@ -95,7 +148,7 @@ contract('Base', (accounts) => {
                 ),
             );
             converted.should.be.bignumber.equal(1);
-        }); */
+        });
     });
     describe('basketBalance', () => {
         before(async () => {
