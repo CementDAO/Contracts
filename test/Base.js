@@ -44,7 +44,7 @@ contract('Base', (accounts) => {
             );
             converted.should.be.bignumber.equal(100);
         });
-        /* it('convertTokensAmount(y, x, 100)', async () => {
+        it('convertTokensAmount(y, x, 100)', async () => {
             const converted = new BigNumber(
                 await mixr.convertTokensAmount(
                     someOtherERC20.address,
@@ -63,7 +63,7 @@ contract('Base', (accounts) => {
                 ),
             );
             converted.should.be.bignumber.equal(1);
-        }); */
+        });
     });
     describe('convertTokens', () => {
         before(async () => {

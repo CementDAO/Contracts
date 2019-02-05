@@ -169,7 +169,7 @@ contract Base {
         }
         else {
             // assert(tokens.contains(_destinationToken))
-            destinationTokenDecimals = ERC20Detailed(_originToken).decimals();
+            destinationTokenDecimals = ERC20Detailed(_destinationToken).decimals();
         }
 
         return FixidityLib.convertFixed(
