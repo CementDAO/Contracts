@@ -84,7 +84,7 @@ contract Governance is Base, Ownable {
      * Test setTokenTargetProportions([FixidityLib.fixed_1(),0]) works for two approved tokens.
      */
     function setTokenTargetProportion(address _token, int256 _proportion)
-        public
+        private
         onlyGovernor()
     {
         TokenData memory token = tokens[_token];
@@ -103,6 +103,8 @@ contract Governance is Base, Ownable {
         uint256 nTokens = _tokens.length;
         uint256 nProportions = _proportions.length;
         require(nTokens == nProportions, "Invalid number of elements!");
+        // require that no element in _proportions is less than zero
+        // require sum of all elements in _proportions adds up to fixed_1 - "Target proportions must add up to 1."
         for(uint256 x = 0; x < nTokens; x += 1) {
             setTokenTargetProportion(_tokens[x], _proportions[x]);
         }
