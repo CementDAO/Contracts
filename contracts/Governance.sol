@@ -95,4 +95,16 @@ contract Governance is Base, Ownable {
         token.targetProportion = _proportion;
         tokens[_token] = token;
     }
+
+    function setTokensTargetProportion(address[] memory _tokens, int256[] memory _proportions)
+        public
+        onlyGovernor()
+    {
+        uint256 nTokens = _tokens.length;
+        uint256 nProportions = _proportions.length;
+        require(nTokens == nProportions, "Invalid number of elements!");
+        for(uint256 x = 0; x < nTokens; x += 1) {
+            setTokenTargetProportion(_tokens[x], _proportions[x]);
+        }
+    }
 }
