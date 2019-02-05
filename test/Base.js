@@ -192,8 +192,8 @@ contract('Base', (accounts) => {
             );
             converted.should.be.bignumber.equal(new BigNumber(10).pow(24).multipliedBy(3));
         });
-        it('Test basketBalance() = 2*(10**24) after removing 1 token of y type', async () => {
-            const amount = new BigNumber(10).pow(20).multipliedBy(1);
+        it('Test basketBalance() = 2*(10**24) after redeeming 1 MIX token for y tokens', async () => {
+            const amount = new BigNumber(10).pow(24).multipliedBy(1);
             await mixr.approve(mixr.address, amount.toString(10), {
                 from: user,
             });
@@ -206,8 +206,8 @@ contract('Base', (accounts) => {
             );
             converted.should.be.bignumber.equal(new BigNumber(10).pow(24).multipliedBy(2));
         });
-        it('Remove 2 tokens of x, we have an empty basket', async () => {
-            const amount = new BigNumber(10).pow(18).multipliedBy(2);
+        it('Redeem 2 MIX tokens for x, we have an empty basket', async () => {
+            const amount = new BigNumber(10).pow(24).multipliedBy(2);
             await mixr.approve(mixr.address, amount.toString(10), {
                 from: user,
             });
