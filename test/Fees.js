@@ -113,4 +113,72 @@ contract('Fees', (accounts) => {
                 .equal(new BigNumber(fixed_1).dividedBy(2));
         });
     });
+
+    describe('deviation after deposit functionality', () => {
+        beforeEach(async () => {
+            const amountToUser = new BigNumber(10).pow(18).multipliedBy(80);
+            mixr = await MIXR.new();
+            await mixr.addGovernor(governor, {
+                from: owner,
+            });
+
+            /**
+             * We will simulate that there's already some other token in the basket and we will
+             * deposit a new one.
+             */
+            someERC20 = await SampleERC20.new(governor,
+                new BigNumber(10).pow(18).multipliedBy(100).toString(10),
+                18);
+            await mixr.approveToken(someERC20.address, {
+                from: governor,
+            });
+            await mixr.setTokenTargetProportion(
+                someERC20.address,
+                new BigNumber(await fixidityLibMock.newFixed(1)).toString(10),
+                {
+                    from: governor,
+                },
+            );
+            await someERC20.transfer(user, amountToUser.toString(10), { from: governor });
+
+            /**
+             * token to deposit
+             */
+            someOtherERC20 = await SampleOtherERC20.new(governor,
+                new BigNumber(10).pow(18).multipliedBy(100).toString(10),
+                18);
+            await mixr.approveToken(someOtherERC20.address, {
+                from: governor,
+            });
+
+            await mixr.setTokenTargetProportion(
+                someOtherERC20.address,
+                new BigNumber(0).toString(10),
+                {
+                    from: governor,
+                },
+            );
+            await someOtherERC20.transfer(user, amountToUser.toString(10), { from: governor });
+        });
+
+        it('deviationAfterDeposit(x,1) with empty basket', async () => {
+            const result = new BigNumber(
+                await mixr.deviationAfterDeposit(someERC20.address, 1),
+            );
+            result.should.be.bignumber.equal(0);
+        });
+
+        it('deviationAfterDeposit(x,1) after introducing 1 token y', async () => {
+            const amountToTransfer = new BigNumber(10).pow(18);
+            await someOtherERC20.transfer(user, amountToTransfer.toString(10), { from: governor });
+            const result = new BigNumber(
+                await mixr.deviationAfterDeposit(someERC20.address, 1),
+            );
+            result.should.be.bignumber.equal(new BigNumber(-0.5));
+        });
+
+        it('deviationAfterDeposit(x,1) after setting token x targetProportion to sero', async () => {
+            //
+        });
+    });
 });
