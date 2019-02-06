@@ -111,6 +111,22 @@ contract('FixidityLibMock - newFixed', () => {
             );
             result.should.be.bignumber.equal(new BigNumber(10).pow(38));
         });
+        it('convertFixed(10**38,0,38)', async () => {
+            const result = new BigNumber(
+                await fixidityLibMock.convertFixed(
+                    new BigNumber(10).pow(38).toString(10), 0, 38,
+                ),
+            );
+            result.should.be.bignumber.equal(new BigNumber(10).pow(76));
+        });
+        it('convertFixed(-1*10**38,0,38)', async () => {
+            const result = new BigNumber(
+                await fixidityLibMock.convertFixed(
+                    new BigNumber(10).pow(38).multipliedBy(-1).toString(10), 0, 38,
+                ),
+            );
+            result.should.be.bignumber.equal(new BigNumber(10).pow(76).multipliedBy(-1));
+        });
         itShouldThrow(
             'convertFixed(max_int256,0,1)',
             async () => {
