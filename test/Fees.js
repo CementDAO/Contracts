@@ -125,8 +125,8 @@ contract('Fees', (accounts) => {
             result.should.be.bignumber
                 .equal(new BigNumber(fixed_1));
         });
-        it('proportionAfterDeposit(token,100000 tokens) with an empty basket', async () => {
-            const amountTokens = new BigNumber(10).pow(18).multipliedBy(100000);
+        it('proportionAfterDeposit(token,1000000 tokens) with an empty basket', async () => {
+            const amountTokens = new BigNumber(10).pow(24);
             const result = new BigNumber(
                 await mixr.proportionAfterDeposit(
                     someERC20.address,
@@ -136,8 +136,8 @@ contract('Fees', (accounts) => {
             result.should.be.bignumber
                 .equal(new BigNumber(fixed_1));
         });
-        it('proportionAfterDeposit(token,max_fixed_new/2 tokens) with an empty basket', async () => {
-            const amountTokens = max_fixed_add.dividedBy(new BigNumber(10).pow(18)).dp(0, 1);
+        it('proportionAfterDeposit(token,1000000000000 tokens) with an empty basket', async () => {
+            const amountTokens = new BigNumber(10).pow(30);
             const result = new BigNumber(
                 await mixr.proportionAfterDeposit(
                     someERC20.address,

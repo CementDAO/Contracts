@@ -79,7 +79,6 @@ contract Fees is Governance {
             tokenBalance, 
             deposit
         );
-
         // The amount to deposit needs to be added to the basket balance to avoid
         // dividing by zero on an empty basket.
         
@@ -92,8 +91,6 @@ contract Fees is Governance {
             basketBeforeDeposit, 
             deposit
         );
-
-        assert(tokenBalanceAfterDeposit < FixidityLib.max_fixed_div()); // Should I use require here?
         int256 result = FixidityLib.divide(
             tokenBalanceAfterDeposit,
             basketAfterDeposit

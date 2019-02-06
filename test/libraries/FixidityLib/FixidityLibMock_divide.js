@@ -77,6 +77,24 @@ contract('FixidityLibMock - divide', () => {
                 max_fixed_div.multipliedBy(fixed_1),
             );
         });
+        it('divide(10**38,10**38)', async () => {
+            const result = new BigNumber(
+                await fixidityLibMock.divide(
+                    new BigNumber(10).pow(38).toString(10),
+                    new BigNumber(10).pow(38).toString(10),
+                ),
+            );
+            result.should.be.bignumber.equal(fixed_1);
+        });
+        it('divide(10**41,10**41)', async () => {
+            const result = new BigNumber(
+                await fixidityLibMock.divide(
+                    new BigNumber(10).pow(76).toString(10),
+                    new BigNumber(10).pow(76).toString(10),
+                ),
+            );
+            result.should.be.bignumber.equal(fixed_1);
+        });
         itShouldThrow('divide(max_fixed_div()+1,1)', async () => {
             await fixidityLibMock.divide(
                 max_fixed_div.plus(1).toString(10),
