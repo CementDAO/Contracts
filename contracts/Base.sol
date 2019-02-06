@@ -5,6 +5,7 @@ import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./fixidity/FixidityLib.sol";
+import "./Utils.sol";
 
 /**
  * @title Base contract.
@@ -173,7 +174,7 @@ contract Base {
         }
 
         return FixidityLib.convertFixed(
-            safeCast(_amount), 
+            Utils.safeCast(_amount), 
             originTokenDecimals, 
             destinationTokenDecimals
         );
@@ -251,18 +252,5 @@ contract Base {
         assert(balance >= 0);
         // We convert back from library precision to basket precision and to uint
         return uint256(FixidityLib.fromFixed(balance, ERC20Detailed(address(this)).decimals()));
-    }
-
-    /**
-     * @dev (C20) Cast safely from uint256 (token balances) to int256 (proportions and fees)
-     */
-    function safeCast(uint256 x) 
-        public 
-        pure 
-        returns(int256)
-    {
-        assert(x >= 0);
-        assert(x <= 57896044618658097711785492504343953926634992332820282019728792003956564819967); 
-        return int256(x);
     } 
 }

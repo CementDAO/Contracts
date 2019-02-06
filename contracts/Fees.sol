@@ -6,6 +6,7 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./fixidity/FixidityLib.sol";
 import "./fixidity/LogarithmLib.sol";
 import "./Governance.sol";
+import "./Utils.sol";
 
 
 /**
@@ -83,7 +84,7 @@ contract Fees is Governance {
         // dividing by zero on an empty basket.
         
         int256 basketBeforeDeposit = FixidityLib.newFixed(
-                safeCast(basketBalance()),
+                Utils.safeCast(basketBalance()),
                 ERC20Detailed(address(this)).decimals()
         );
         assert(basketBeforeDeposit < FixidityLib.max_fixed_add());

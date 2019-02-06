@@ -1,8 +1,9 @@
 pragma solidity ^0.5.0;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
-import "./Base.sol";
 import "./fixidity/FixidityLib.sol";
+import "./Base.sol";
+import "./Utils.sol";
 
 
 /**
@@ -83,19 +84,6 @@ contract Governance is Base, Ownable {
      * Test setTokenTargetProportions([FixidityLib.fixed_1()/2,FixidityLib.fixed_1()/2]) works for two approved tokens.
      * Test setTokenTargetProportions([FixidityLib.fixed_1(),0]) works for two approved tokens.
      */
-    function setTokenTargetProportion(address _token, int256 _proportion)
-        private
-        onlyGovernor()
-    {
-        TokenData memory token = tokens[_token];
-        require(
-            token.approved == true,
-            "The given token isn't listed as accepted."
-        );
-        token.targetProportion = _proportion;
-        tokens[_token] = token;
-    }
-
     function setTokensTargetProportion(address[] memory _tokens, int256[] memory _proportions)
         public
         onlyGovernor()
@@ -103,10 +91,22 @@ contract Governance is Base, Ownable {
         uint256 nTokens = _tokens.length;
         uint256 nProportions = _proportions.length;
         require(nTokens == nProportions, "Invalid number of elements!");
-        // require that no element in _proportions is less than zero
-        // require sum of all elements in _proportions adds up to fixed_1 - "Target proportions must add up to 1."
+        /* require(
+            Utils.arraySum(_proportions) == FixidityLib.fixed_1(),
+            "Invalid total of proportions."
+        ); */
         for(uint256 x = 0; x < nTokens; x += 1) {
-            setTokenTargetProportion(_tokens[x], _proportions[x]);
+            TokenData memory token = tokens[_tokens[x]];
+            /* require(
+                _proportions[x] > 0,
+                "Invalid proportion."
+            ); */
+            require(
+                token.approved == true,
+                "The given token isn't listed as accepted."
+            );
+            token.targetProportion = _proportions[x];
+            tokens[_tokens[x]] = token;
         }
     }
 }
