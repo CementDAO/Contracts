@@ -89,16 +89,16 @@ contract('Base', (accounts) => {
                 from: governor,
             });
 
-            await mixr.setTokenTargetProportion(
-                someERC20.address,
-                new BigNumber(await fixidityLibMock.newFixedFraction(1, 4)).toString(10),
+            await mixr.setTokensTargetProportion(
+                [someERC20.address],
+                [new BigNumber(await fixidityLibMock.newFixedFraction(1, 4)).toString(10)],
                 {
                     from: governor,
                 },
             );
-            await mixr.setTokenTargetProportion(
-                someOtherERC20.address,
-                new BigNumber(await fixidityLibMock.newFixedFraction(1, 4)).toString(10),
+            await mixr.setTokensTargetProportion(
+                [someOtherERC20.address],
+                [new BigNumber(await fixidityLibMock.newFixedFraction(1, 4)).toString(10)],
                 {
                     from: governor,
                 },
@@ -174,16 +174,16 @@ contract('Base', (accounts) => {
                 from: governor,
             });
 
-            await mixr.setTokenTargetProportion(
-                someERC20.address,
-                new BigNumber(await fixidityLibMock.newFixedFraction(1, 4)).toString(10),
+            await mixr.setTokensTargetProportion(
+                [someERC20.address],
+                [new BigNumber(await fixidityLibMock.newFixedFraction(1, 4)).toString(10)],
                 {
                     from: governor,
                 },
             );
-            await mixr.setTokenTargetProportion(
-                someOtherERC20.address,
-                new BigNumber(await fixidityLibMock.newFixedFraction(1, 4)).toString(10),
+            await mixr.setTokensTargetProportion(
+                [someOtherERC20.address],
+                [new BigNumber(await fixidityLibMock.newFixedFraction(1, 4)).toString(10)],
                 {
                     from: governor,
                 },

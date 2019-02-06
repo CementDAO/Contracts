@@ -109,44 +109,6 @@ contract('MIXR governance', (accounts) => {
             await mixr.addGovernor(governor, {
                 from: owner,
             });
-            await mixr.approveToken(someERC20.address, {
-                from: governor,
-            });
-        });
-
-        itShouldThrow(
-            'forbids to perform for non-accepted tokens',
-            async () => {
-                await mixr.setTokenTargetProportion(someERC721.address, 1, {
-                    from: governor,
-                });
-            },
-            'The given token isn\'t listed as accepted.',
-        );
-
-        itShouldThrow(
-            'forbids to perform for non-governors',
-            async () => {
-                await mixr.setTokenTargetProportion(someERC20.address, 1, {
-                    from: user,
-                });
-            },
-            'Message sender isn\'t part of the governance whitelist.',
-        );
-
-        it('allows a governor to set a proportion for an approved token', async () => {
-            await mixr.setTokenTargetProportion(someERC20.address, 1, {
-                from: governor,
-            });
-        });
-    });
-
-    describe('set tokens target proportion functionality', async () => {
-        beforeEach(async () => {
-            mixr = await MIXR.new();
-            await mixr.addGovernor(governor, {
-                from: owner,
-            });
 
             someERC20 = await SampleERC20.new(governor,
                 new BigNumber(10).pow(18).multipliedBy(100).toString(10),
@@ -161,6 +123,56 @@ contract('MIXR governance', (accounts) => {
             await mixr.approveToken(someOtherERC20.address, {
                 from: governor,
             });
+        });
+
+        itShouldThrow(
+            'forbids to perform for non-accepted tokens',
+            async () => {
+                const tokensArray = [someERC721.address];
+                const proportionArray = [
+                    new BigNumber(await fixidityLibMock.newFixed(1)).toString(10),
+                ];
+                await mixr.setTokensTargetProportion(
+                    tokensArray,
+                    proportionArray,
+                    {
+                        from: governor,
+                    },
+                );
+            },
+            'The given token isn\'t listed as accepted.',
+        );
+
+        itShouldThrow(
+            'forbids to perform for non-governors',
+            async () => {
+                const tokensArray = [someERC20.address];
+                const proportionArray = [
+                    new BigNumber(await fixidityLibMock.newFixed(1)).toString(10),
+                ];
+                await mixr.setTokensTargetProportion(
+                    tokensArray,
+                    proportionArray,
+                    {
+                        from: user,
+                    },
+                );
+            },
+            'Message sender isn\'t part of the governance whitelist.',
+        );
+
+        it('allows a governor to set a proportion for an approved token', async () => {
+            const tokensArray = [someERC20.address];
+            const proportionArray = [
+                new BigNumber(await fixidityLibMock.newFixed(1)).toString(10),
+            ];
+            await mixr.setTokensTargetProportion(
+                tokensArray,
+                proportionArray,
+                {
+                    from: governor,
+                },
+            );
         });
 
         it('allows to send valid information', async () => {
