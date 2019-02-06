@@ -91,16 +91,12 @@ contract Governance is Base, Ownable {
         uint256 nTokens = _tokens.length;
         uint256 nProportions = _proportions.length;
         require(nTokens == nProportions, "Invalid number of elements!");
-        /* require(
-            Utils.arraySum(_proportions) == FixidityLib.fixed_1(),
-            "Invalid total of proportions."
-        ); */
         for(uint256 x = 0; x < nTokens; x += 1) {
             TokenData memory token = tokens[_tokens[x]];
-            /* require(
-                _proportions[x] > 0,
+            require(
+                _proportions[x] >= 0 && _proportions[x] <= FixidityLib.fixed_1(),
                 "Invalid proportion."
-            ); */
+            );
             require(
                 token.approved == true,
                 "The given token isn't listed as accepted."
@@ -108,5 +104,28 @@ contract Governance is Base, Ownable {
             token.targetProportion = _proportions[x];
             tokens[_tokens[x]] = token;
         }
+        require(
+            areNewProportionsValid() == true,
+            "Invalid total of proportions."
+        );
+    }
+
+    /**
+     * @dev sum the new proportions
+     */
+    function areNewProportionsValid()
+        private
+        view
+        returns(bool)
+    {
+        int256 newProportions = 0;
+        uint256 nExistingTokens = tokensList.length;
+        for(uint256 x = 0; x < nExistingTokens; x += 1) {
+            TokenData memory token = tokens[tokensList[x]];
+            if (token.approved == true) {
+                newProportions = newProportions + token.targetProportion;
+            }
+        }
+        return (newProportions == FixidityLib.fixed_1());
     }
 }
