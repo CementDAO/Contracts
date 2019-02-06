@@ -19,6 +19,8 @@ contract('Fees', (accounts) => {
     const user = accounts[2];
     // eslint-disable-next-line camelcase
     let fixed_1;
+    // eslint-disable-next-line camelcase
+    let max_fixed_new;
 
     before(async () => {
         mixr = await MIXR.deployed();
@@ -27,6 +29,8 @@ contract('Fees', (accounts) => {
         someOtherERC20 = await SampleOtherERC20.deployed();
         // eslint-disable-next-line camelcase
         fixed_1 = new BigNumber(await fixidityLibMock.fixed_1());
+        // eslint-disable-next-line camelcase
+        max_fixed_new = new BigNumber(await fixidityLibMock.max_fixed_new());
     });
 
     describe('proportion after deposit functionality', () => {
@@ -109,6 +113,39 @@ contract('Fees', (accounts) => {
             );
             result.should.be.bignumber
                 .equal(new BigNumber(fixed_1).dividedBy(2));
+        });
+        it('proportionAfterDeposit(token,100 tokens) with an empty basket', async () => {
+            const amountTokens = new BigNumber(10).pow(18).multipliedBy(100);
+            const result = new BigNumber(
+                await mixr.proportionAfterDeposit(
+                    someERC20.address,
+                    amountTokens.toString(10),
+                ),
+            );
+            result.should.be.bignumber
+                .equal(new BigNumber(fixed_1));
+        });
+        it('proportionAfterDeposit(token,100000 tokens) with an empty basket', async () => {
+            const amountTokens = new BigNumber(10).pow(18).multipliedBy(100000);
+            const result = new BigNumber(
+                await mixr.proportionAfterDeposit(
+                    someERC20.address,
+                    amountTokens.toString(10),
+                ),
+            );
+            result.should.be.bignumber
+                .equal(new BigNumber(fixed_1));
+        });
+        it('proportionAfterDeposit(token,max_fixed_new/2 tokens) with an empty basket', async () => {
+            const amountTokens = max_fixed_new.dividedBy(2);
+            const result = new BigNumber(
+                await mixr.proportionAfterDeposit(
+                    someERC20.address,
+                    amountTokens.toString(10),
+                ),
+            );
+            result.should.be.bignumber
+                .equal(new BigNumber(fixed_1));
         });
     });
 
