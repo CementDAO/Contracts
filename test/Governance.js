@@ -179,7 +179,7 @@ contract('MIXR governance', (accounts) => {
             const tokensArray = [someERC20.address, someOtherERC20.address];
             const proportionArray = [
                 new BigNumber(await fixidityLibMock.newFixedFraction(1, 2)).toString(10),
-                new BigNumber(await fixidityLibMock.newFixedFraction(1, 4)).toString(10),
+                new BigNumber(await fixidityLibMock.newFixedFraction(1, 2)).toString(10),
             ];
             await mixr.setTokensTargetProportion(
                 tokensArray,

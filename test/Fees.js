@@ -47,13 +47,6 @@ contract('Fees', (accounts) => {
             await mixr.approveToken(someERC20.address, {
                 from: governor,
             });
-            await mixr.setTokensTargetProportion(
-                [someERC20.address],
-                [new BigNumber(await fixidityLibMock.newFixedFraction(1, 4)).toString(10)],
-                {
-                    from: governor,
-                },
-            );
             await someERC20.transfer(user, amountToUser.toString(10), { from: governor });
 
             /**
@@ -67,8 +60,14 @@ contract('Fees', (accounts) => {
             });
 
             await mixr.setTokensTargetProportion(
-                [someOtherERC20.address],
-                [new BigNumber(await fixidityLibMock.newFixedFraction(1, 2)).toString(10)],
+                [
+                    someERC20.address,
+                    someOtherERC20.address,
+                ],
+                [
+                    new BigNumber(await fixidityLibMock.newFixedFraction(1, 2)).toString(10),
+                    new BigNumber(await fixidityLibMock.newFixedFraction(1, 2)).toString(10),
+                ],
                 {
                     from: governor,
                 },
@@ -146,13 +145,6 @@ contract('Fees', (accounts) => {
                 },
             );
             await someERC20.transfer(user, amountToUser.toString(10), { from: governor });
-            await mixr.setTokensTargetProportion(
-                [someOtherERC20.address],
-                [0],
-                {
-                    from: governor,
-                },
-            );
             await someOtherERC20.transfer(user, amountToUser.toString(10), { from: governor });
         });
 
@@ -178,15 +170,14 @@ contract('Fees', (accounts) => {
 
         it('deviationAfterDeposit(x,1) after setting token x targetProportion to zero', async () => {
             await mixr.setTokensTargetProportion(
-                [someERC20.address],
-                [0],
-                {
-                    from: governor,
-                },
-            );
-            await mixr.setTokensTargetProportion(
-                [someOtherERC20.address],
-                [fixed_1.toString(10)],
+                [
+                    someERC20.address,
+                    someOtherERC20.address,
+                ],
+                [
+                    0,
+                    fixed_1.toString(10),
+                ],
                 {
                     from: governor,
                 },
