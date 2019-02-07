@@ -153,6 +153,40 @@ contract('Fees', (accounts) => {
             result.should.be.bignumber
                 .equal(new BigNumber(fixed_1));
         });
+        it('proportionAfterTransaction(x,1, REDEMPTION()) with two wei of x and three wei of y in the basket', async () => {
+            await someERC20.transfer(mixr.address, 2, {
+                from: governor,
+            });
+            await someOtherERC20.transfer(mixr.address, 3, {
+                from: governor,
+            });
+            const result = new BigNumber(
+                await mixr.proportionAfterTransaction(
+                    someERC20.address,
+                    1,
+                    REDEMPTION.toString(10),
+                ),
+            );
+            result.should.be.bignumber
+                .equal(new BigNumber(fixed_1).dividedBy(2).dp(0, 1));
+        });
+        it('proportionAfterTransaction(x,2, REDEMPTION()) with two wei each of x and y in the basket', async () => {
+            await someERC20.transfer(mixr.address, 2, {
+                from: governor,
+            });
+            await someOtherERC20.transfer(mixr.address, 2, {
+                from: governor,
+            });
+            const result = new BigNumber(
+                await mixr.proportionAfterTransaction(
+                    someERC20.address,
+                    2,
+                    REDEMPTION.toString(10),
+                ),
+            );
+            result.should.be.bignumber
+                .equal(0);
+        });
     });
 
     describe('deviation after transaction functionality', () => {

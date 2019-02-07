@@ -73,17 +73,18 @@ contract Fees is Governance {
 
     /**
      * @dev (C20) Returns what would be the proportion of a token in the basket
-     * after adding a number of tokens. This function takes the amount of tokens
-     * will throw if the amount of tokens deposited is greater than
-     * FixidityLib.max_fixed_add() or the token balance goes above 
-     * FixidityLib.max_fixed_div().
+     * after depositing or redeeming a number of tokens. If adding, this 
+     * function will throw if the amount of tokens deposited, the current token
+     * balance or the basket balance are greater than FixidityLib.max_fixed_add().
      * This function returns values in the [0,fixed_1()] range.
      * Testing: With an empty basket.
      * Test proportionAfterTransaction(token,1,DEPOSIT) returns fixed_1
-     * Assuming tokens x and y have the same number of decimals
      * Introduce 1 token of x into the basket.
      * Test proportionAfterTransaction(x,1,DEPOSIT) returns fixed_1
      * Test proportionAfterTransaction(y,1,DEPOSIT) returns fixed_1/2
+     * Testing: With a basket containing 2 wei each of x and y.
+     * Test proportionAfterTransaction(x,1,REDEMPTION) returns fixed_1/2
+     * Test proportionAfterTransaction(x,2,REDEMPTION) returns 0
      */
     function proportionAfterTransaction(
         address _token, 
@@ -110,12 +111,15 @@ contract Fees is Governance {
         // Add the token balance to the amount to deposit, in fixidity units
         int256 tokenBalanceAfterTransaction;
         if (_transactionType == DEPOSIT()) {
+            assert(tokenBalance < FixidityLib.max_fixed_add());
+            assert(deposit < FixidityLib.max_fixed_add());
             tokenBalanceAfterTransaction = FixidityLib.add(
                 tokenBalance, 
                 deposit
             );
         }
         else if (_transactionType == REDEMPTION()) {
+            assert(deposit <= tokenBalance);
             tokenBalanceAfterTransaction = FixidityLib.subtract(
                 tokenBalance, 
                 deposit
@@ -129,15 +133,18 @@ contract Fees is Governance {
                 Utils.safeCast(basketBalance()),
                 ERC20Detailed(address(this)).decimals()
         );
-        assert(basketBeforeTransaction < FixidityLib.max_fixed_add());
+        
         int256 basketAfterTransaction;
         if (_transactionType == DEPOSIT()) {
+            assert(basketBeforeTransaction < FixidityLib.max_fixed_add());
+            assert(deposit < FixidityLib.max_fixed_add());
             basketAfterTransaction = FixidityLib.add(
                 basketBeforeTransaction, 
                 deposit
             );
         }
         else if (_transactionType == REDEMPTION()) {
+            assert(deposit <= basketBeforeTransaction);
             basketAfterTransaction = FixidityLib.subtract(
                 basketBeforeTransaction, 
                 deposit
