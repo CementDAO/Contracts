@@ -27,6 +27,14 @@ contract Fees is Governance {
      * @dev Accepted transaction type for the proportion, deviation and fee
      * calculation functions.
      */
+    function TRANSFER() public pure returns(int8) {
+        return 0;
+    }
+
+    /**
+     * @dev Accepted transaction type for the proportion, deviation and fee
+     * calculation functions.
+     */
     function DEPOSIT() public pure returns(int8) {
         return 1;
     }
@@ -56,6 +64,7 @@ contract Fees is Governance {
         require(_fee >= minimumFee, "Fees can't be set to less than the minimum fee.");
         TokenData memory token = tokens[_token];
         if (_transactionType == DEPOSIT()) token.depositFee = _fee;
+        else if (_transactionType == TRANSFER()) token.transferFee = _fee;
         else if (_transactionType == REDEMPTION()) token.redemptionFee = _fee;
         else revert("Transaction type not accepted.");
         
