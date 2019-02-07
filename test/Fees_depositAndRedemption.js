@@ -77,18 +77,18 @@ contract('Fees', (accounts) => {
             await someOtherERC20.transfer(user, amountToUser.toString(10), { from: governor });
         });
         /*
-        * Test deviation = -0.4, proportion = 0.5, base = fixed_1()/10
-        *      proportionAfterDeposit = 0.1, proportion = 0.5
-        *      Set proportion to 0.5 for token x. Set basket to contain just 90 tokens of token y. Call depositFee(x,10);
-        * Test deviation = -0.39, proportion = 0.5, base = fixed_1()/10
-        *      proportionAfterDeposit = 0.11, proportion = 0.5
-        *      Set proportion to 0.5 for token x. Set basket to contain just 89 tokens of token y. Call depositFee(x,11);
-        * Test deviation = 0.39, proportion = 0.5, base = fixed_1()/10
-        *      proportionAfterDeposit = 0.89, proportion = 0.5
-        *      Set proportion to 0.5 for token x. Set basket to contain just 11 tokens of token y. Call depositFee(x,89);
-        * Test deviation = 0.4, proportion = 0.5, base = fixed_1()/10
-        *      proportionAfterDeposit = 0.9, proportion = 0.5
-        *      Set proportion to 0.5 for token x. Set basket to contain just 10 tokens of token y. Call depositFee(x,90);
+        * Set proportion x = fixed_1()/2
+        * Set proportion y = fixed_1()/2
+        * Set scalingFactor = fixed_1()/2
+        * Set token.depositFee(x) = fixed_1()/10
+        * Set token.depositFee(y) = fixed_1()/10
+        * Set basket to contain 0 tokens of x and 90 tokens of y. Call depositFee(x,10). 
+        * Results: Proportion 0.1; Deviation -0.4; Fee 0.0681588951206413*fixed_1()
+        * Set basket to contain 0 tokens of x and 89 tokens of y. Call depositFee(x,11).
+        * Results: Proportion 0.11; Deviation -0.39; Fee 0.06699740308471755*fixed_1()
+        * Set basket to contain 0 tokens of x and 11 tokens of y. Call depositFee(x,89).
+        * Results: Proportion 0.89; Deviation 0.39; Fee 0.13300259691528246*fixed_1()
+        * Set basket to contain 0 tokens of x and 10 tokens of y. Call depositFee(x,90).
         */
         /* it('depositFee(x,90) with 10 y in basket', async () => {
             const amountInBasket = new BigNumber(10).pow(18).multipliedBy(10);
