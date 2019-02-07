@@ -99,6 +99,14 @@ contract FixidityLibMock {
     }
 
     /**
+     * @dev Maximum value that can be safely used as a divisor.
+     * Hardcoded to 36 digits.
+     */
+    function max_fixed_divisor() public pure returns(int256) {
+        return FixidityLib.max_fixed_divisor();
+    }
+
+    /**
      * @dev Maximum value that can be safely used as an addition operator.
      * max_int256() / 2
      * Hardcoded to 36 digits.
