@@ -56,6 +56,18 @@ contract Base {
          * FixidityLib.max_fixed_mul() range.
          */
         int256 depositFee;
+        /**
+         * @dev (C20) The base redemption fees for each token in the basket using 
+         * fixidity units in a FixidityLib.fixed_1()/1000000 to 
+         * FixidityLib.max_fixed_mul() range.
+         */
+        int256 redemptionFee;
+        /**
+         * @dev (C20) The base transfer fees for each token in the basket using 
+         * fixidity units in a FixidityLib.fixed_1()/1000000 to 
+         * FixidityLib.max_fixed_mul() range.
+         */
+        int256 transferFee;
     }
 
     mapping(address => TokenData) internal tokens;
