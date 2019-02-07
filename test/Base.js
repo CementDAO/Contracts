@@ -17,6 +17,7 @@ contract('Base', (accounts) => {
     const owner = accounts[0];
     const governor = accounts[1];
     const user = accounts[2];
+    const walletFee = accounts[3];
 
     before(async () => {
         mixr = await MIXR.deployed();
@@ -115,20 +116,9 @@ contract('Base', (accounts) => {
              * send some tokens
              */
             let amount = new BigNumber(1);
-            await someERC20.approve(mixr.address, amount.toString(10), {
-                from: user,
-            });
-            await mixr.depositToken(someERC20.address, amount.toString(10), {
-                from: user,
-            });
-
+            await someERC20.transfer(mixr.address, amount.toString(10), { from: user });
             amount = new BigNumber(100);
-            await someOtherERC20.approve(mixr.address, amount.toString(10), {
-                from: user,
-            });
-            await mixr.depositToken(someOtherERC20.address, amount.toString(10), {
-                from: user,
-            });
+            await someOtherERC20.transfer(mixr.address, amount.toString(10), { from: user });
         });
         it('convertTokens(x, y)', async () => {
             const converted = new BigNumber(
@@ -194,6 +184,8 @@ contract('Base', (accounts) => {
                 new BigNumber(10).pow(18).multipliedBy(90).toString(10), { from: governor });
             await someOtherERC20.transfer(user,
                 new BigNumber(10).pow(20).multipliedBy(80).toString(10), { from: governor });
+
+            await mixr.setAccountForFees(walletFee, { from: governor });
         });
         it('basketBalance() = 0 before introducing any tokens', async () => {
             const converted = new BigNumber(
@@ -294,11 +286,11 @@ contract('Base', (accounts) => {
                 from: user,
             });
 
-            const converted = new BigNumber(
+            const result = new BigNumber(
                 await mixr.basketBalance(),
             );
-            converted.should.be.bignumber.equal(
-                new BigNumber(10).pow(4).plus(new BigNumber(10).pow(6))
+            result.should.be.bignumber.equal(
+                new BigNumber(10).pow(4).plus(new BigNumber(10).pow(6)),
             );
         });
     });

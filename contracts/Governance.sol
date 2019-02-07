@@ -73,6 +73,18 @@ contract Governance is Base, Ownable {
         tokensList.push(_token);
     }
 
+    function setAccountForFees(address _wallet)
+        public
+        onlyGovernor()
+    {
+        require(_wallet != address(0), "Invalid wallet address!");
+        /**
+         * TODO: we should also verify that it's not a contract address.
+         * Maybe we also want multiple verification.
+         */
+        accountForFees = _wallet;
+    }
+
     /**
      * @dev (C4) This function sets a proportion for a token in the basket,
      * allowing this smart contract to receive them. This proportions are

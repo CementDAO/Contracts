@@ -40,6 +40,8 @@ contract MIXR is Fees, ERC20, ERC20Detailed {
         _mint(address(this), uint256(basketWei));
         IERC20(address(this)).approve(address(this), uint256(basketWei));
         IERC20(address(this)).transferFrom(address(this), msg.sender, uint256(basketWei));
+        // int256 fee = transactionFee(_token, uint256(basketWei), DEPOSIT());
+        // IERC20(address(this)).transferFrom(msg.sender, accountForFees, uint256(fee));
     }
 
     /**

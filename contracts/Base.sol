@@ -83,6 +83,11 @@ contract Base {
      * fees with any of the stablecoins on the basket list
      */
     mapping(address => address) internal payFeesWith;
+    
+    /**
+     * @dev This is also part of (C13)
+     */
+    address internal accountForFees;
 
     /**
      * @dev This is one of the possible solutions allowing to check
