@@ -119,8 +119,8 @@ contract('Fees', (accounts) => {
             const result = new BigNumber(
                 await mixr.transactionFee(someERC20.address, amountToTransfer.toString(10), DEPOSIT.toString(10)),
             );
-            result.should.be.bignumber.gte(new BigNumber(68158895120641200000000000000000000));
-            result.should.be.bignumber.lte(new BigNumber(68158895120641300000000000000000000));
+            result.should.be.bignumber.gte(new BigNumber(68158895120641200000000));
+            result.should.be.bignumber.lte(new BigNumber(68158895120641300000000));
         });
         
         it('transactionFee(x,11) with 89 y in basket', async () => {
@@ -130,8 +130,8 @@ contract('Fees', (accounts) => {
             const result = new BigNumber(
                 await mixr.transactionFee(someERC20.address, amountToTransfer.toString(10), DEPOSIT.toString(10)),
             );
-            result.should.be.bignumber.gte(new BigNumber(66997403084717500000000000000000000));
-            result.should.be.bignumber.lte(new BigNumber(66997403084717600000000000000000000));
+            result.should.be.bignumber.gte(new BigNumber(66997403084717500000000));
+            result.should.be.bignumber.lte(new BigNumber(66997403084717600000000));
         });
 
         it('transactionFee(x,89) with 11 y in basket', async () => {
@@ -141,8 +141,8 @@ contract('Fees', (accounts) => {
             const result = new BigNumber(
                 await mixr.transactionFee(someERC20.address, amountToTransfer.toString(10), DEPOSIT.toString(10)),
             );
-            result.should.be.bignumber.gte(new BigNumber(133002596915282450000000000000000000));
-            result.should.be.bignumber.lte(new BigNumber(133002596915282460000000000000000000));
+            result.should.be.bignumber.gte(new BigNumber(133002596915282450000000));
+            result.should.be.bignumber.lte(new BigNumber(133002596915282460000000));
         });
         itShouldThrow('transactionFee(x,90) with 10 y in basket', async () => {
             const amountInBasket = new BigNumber(10).pow(18).multipliedBy(10);

@@ -282,7 +282,15 @@ contract Fees is Governance {
 	    else revert(
             "Token not accepted, basket has too many."
         );
-        if (fee > minimumFee) return fee;
-        else return minimumFee;
+        if (fee > minimumFee) 
+            return FixidityLib.fromFixed(
+                fee,
+                ERC20Detailed(address(this)).decimals()
+            );
+        else 
+            return FixidityLib.fromFixed(
+                minimumFee,
+                ERC20Detailed(address(this)).decimals()
+            );
     }
 }
