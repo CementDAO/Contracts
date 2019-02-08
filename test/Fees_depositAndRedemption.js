@@ -5,6 +5,7 @@ const SampleOtherERC20 = artifacts.require('./test/SampleOtherERC20.sol');
 
 const BigNumber = require('bignumber.js');
 const chai = require('chai');
+const { itShouldThrow } = require('./utils');
 
 // use default BigNumber
 chai.use(require('chai-bignumber')()).should();
@@ -49,34 +50,49 @@ contract('Fees', (accounts) => {
              * deposit a new one.
              */
             someERC20 = await SampleERC20.new(governor,
-                new BigNumber(10).pow(18).multipliedBy(100).toString(10),
+                new BigNumber(10).pow(18).multipliedBy(2000).toString(10),
                 18);
             await mixr.approveToken(someERC20.address, {
                 from: governor,
             });
             someOtherERC20 = await SampleOtherERC20.new(governor,
-                new BigNumber(10).pow(18).multipliedBy(100).toString(10),
+                new BigNumber(10).pow(18).multipliedBy(2000).toString(10),
                 18);
             await mixr.approveToken(someOtherERC20.address, {
                 from: governor,
             });
 
-            /* await mixr.setTokenTargetProportion(
-                someERC20.address,
-                fixed_1.dividedBy(2).toString(10),
+            await mixr.setTokensTargetProportion(
+                [
+                    someERC20.address,
+                    someOtherERC20.address,
+                ],
+                [
+                    new BigNumber(await fixidityLibMock.newFixedFraction(1, 2)).toString(10),
+                    new BigNumber(await fixidityLibMock.newFixedFraction(1, 2)).toString(10),
+                ],
                 {
                     from: governor,
                 },
             );
-            await mixr.setTokenTargetProportion(
-                someOtherERC20.address,
-                fixed_1.dividedBy(2).toString(10),
+
+            await mixr.setTransactionFee(
+                someERC20.address,
+                new BigNumber(await fixidityLibMock.newFixedFraction(1, 10)).toString(10),
+                DEPOSIT.toString(10),
                 {
                     from: governor,
                 },
-            ); */
-
-            const amountToUser = new BigNumber(10).pow(18).multipliedBy(90);
+            );
+            await mixr.setTransactionFee(
+                someOtherERC20.address,
+                new BigNumber(await fixidityLibMock.newFixedFraction(1, 10)).toString(10),
+                DEPOSIT.toString(10),
+                {
+                    from: governor,
+                },
+            );
+            const amountToUser = new BigNumber(10).pow(18).multipliedBy(1000);
             await someERC20.transfer(user, amountToUser.toString(10), { from: governor });
             await someOtherERC20.transfer(user, amountToUser.toString(10), { from: governor });
         });
@@ -93,15 +109,29 @@ contract('Fees', (accounts) => {
         * Set basket to contain 0 tokens of x and 11 tokens of y. Call transactionFee(x,89,DEPOSIT)
         * Results: Proportion 0.89; Deviation 0.39; Fee 0.13300259691528246*fixed_1()
         * Set basket to contain 0 tokens of x and 10 tokens of y. Call transactionFee(x,90,DEPOSIT)
+        * Results: Revert
         */
-        /* it('transactionFee(x,90) with 10 y in basket', async () => {
-            const amountInBasket = new BigNumber(10).pow(18).multipliedBy(10);
-            const amountToTransfer = new BigNumber(10).pow(18).multipliedBy(90);
-            await someOtherERC20.transfer(mixr.address, amountInBasket, { from: governor });
+
+        it('transactionFee(x,10) with 90 y in basket', async () => {
+            const amountInBasket = new BigNumber(10).pow(18).multipliedBy(90);
+            const amountToTransfer = new BigNumber(10).pow(18).multipliedBy(10);
+            await someOtherERC20.transfer(mixr.address, amountInBasket.toString(10), { from: governor });
             const result = new BigNumber(
-                await mixr.transactionFee(someERC20.address, amountToTransfer.toString(10),DEPOSIT.toString(10)),
+                await mixr.transactionFee(someERC20.address, amountToTransfer.toString(10), DEPOSIT.toString(10)),
             );
-            result.should.be.bignumber.equal(fixed_1).dividedBy(10**6);
+            result.should.be.bignumber.gte(new BigNumber(68158895120641200000000000000000000));
+            result.should.be.bignumber.lte(new BigNumber(68158895120641300000000000000000000));
+        });
+        
+        it('transactionFee(x,11) with 89 y in basket', async () => {
+            const amountInBasket = new BigNumber(10).pow(18).multipliedBy(89);
+            const amountToTransfer = new BigNumber(10).pow(18).multipliedBy(11);
+            await someOtherERC20.transfer(mixr.address, amountInBasket.toString(10), { from: governor });
+            const result = new BigNumber(
+                await mixr.transactionFee(someERC20.address, amountToTransfer.toString(10), DEPOSIT.toString(10)),
+            );
+            result.should.be.bignumber.gte(new BigNumber(66997403084717500000000000000000000));
+            result.should.be.bignumber.lte(new BigNumber(66997403084717600000000000000000000));
         });
 
         it('transactionFee(x,89) with 11 y in basket', async () => {
@@ -109,29 +139,18 @@ contract('Fees', (accounts) => {
             const amountToTransfer = new BigNumber(10).pow(18).multipliedBy(89);
             await someOtherERC20.transfer(mixr.address, amountInBasket.toString(10), { from: governor });
             const result = new BigNumber(
-                await mixr.transactionFee(someERC20.address, amountToTransfer.toString(10),DEPOSIT.toString(10)),
+                await mixr.transactionFee(someERC20.address, amountToTransfer.toString(10), DEPOSIT.toString(10)),
             );
-            result.should.be.bignumber.equal(fixed_1).dividedBy(10**6);
+            result.should.be.bignumber.gte(new BigNumber(133002596915282450000000000000000000));
+            result.should.be.bignumber.lte(new BigNumber(133002596915282460000000000000000000));
         });
-
-        it('transactionFee(x,11) with 89 y in basket', async () => {
-            const amountInBasket = new BigNumber(10).pow(18).multipliedBy(89);
-            const amountToTransfer = new BigNumber(10).pow(18).multipliedBy(11);
-            await someOtherERC20.transfer(mixr.address, amountInBasket.toString(10), { from: governor });
+        itShouldThrow('transactionFee(x,90) with 10 y in basket', async () => {
+            const amountInBasket = new BigNumber(10).pow(18).multipliedBy(10);
+            const amountToTransfer = new BigNumber(10).pow(18).multipliedBy(90);
+            await someOtherERC20.transfer(mixr.address, amountInBasket, { from: governor });
             const result = new BigNumber(
-                await mixr.transactionFee(someERC20.address, amountToTransfer.toString(10),DEPOSIT.toString(10)),
+                await mixr.transactionFee(someERC20.address, amountToTransfer.toString(10), DEPOSIT.toString(10)),
             );
-            result.should.be.bignumber.equal(fixed_1).dividedBy(10**6);
-        });
-
-        it('transactionFee(x,10) with 90 y in basket', async () => {
-            const amountInBasket = new BigNumber(10).pow(18).multipliedBy(90);
-            const amountToTransfer = new BigNumber(10).pow(18).multipliedBy(10);
-            await someOtherERC20.transfer(mixr.address, amountInBasket.toString(10), { from: governor });
-            const result = new BigNumber(
-                await mixr.transactionFee(someERC20.address, amountToTransfer.toString(10),DEPOSIT.toString(10)),
-            );
-            result.should.be.bignumber.equal(fixed_1).dividedBy(10**6);
-        }); */
+        }, 'revert');
     });
 });

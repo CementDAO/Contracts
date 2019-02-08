@@ -20,9 +20,9 @@ contract Base {
     /**
      * @dev Scaling factor for the calculation of fees, expressed in fixed 
      * point units.
-     * Test scalingFactor = FixidityLib.fixed_1()
+     * Test scalingFactor = FixidityLib.fixed_1()/2
      */
-    int256 constant public scalingFactor = 1000000000000000000000000000000000000;
+    int256 constant public scalingFactor = 500000000000000000000000000000000000;
 
     /**
      * @dev Minimum that can be returned when calculating a fee, expressed in

@@ -103,7 +103,8 @@ contract Fees is Governance {
             // We specify that this already uses a fixed point representation of decimals 
             // to convert to the library representation and be able to use the add function
             ERC20Detailed(address(this)).decimals()
-        );
+        );     
+
         int256 deposit = FixidityLib.newFixed(
             convertTokensAmount(_token, address(this), _deposit), 
             ERC20Detailed(address(this)).decimals()
@@ -111,8 +112,8 @@ contract Fees is Governance {
         // Add the token balance to the amount to deposit, in fixidity units
         int256 tokenBalanceAfterTransaction;
         if (_transactionType == DEPOSIT()) {
-            assert(tokenBalance < FixidityLib.max_fixed_add());
-            assert(deposit < FixidityLib.max_fixed_add());
+            require(tokenBalance < FixidityLib.max_fixed_add(), "Token balance to high to accept deposits.");
+            require(deposit < FixidityLib.max_fixed_add(), "Deposit too large, risk of overflow.");
             tokenBalanceAfterTransaction = FixidityLib.add(
                 tokenBalance, 
                 deposit
@@ -133,11 +134,10 @@ contract Fees is Governance {
                 Utils.safeCast(basketBalance()),
                 ERC20Detailed(address(this)).decimals()
         );
-        
         int256 basketAfterTransaction;
         if (_transactionType == DEPOSIT()) {
-            assert(basketBeforeTransaction < FixidityLib.max_fixed_add());
-            assert(deposit < FixidityLib.max_fixed_add());
+            require(basketBeforeTransaction < FixidityLib.max_fixed_add(), "Basket balance too high to accept deposits.");
+            require(deposit < FixidityLib.max_fixed_add(), "Deposit too large, risk of overflow.");
             basketAfterTransaction = FixidityLib.add(
                 basketBeforeTransaction, 
                 deposit
@@ -155,7 +155,8 @@ contract Fees is Governance {
             tokenBalanceAfterTransaction,
             basketAfterTransaction
         );
-        assert(result >= 0 && result <= FixidityLib.fixed_1());
+        
+        //assert(result >= 0 && result <= FixidityLib.fixed_1());
         return result;
     }
 
@@ -218,7 +219,6 @@ contract Fees is Governance {
         // Basket position after deposit, make sure these are fixed point units
         TokenData memory token = tokens[_token];
         int256 deviation = deviationAfterTransaction(_token, _amount, _transactionType);
-
         // SPLIT ON _trasactionType
 
         // When the deviation goes below this value the fee becomes constant
@@ -228,11 +228,13 @@ contract Fees is Governance {
         int256 upperBound = FixidityLib.newFixedFraction(4,10);
 
         int256 fee = minimumFee;
+        int256 deviationLogit;
+        int256 normalMultiplier;
 
         // Behaviour when we have very few of _token
         if (deviation <= lowerBound ) {
             int256 lowerMultiplier = LogarithmLib.log_b(
-                10,
+                FixidityLib.newFixed(10),
                 FixidityLib.newFixedFraction(1,11)
             );
             fee = FixidityLib.add(
@@ -251,7 +253,7 @@ contract Fees is Governance {
                 token.targetProportion,
                 FixidityLib.newFixed(2)
             );
-            int256 deviationLogit = FixidityLib.divide(
+            deviationLogit = FixidityLib.divide(
                 FixidityLib.add(
                     deviation,
                     t2
@@ -261,8 +263,8 @@ contract Fees is Governance {
                     t2
                 )
             );
-            int256 normalMultiplier = LogarithmLib.log_b(
-                10,
+            normalMultiplier = LogarithmLib.log_b(
+                FixidityLib.newFixed(10),
                 deviationLogit
             );
             fee = FixidityLib.add(
