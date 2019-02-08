@@ -5,7 +5,7 @@ const SampleOtherERC20 = artifacts.require('./test/SampleOtherERC20.sol');
 
 const BigNumber = require('bignumber.js');
 const chai = require('chai');
-
+const { transformNumbers } = require('./utils');
 // use default BigNumber
 chai.use(require('chai-bignumber')()).should();
 
@@ -14,6 +14,8 @@ contract('Base', (accounts) => {
     let fixidityLibMock;
     let someERC20;
     let someOtherERC20;
+    let someERC20Decimals;
+    let someOtherERC20Decimals;
     const owner = accounts[0];
     const governor = accounts[1];
     const user = accounts[2];
@@ -28,12 +30,18 @@ contract('Base', (accounts) => {
 
     describe('convertTokensAmount', () => {
         before(async () => {
-            someERC20 = await SampleERC20.new(governor,
-                new BigNumber(10).pow(18).multipliedBy(100).toString(10),
-                18);
-            someOtherERC20 = await SampleOtherERC20.new(governor,
-                new BigNumber(10).pow(20).multipliedBy(100).toString(10),
-                20);
+            someERC20Decimals = 18;
+            someOtherERC20Decimals = 20;
+            someERC20 = await SampleERC20.new(
+                governor,
+                transformNumbers(someERC20Decimals, 100),
+                someERC20Decimals,
+            );
+            someOtherERC20 = await SampleOtherERC20.new(
+                governor,
+                transformNumbers(someOtherERC20Decimals, 100),
+                someOtherERC20Decimals,
+            );
         });
         it('convertTokensAmount(x, y, 1)', async () => {
             const converted = new BigNumber(
@@ -68,17 +76,23 @@ contract('Base', (accounts) => {
     });
     describe('convertTokens', () => {
         before(async () => {
+            someERC20Decimals = 18;
+            someOtherERC20Decimals = 20;
             mixr = await MIXR.new();
             await mixr.addGovernor(governor, {
                 from: owner,
             });
 
-            someERC20 = await SampleERC20.new(governor,
-                new BigNumber(10).pow(18).multipliedBy(100).toString(10),
-                18);
-            someOtherERC20 = await SampleOtherERC20.new(governor,
-                new BigNumber(10).pow(20).multipliedBy(100).toString(10),
-                20);
+            someERC20 = await SampleERC20.new(
+                governor,
+                transformNumbers(someERC20Decimals, 100),
+                someERC20Decimals,
+            );
+            someOtherERC20 = await SampleOtherERC20.new(
+                governor,
+                transformNumbers(someOtherERC20Decimals, 100),
+                someOtherERC20Decimals,
+            );
 
             /**
              * approve tokens!
@@ -108,9 +122,9 @@ contract('Base', (accounts) => {
              * give some to user for test purposes
              */
             await someERC20.transfer(user,
-                new BigNumber(10).pow(18).multipliedBy(90).toString(10), { from: governor });
+                transformNumbers(someERC20Decimals, 90), { from: governor });
             await someOtherERC20.transfer(user,
-                new BigNumber(10).pow(20).multipliedBy(80).toString(10), { from: governor });
+                transformNumbers(someOtherERC20Decimals, 80), { from: governor });
 
             /**
              * send some tokens
@@ -141,17 +155,23 @@ contract('Base', (accounts) => {
     });
     describe('basketBalance', () => {
         before(async () => {
+            someERC20Decimals = 18;
+            someOtherERC20Decimals = 20;
             mixr = await MIXR.new();
             await mixr.addGovernor(governor, {
                 from: owner,
             });
 
-            someERC20 = await SampleERC20.new(governor,
-                new BigNumber(10).pow(18).multipliedBy(100).toString(10),
-                18);
-            someOtherERC20 = await SampleOtherERC20.new(governor,
-                new BigNumber(10).pow(20).multipliedBy(100).toString(10),
-                20);
+            someERC20 = await SampleERC20.new(
+                governor,
+                transformNumbers(someERC20Decimals, 100),
+                someERC20Decimals,
+            );
+            someOtherERC20 = await SampleOtherERC20.new(
+                governor,
+                transformNumbers(someOtherERC20Decimals, 100),
+                someOtherERC20Decimals,
+            );
 
             /**
              * approve tokens!
@@ -181,9 +201,9 @@ contract('Base', (accounts) => {
              * give some to user for test purposes
              */
             await someERC20.transfer(user,
-                new BigNumber(10).pow(18).multipliedBy(90).toString(10), { from: governor });
+                transformNumbers(someERC20Decimals, 90), { from: governor });
             await someOtherERC20.transfer(user,
-                new BigNumber(10).pow(20).multipliedBy(80).toString(10), { from: governor });
+                transformNumbers(someOtherERC20Decimals, 80), { from: governor });
 
             await mixr.setAccountForFees(walletFee, { from: governor });
         });

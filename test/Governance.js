@@ -6,7 +6,7 @@ const SampleOtherERC20 = artifacts.require('./test/SampleOtherERC20.sol');
 
 const BigNumber = require('bignumber.js');
 const chai = require('chai');
-const { itShouldThrow } = require('./utils');
+const { itShouldThrow, transformNumbers } = require('./utils');
 
 // use default BigNumber
 chai.use(require('chai-bignumber')()).should();
@@ -17,6 +17,8 @@ contract('MIXR governance', (accounts) => {
     let someERC20;
     let someOtherERC20;
     let someERC721;
+    let someERC20Decimals;
+    let someOtherERC20Decimals;
     const owner = accounts[0];
     const governor = accounts[1];
     const user = accounts[2];
@@ -105,21 +107,27 @@ contract('MIXR governance', (accounts) => {
     // If the tests order is changed, or if these tests are ran in isolation they will fail.
     describe('proportion management', async () => {
         beforeEach(async () => {
+            someERC20Decimals = 18;
+            someOtherERC20Decimals = 18;
             mixr = await MIXR.new();
             await mixr.addGovernor(governor, {
                 from: owner,
             });
 
-            someERC20 = await SampleERC20.new(governor,
-                new BigNumber(10).pow(18).multipliedBy(100).toString(10),
-                18);
+            someERC20 = await SampleERC20.new(
+                governor,
+                transformNumbers(someERC20Decimals, 100),
+                someERC20Decimals,
+            );
+            someOtherERC20 = await SampleOtherERC20.new(
+                governor,
+                transformNumbers(someOtherERC20Decimals, 100),
+                someOtherERC20Decimals,
+            );
+
             await mixr.approveToken(someERC20.address, {
                 from: governor,
             });
-
-            someOtherERC20 = await SampleOtherERC20.new(governor,
-                new BigNumber(10).pow(18).multipliedBy(100).toString(10),
-                18);
             await mixr.approveToken(someOtherERC20.address, {
                 from: governor,
             });

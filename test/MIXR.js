@@ -9,18 +9,20 @@ const chai = require('chai');
 // use default BigNumber
 chai.use(require('chai-bignumber')()).should();
 
-const { itShouldThrow } = require('./utils');
+const { itShouldThrow, transformNumbers } = require('./utils');
 
 contract('MIXR', (accounts) => {
     let mixr;
     let fixidityLibMock;
     let someERC20;
     let someERC721;
+    const mixrDecimals = 24;
+    const someERC20Decimals = 18;
     const owner = accounts[0];
     const governor = accounts[1];
     const user = accounts[2];
-    const oneBgERC20 = new BigNumber(10).pow(18);
-    const oneBgMIXR = new BigNumber(10).pow(24);
+    const oneBgERC20 = new BigNumber(10).pow(someERC20Decimals);
+    const oneBgMIXR = new BigNumber(10).pow(mixrDecimals);
     // eslint-disable-next-line camelcase
     let fixed_1;
 
@@ -39,7 +41,7 @@ contract('MIXR', (accounts) => {
         beforeEach(async () => {
             mixr = await MIXR.new();
             someERC20 = await SampleERC20.new(governor,
-                new BigNumber(10).pow(18).multipliedBy(100).toString(10),
+                transformNumbers(someERC20Decimals, 100),
                 18);
 
             await mixr.addGovernor(governor, {

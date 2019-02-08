@@ -1,3 +1,5 @@
+const BigNumber = require('bignumber.js');
+
 const itShouldThrow = (reason, fun, expectedMessage) => {
     it(reason, async () => {
         let error = false;
@@ -31,6 +33,12 @@ const itShouldThrow = (reason, fun, expectedMessage) => {
     });
 };
 
+const transformNumbers = (decimals, tokens) => new BigNumber(10)
+    .pow(decimals)
+    .multipliedBy(tokens)
+    .toString(10);
+
 module.exports = {
     itShouldThrow,
+    transformNumbers,
 };
