@@ -221,76 +221,86 @@ contract Fees is Governance {
         int256 deviation = deviationAfterTransaction(_token, _amount, _transactionType);
         // SPLIT ON _trasactionType
 
-        // When the deviation goes below this value the fee becomes constant
-        int256 lowerBound = FixidityLib.newFixedFraction(-4,10);
-
-        // When the deviation goes above this value the deposit is rejected
-        int256 upperBound = FixidityLib.newFixedFraction(4,10);
-
         int256 fee = minimumFee;
-        int256 deviationLogit;
-        int256 normalMultiplier;
 
-        // Behaviour when we have very few of _token
-        if (deviation <= lowerBound ) {
-            int256 lowerMultiplier = LogarithmLib.log_b(
-                FixidityLib.newFixed(10),
-                FixidityLib.newFixedFraction(1,11)
+        // Floors and ceilings
+        if (_transactionType == DEPOSIT()) {
+            // When the deviation goes above this value the deposit is rejected
+            int256 upperBound = FixidityLib.multiply(
+                FixidityLib.newFixedFraction(4,10),
+                token.targetProportion
             );
-            fee = FixidityLib.add(
-                token.depositFee, // PAY ATTENTION WHEN SPLITTING
+            if (deviation > upperBound)
+                revert("Token not accepted, basket has too many.");
+            
+            // Deposits have a floor on -0.4 * targetProportion for deviation 
+            int256 lowerBound = FixidityLib.multiply(
+                FixidityLib.newFixedFraction(-4,10),
+                token.targetProportion
+            );
+            if (deviation <= lowerBound)
+                deviation = lowerBound;
+        } else if (_transactionType == REDEMPTION()) {
+            // Redemptions have a ceiling on 0.4 * targetProportion for deviation
+            int256 upperBound = FixidityLib.multiply(
+                FixidityLib.newFixedFraction(4,10),
+                token.targetProportion
+            );
+            if (deviation > upperBound)
+                deviation = upperBound;
+
+            // Redemptions have a floor on -0.4999 * targetProportion for deviation
+            int256 lowerBound = FixidityLib.multiply(
+                FixidityLib.newFixedFraction(-4999,10000),
+                token.targetProportion
+            );
+            if (deviation < lowerBound)
+                deviation = lowerBound;
+            // Redemptions when no tokens are in the basket are managed by the redeemMIXR function
+        } else revert("Transaction type not accepted.");
+        
+        // Calculate the fee following the formula from the inside out
+        int256 t2 = FixidityLib.divide(
+            token.targetProportion,
+            FixidityLib.newFixed(2)
+        );
+        int256 deviationCurve = FixidityLib.divide(
+            FixidityLib.add(
+                deviation,
+                t2
+            ),
+            FixidityLib.subtract(
+                t2,
+                deviation
+            )
+        );
+        int256 deviationLogit = LogarithmLib.log_b(
+            FixidityLib.newFixed(10),
+            deviationCurve
+        );
+        int256 scaledLogit = FixidityLib.multiply(
                 FixidityLib.multiply(
-                    FixidityLib.multiply(
-                        token.depositFee,  // PAY ATTENTION WHEN SPLITTING
-                        scalingFactor
-                    ),
-                    lowerMultiplier
-                )
-            );
-        // Normal behaviour
-        } else if (lowerBound < deviation && deviation < upperBound) {
-            int256 t2 = FixidityLib.divide(
-                token.targetProportion,
-                FixidityLib.newFixed(2)
-            );
-            deviationLogit = FixidityLib.divide(
-                FixidityLib.add(
-                    deviation,
-                    t2
+                    token.depositFee,
+                    scalingFactor
                 ),
-                FixidityLib.subtract(
-                    deviation,
-                    t2
-                )
-            );
-            normalMultiplier = LogarithmLib.log_b(
-                FixidityLib.newFixed(10),
                 deviationLogit
             );
+        if (_transactionType == DEPOSIT()) {
             fee = FixidityLib.add(
-                token.depositFee,  // PAY ATTENTION WHEN SPLITTING
-                FixidityLib.multiply(
-                    FixidityLib.multiply(
-                        token.depositFee,  // PAY ATTENTION WHEN SPLITTING
-                        scalingFactor
-                    ),
-                    normalMultiplier
-                )
+                token.depositFee,
+                scaledLogit
             );
-        }
-        // Behaviour when we have too many of _token
-	    else revert(
-            "Token not accepted, basket has too many."
+        } else if (_transactionType == REDEMPTION()) {
+            fee = FixidityLib.subtract(
+                token.depositFee,
+                scaledLogit
+            );
+        } else revert("Transaction type not accepted.");
+
+        if (fee < minimumFee) fee = minimumFee;
+        return FixidityLib.fromFixed(
+            fee,
+            ERC20Detailed(address(this)).decimals()
         );
-        if (fee > minimumFee) 
-            return FixidityLib.fromFixed(
-                fee,
-                ERC20Detailed(address(this)).decimals()
-            );
-        else 
-            return FixidityLib.fromFixed(
-                minimumFee,
-                ERC20Detailed(address(this)).decimals()
-            );
     }
 }

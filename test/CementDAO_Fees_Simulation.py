@@ -4,87 +4,132 @@ scalingFactor = 0.5
 depositFee = 0.1
 target = 0.5
 
+def lowerBound(_target):
+    return -0.4*target
+
+def upperBound(_target):
+    return 0.4*target
+
 def proportion(_basket, _token, _transaction):
-	return (_token + _transaction)/(_basket + _transaction)
+    return (_token + _transaction)/(_basket + _transaction)
 
 def deviation(_proportion, _target):
-	return _proportion - _target
+    return _proportion - _target
 
-def deviationLogit(_deviation, _target):
-	return (_deviation+_target/2)/(_deviation-_target/2)
+def deviationCurve(_deviation, _target):
+    return (_deviation+_target/2)/(target/2-_deviation)
 
-def normalMultiplier(_deviationLogit):
-	return math.log(_deviationLogit, 10)
+def deviationLogit(_deviationCurve):
+    return math.log(_deviationCurve, 10)
 
-def fee(_depositFee, _scalingFactor, _normalMultiplier):
-	return depositFee + (_depositFee * _scalingFactor * _normalMultiplier)
+def fee(_depositFee, _scalingFactor, _deviationLogit):
+    return depositFee + (_depositFee * _scalingFactor * _deviationLogit)
 
-token = 0.0
-basket = 90.0
-transaction = 10.0
-
-proportion(basket, token, transaction)
-
-deviation(basket, token, transaction, target)
-
-fee(scalingFactor, depositFee, basket, token, transaction, target)
-
-
-_proportion = proportion(basket, token, transaction)
-0.1
-_deviation = deviation(_proportion, target)
--0.4
-_deviationLogit = deviationLogit(_deviation, target)
-0.23076923076923078
-_normalMultiplier = normalMultiplier(_deviationLogit)
--0.6368220975871742
-fee(depositFee, scalingFactor, _normalMultiplier)
-0.0681588951206413
+_lowerBound = lowerBound(target)
+_lowerBound
+-0.2
+_upperBound = upperBound(target)
+_upperBound
+0.2
 
 token = 0.0
-basket = 11.0
-transaction = 89.0
+transaction = (target - _lowerBound) * 100.0
+transaction
+70.0
+basket = 100.0 - transaction
+basket
+30.0
 
 _proportion = proportion(basket, token, transaction)
-0.89
+_proportion
+0.7
 _deviation = deviation(_proportion, target)
-0.39
-_deviationLogit = deviationLogit(_deviation, target)
-4.571428571428571
-_normalMultiplier = normalMultiplier(_deviationLogit)
-0.660051938305649
-fee(depositFee, scalingFactor, _normalMultiplier)
-0.13300259691528246
+_deviation
+0.19999999999999996
+_deviationCurve = deviationCurve(_deviation, target)
+_deviationCurve
+8.999999999999991
+_deviationLogit = deviationLogit(_deviationCurve)
+_deviationLogit
+0.9542425094393243
+fee(depositFee, scalingFactor, _deviationLogit)
+0.14771212547196622
 
 token = 0.0
-basket = 89.0
-transaction = 11.0
+transaction = (target - _lowerBound) * 100.0 + 1
+transaction
+71.0
+basket = 100.0 - transaction
+basket
+29.0
 
 _proportion = proportion(basket, token, transaction)
-0.11
+_proportion
+0.71
 _deviation = deviation(_proportion, target)
--0.39
-_deviationLogit = deviationLogit(_deviation, target)
-0.21875000000000003
-_normalMultiplier = normalMultiplier(_deviationLogit)
--0.660051938305649
-fee(depositFee, scalingFactor, _normalMultiplier)
-0.06699740308471755
+_deviation
+0.20999999999999996
+_deviationCurve = deviationCurve(_deviation, target)
+_deviationCurve
+11.49999999999999
+_deviationLogit = deviationLogit(_deviationCurve)
+_deviationLogit
+1.0606978403536111
+fee(depositFee, scalingFactor, _deviationLogit)
+0.15303489201768056
 
 token = 0.0
-basket = 10.0
-transaction = 90.0
+transaction = (target - _upperBound) * 100.0 - 1
+transaction
+29.0
+basket = 100.0 - transaction
+basket
+71.0
 
 _proportion = proportion(basket, token, transaction)
-0.9
+_proportion
+0.29
 _deviation = deviation(_proportion, target)
-0.4
-_deviationLogit = deviationLogit(_deviation, target)
-4.333333333333333
-_normalMultiplier = normalMultiplier(_deviationLogit)
-0.6368220975871742
-fee(depositFee, scalingFactor, _normalMultiplier)
-0.1318411048793587
+_deviation
+-0.21000000000000002
+_deviationCurve = deviationCurve(_deviation, target)
+_deviationCurve
+0.08695652173913039
+_deviationLogit = deviationLogit(_deviationCurve)
+_deviationLogit
+-1.0606978403536118
+fee(depositFee, scalingFactor, _deviationLogit)
+0.04696510798231941
 
+token = 0.0
+transaction = (target - _upperBound) * 100.0
+transaction
+30.0
+basket = 100.0 - transaction
+basket
+70.0
 
+_proportion = proportion(basket, token, transaction)
+_proportion
+0.3
+_deviation = deviation(_proportion, target)
+_deviation
+-0.2
+_deviationCurve = deviationCurve(_deviation, target)
+_deviationCurve
+0.11111111111111108
+_deviationLogit = deviationLogit(_deviationCurve)
+_deviationLogit
+-0.9542425094393249
+fee(depositFee, scalingFactor, _deviationLogit)
+0.05228787452803376
 
+_proportion = proportion(basket, token, transaction)
+_proportion
+_deviation = deviation(_proportion, target)
+_deviation
+_deviationCurve = deviationCurve(_deviation, target)
+_deviationCurve
+_deviationLogit = deviationLogit(_deviationCurve)
+_deviationLogit
+fee(depositFee, scalingFactor, _deviationLogit)

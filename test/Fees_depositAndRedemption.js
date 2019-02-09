@@ -112,45 +112,45 @@ contract('Fees', (accounts) => {
         * Results: Revert
         */
 
-        it('transactionFee(x,10) with 90 y in basket', async () => {
-            const amountInBasket = new BigNumber(10).pow(18).multipliedBy(90);
-            const amountToTransfer = new BigNumber(10).pow(18).multipliedBy(10);
+        it('transactionFee(x,70) with 30 y in basket - Deposit at deviation ceiling', async () => {
+            const amountInBasket = new BigNumber(10).pow(18).multipliedBy(30);
+            const amountToTransfer = new BigNumber(10).pow(18).multipliedBy(70);
             await someOtherERC20.transfer(mixr.address, amountInBasket.toString(10), { from: governor });
             const result = new BigNumber(
                 await mixr.transactionFee(someERC20.address, amountToTransfer.toString(10), DEPOSIT.toString(10)),
             );
-            result.should.be.bignumber.gte(new BigNumber(68158895120641200000000));
-            result.should.be.bignumber.lte(new BigNumber(68158895120641300000000));
+            result.should.be.bignumber.gte(new BigNumber(147712125471966240000000));
+            result.should.be.bignumber.lte(new BigNumber(147712125471966250000000));
         });
         
-        it('transactionFee(x,11) with 89 y in basket', async () => {
-            const amountInBasket = new BigNumber(10).pow(18).multipliedBy(89);
-            const amountToTransfer = new BigNumber(10).pow(18).multipliedBy(11);
+        itShouldThrow('transactionFee(x,71) with 29 y in basket - Deposit above deviation ceiling.', async () => {
+            const amountInBasket = new BigNumber(10).pow(18).multipliedBy(29);
+            const amountToTransfer = new BigNumber(10).pow(18).multipliedBy(71);
             await someOtherERC20.transfer(mixr.address, amountInBasket.toString(10), { from: governor });
-            const result = new BigNumber(
-                await mixr.transactionFee(someERC20.address, amountToTransfer.toString(10), DEPOSIT.toString(10)),
-            );
-            result.should.be.bignumber.gte(new BigNumber(66997403084717500000000));
-            result.should.be.bignumber.lte(new BigNumber(66997403084717600000000));
-        });
-
-        it('transactionFee(x,89) with 11 y in basket', async () => {
-            const amountInBasket = new BigNumber(10).pow(18).multipliedBy(11);
-            const amountToTransfer = new BigNumber(10).pow(18).multipliedBy(89);
-            await someOtherERC20.transfer(mixr.address, amountInBasket.toString(10), { from: governor });
-            const result = new BigNumber(
-                await mixr.transactionFee(someERC20.address, amountToTransfer.toString(10), DEPOSIT.toString(10)),
-            );
-            result.should.be.bignumber.gte(new BigNumber(133002596915282450000000));
-            result.should.be.bignumber.lte(new BigNumber(133002596915282460000000));
-        });
-        itShouldThrow('transactionFee(x,90) with 10 y in basket', async () => {
-            const amountInBasket = new BigNumber(10).pow(18).multipliedBy(10);
-            const amountToTransfer = new BigNumber(10).pow(18).multipliedBy(90);
-            await someOtherERC20.transfer(mixr.address, amountInBasket, { from: governor });
             const result = new BigNumber(
                 await mixr.transactionFee(someERC20.address, amountToTransfer.toString(10), DEPOSIT.toString(10)),
             );
         }, 'revert');
+
+        it('transactionFee(x,29) with 71 y in basket - Deposit below deviation floor.', async () => {
+            const amountInBasket = new BigNumber(10).pow(18).multipliedBy(71);
+            const amountToTransfer = new BigNumber(10).pow(18).multipliedBy(29);
+            await someOtherERC20.transfer(mixr.address, amountInBasket.toString(10), { from: governor });
+            const result = new BigNumber(
+                await mixr.transactionFee(someERC20.address, amountToTransfer.toString(10), DEPOSIT.toString(10)),
+            );
+            result.should.be.bignumber.gte(new BigNumber(52287874528033750000000));
+            result.should.be.bignumber.lte(new BigNumber(52287874528033760000000));
+        });
+        it('transactionFee(x,30) with 70 y in basket - Deposit just at deviation floor.', async () => {
+            const amountInBasket = new BigNumber(10).pow(18).multipliedBy(70);
+            const amountToTransfer = new BigNumber(10).pow(18).multipliedBy(30);
+            await someOtherERC20.transfer(mixr.address, amountInBasket, { from: governor });
+            const result = new BigNumber(
+                await mixr.transactionFee(someERC20.address, amountToTransfer.toString(10), DEPOSIT.toString(10)),
+            );
+            result.should.be.bignumber.gte(new BigNumber(52287874528033750000000));
+            result.should.be.bignumber.lte(new BigNumber(52287874528033760000000));
+        });
     });
 });
