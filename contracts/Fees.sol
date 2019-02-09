@@ -88,15 +88,13 @@ contract Fees is Governance {
      */
     function proportionAfterTransaction(
         address _token, 
-        uint256 _deposit, 
+        uint256 _transactionAmount, 
         int8 _transactionType
     )
         public
         view
         returns (int256)
     {
-        //assert(amount < FixidityLib.max_fixed_add());
-        //assert(tokenBalance < FixidityLib.max_fixed_add());
         int256 tokenBalance = FixidityLib.newFixed(
             // The command below returns the balance of _token with this.decimals precision
             convertTokens(_token, address(this)), 
@@ -105,29 +103,29 @@ contract Fees is Governance {
             ERC20Detailed(address(this)).decimals()
         );     
 
-        int256 deposit = FixidityLib.newFixed(
-            convertTokensAmount(_token, address(this), _deposit), 
+        int256 transactionAmount = FixidityLib.newFixed(
+            convertTokensAmount(_token, address(this), _transactionAmount), 
             ERC20Detailed(address(this)).decimals()
         );
         // Add the token balance to the amount to deposit, in fixidity units
         int256 tokenBalanceAfterTransaction;
         if (_transactionType == DEPOSIT()) {
             require(tokenBalance < FixidityLib.max_fixed_add(), "Token balance to high to accept deposits.");
-            require(deposit < FixidityLib.max_fixed_add(), "Deposit too large, risk of overflow.");
+            require(transactionAmount < FixidityLib.max_fixed_add(), "Deposit too large, risk of overflow.");
             tokenBalanceAfterTransaction = FixidityLib.add(
                 tokenBalance, 
-                deposit
+                transactionAmount
             );
         }
         else if (_transactionType == REDEMPTION()) {
-            assert(deposit <= tokenBalance);
+            assert(transactionAmount <= tokenBalance);
             tokenBalanceAfterTransaction = FixidityLib.subtract(
                 tokenBalance, 
-                deposit
+                transactionAmount
             );
         } else revert("Transaction type not accepted.");
 
-        // The amount to deposit needs to be added to the basket balance to avoid
+        // The amount to redeem needs to be added to the basket balance to avoid
         // dividing by zero on an empty basket.
         
         int256 basketBeforeTransaction = FixidityLib.newFixed(
@@ -137,17 +135,17 @@ contract Fees is Governance {
         int256 basketAfterTransaction;
         if (_transactionType == DEPOSIT()) {
             require(basketBeforeTransaction < FixidityLib.max_fixed_add(), "Basket balance too high to accept deposits.");
-            require(deposit < FixidityLib.max_fixed_add(), "Deposit too large, risk of overflow.");
+            require(transactionAmount < FixidityLib.max_fixed_add(), "Deposit too large, risk of overflow.");
             basketAfterTransaction = FixidityLib.add(
                 basketBeforeTransaction, 
-                deposit
+                transactionAmount
             );
         }
         else if (_transactionType == REDEMPTION()) {
-            assert(deposit <= basketBeforeTransaction);
+            assert(transactionAmount <= basketBeforeTransaction);
             basketAfterTransaction = FixidityLib.subtract(
                 basketBeforeTransaction, 
-                deposit
+                transactionAmount
             );
         } else revert("Transaction type not accepted.");
 
@@ -196,20 +194,6 @@ contract Fees is Governance {
     /**
      * @dev (C20) Calculates the deposit fee as decribed in the CementDAO.
      * whitepaper. Uses fixed point units from FixidityLib.
-     * Set proportion x = fixed_1()/2
-     * Set proportion y = fixed_1()/2
-     * Set scalingFactor = fixed_1()/2
-     * Set token.transactionFee(x) = fixed_1()/10
-     * Set token.transactionFee(y) = fixed_1()/10
-     * Set basket to contain 0 tokens of x and 90 tokens of y. Call transactionFee(x,10). 
-     * Results: Proportion 0.1; Deviation -0.4; Fee 0.0681588951206413*fixed_1()
-     * Set basket to contain 0 tokens of x and 89 tokens of y. Call transactionFee(x,11).
-     * Results: Proportion 0.11; Deviation -0.39; Fee 0.06699740308471755*fixed_1()
-     * Set basket to contain 0 tokens of x and 11 tokens of y. Call transactionFee(x,89).
-     * Results: Proportion 0.89; Deviation 0.39; Fee 0.13300259691528246*fixed_1()
-     * Set basket to contain 0 tokens of x and 10 tokens of y. Call transactionFee(x,90).
-     * Result should be revert.
-     * TODO: Convert back to MIX wei at the end.
      */
     function transactionFee(address _token, uint256 _amount, int8 _transactionType)
         public
@@ -219,8 +203,6 @@ contract Fees is Governance {
         // Basket position after deposit, make sure these are fixed point units
         TokenData memory token = tokens[_token];
         int256 deviation = deviationAfterTransaction(_token, _amount, _transactionType);
-        // SPLIT ON _trasactionType
-
         int256 fee = minimumFee;
 
         // Floors and ceilings
