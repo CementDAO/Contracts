@@ -30,7 +30,7 @@ contract('Fees', (accounts) => {
         // eslint-disable-next-line camelcase
         fixed_1 = new BigNumber(await fixidityLibMock.fixed_1());
         DEPOSIT = await mixr.DEPOSIT();
-        REDEMPTION = await mixr.DEPOSIT();
+        REDEMPTION = await mixr.REDEMPTION();
     });
 
     describe('proportion after transaction functionality', () => {
@@ -168,7 +168,7 @@ contract('Fees', (accounts) => {
                 ),
             );
             result.should.be.bignumber
-                .equal(new BigNumber(fixed_1).dividedBy(2).dp(0, 1));
+                .equal(new BigNumber(fixed_1).dividedBy(4).dp(0, 1));
         });
         it('proportionAfterTransaction(x,2, REDEMPTION()) with two wei each of x and y in the basket', async () => {
             await someERC20.transfer(mixr.address, 2, {
