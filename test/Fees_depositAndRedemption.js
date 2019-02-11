@@ -18,10 +18,6 @@ contract('Fees', (accounts) => {
     const owner = accounts[0];
     const governor = accounts[1];
     const user = accounts[2];
-    // eslint-disable-next-line camelcase
-    let fixed_1;
-    // eslint-disable-next-line camelcase
-    let max_fixed_add;
     let DEPOSIT;
     let REDEMPTION;
 
@@ -30,10 +26,6 @@ contract('Fees', (accounts) => {
         fixidityLibMock = await FixidityLibMock.deployed();
         someERC20 = await SampleERC20.deployed();
         someOtherERC20 = await SampleOtherERC20.deployed();
-        // eslint-disable-next-line camelcase
-        fixed_1 = new BigNumber(await fixidityLibMock.fixed_1());
-        // eslint-disable-next-line camelcase
-        max_fixed_add = new BigNumber(await fixidityLibMock.max_fixed_add());
         DEPOSIT = await mixr.DEPOSIT();
         REDEMPTION = await mixr.REDEMPTION();
     });
@@ -103,29 +95,54 @@ contract('Fees', (accounts) => {
         it('transactionFee(x,70,DEPOSIT) with 30 y in basket - Deposit at deviation ceiling', async () => {
             const amountInBasket = new BigNumber(10).pow(18).multipliedBy(30);
             const amountToTransfer = new BigNumber(10).pow(18).multipliedBy(70);
-            await someOtherERC20.transfer(mixr.address, amountInBasket.toString(10), { from: governor });
+            await someOtherERC20.transfer(
+                mixr.address,
+                amountInBasket.toString(10),
+                { from: governor },
+            );
             const result = new BigNumber(
-                await mixr.transactionFee(someERC20.address, amountToTransfer.toString(10), DEPOSIT.toString(10)),
+                await mixr.transactionFee(
+                    someERC20.address,
+                    amountToTransfer.toString(10),
+                    DEPOSIT.toString(10),
+                ),
             );
             result.should.be.bignumber.gte(new BigNumber(147712125471966240000000));
             result.should.be.bignumber.lte(new BigNumber(147712125471966250000000));
         });
-        
+
         itShouldThrow('transactionFee(x,71,DEPOSIT) with 29 y in basket - Deposit above deviation ceiling.', async () => {
             const amountInBasket = new BigNumber(10).pow(18).multipliedBy(29);
             const amountToTransfer = new BigNumber(10).pow(18).multipliedBy(71);
-            await someOtherERC20.transfer(mixr.address, amountInBasket.toString(10), { from: governor });
-            const result = new BigNumber(
-                await mixr.transactionFee(someERC20.address, amountToTransfer.toString(10), DEPOSIT.toString(10)),
+            await someOtherERC20.transfer(
+                mixr.address,
+                amountInBasket.toString(10),
+                { from: governor },
             );
+            const result = new BigNumber(
+                await mixr.transactionFee(
+                    someERC20.address,
+                    amountToTransfer.toString(10),
+                    DEPOSIT.toString(10),
+                ),
+            );
+            // TODO: assert missing
         }, 'revert');
 
         it('transactionFee(x,29,DEPOSIT) with 71 y in basket - Deposit below deviation floor.', async () => {
             const amountInBasket = new BigNumber(10).pow(18).multipliedBy(71);
             const amountToTransfer = new BigNumber(10).pow(18).multipliedBy(29);
-            await someOtherERC20.transfer(mixr.address, amountInBasket.toString(10), { from: governor });
+            await someOtherERC20.transfer(
+                mixr.address,
+                amountInBasket.toString(10),
+                { from: governor },
+            );
             const result = new BigNumber(
-                await mixr.transactionFee(someERC20.address, amountToTransfer.toString(10), DEPOSIT.toString(10)),
+                await mixr.transactionFee(
+                    someERC20.address,
+                    amountToTransfer.toString(10),
+                    DEPOSIT.toString(10),
+                ),
             );
             result.should.be.bignumber.gte(new BigNumber(52287874528033750000000));
             result.should.be.bignumber.lte(new BigNumber(52287874528033760000000));
@@ -135,7 +152,11 @@ contract('Fees', (accounts) => {
             const amountToTransfer = new BigNumber(10).pow(18).multipliedBy(30);
             await someOtherERC20.transfer(mixr.address, amountInBasket, { from: governor });
             const result = new BigNumber(
-                await mixr.transactionFee(someERC20.address, amountToTransfer.toString(10), DEPOSIT.toString(10)),
+                await mixr.transactionFee(
+                    someERC20.address,
+                    amountToTransfer.toString(10),
+                    DEPOSIT.toString(10),
+                ),
             );
             result.should.be.bignumber.gte(new BigNumber(52287874528033750000000));
             result.should.be.bignumber.lte(new BigNumber(52287874528033760000000));
@@ -211,12 +232,16 @@ contract('Fees', (accounts) => {
             await someERC20.transfer(mixr.address, xInBasket.toString(10), { from: governor });
             await someOtherERC20.transfer(mixr.address, yInBasket.toString(10), { from: governor });
             const result = new BigNumber(
-                await mixr.transactionFee(someERC20.address, amountToTransfer.toString(10), REDEMPTION.toString(10)),
+                await mixr.transactionFee(
+                    someERC20.address,
+                    amountToTransfer.toString(10),
+                    REDEMPTION.toString(10),
+                ),
             );
             result.should.be.bignumber.gte(new BigNumber(299997828419000000000000));
             result.should.be.bignumber.lte(new BigNumber(299997828419010000000000));
         });
-        
+
         it('transactionFee(x,109,REDEMPTION) - 120 x and 30 y in basket - Above deviation floor.', async () => {
             const xInBasket = new BigNumber(10).pow(18).multipliedBy(120);
             const yInBasket = new BigNumber(10).pow(18).multipliedBy(30);
@@ -224,7 +249,11 @@ contract('Fees', (accounts) => {
             await someERC20.transfer(mixr.address, xInBasket.toString(10), { from: governor });
             await someOtherERC20.transfer(mixr.address, yInBasket.toString(10), { from: governor });
             const result = new BigNumber(
-                await mixr.transactionFee(someERC20.address, amountToTransfer.toString(10), REDEMPTION.toString(10)),
+                await mixr.transactionFee(
+                    someERC20.address,
+                    amountToTransfer.toString(10),
+                    REDEMPTION.toString(10),
+                ),
             );
             result.should.be.bignumber.gte(new BigNumber(171025291828538940000000));
             result.should.be.bignumber.lte(new BigNumber(171025291828538950000000));
@@ -237,7 +266,11 @@ contract('Fees', (accounts) => {
             await someERC20.transfer(mixr.address, xInBasket.toString(10), { from: governor });
             await someOtherERC20.transfer(mixr.address, yInBasket.toString(10), { from: governor });
             const result = new BigNumber(
-                await mixr.transactionFee(someERC20.address, amountToTransfer.toString(10), REDEMPTION.toString(10)),
+                await mixr.transactionFee(
+                    someERC20.address,
+                    amountToTransfer.toString(10),
+                    REDEMPTION.toString(10),
+                ),
             );
             result.should.be.bignumber.gte(new BigNumber(53712301418605630000000));
             result.should.be.bignumber.lte(new BigNumber(53712301418605640000000));
@@ -249,11 +282,14 @@ contract('Fees', (accounts) => {
             await someERC20.transfer(mixr.address, xInBasket.toString(10), { from: governor });
             await someOtherERC20.transfer(mixr.address, yInBasket.toString(10), { from: governor });
             const result = new BigNumber(
-                await mixr.transactionFee(someERC20.address, amountToTransfer.toString(10), REDEMPTION.toString(10)),
+                await mixr.transactionFee(
+                    someERC20.address,
+                    amountToTransfer.toString(10),
+                    REDEMPTION.toString(10),
+                ),
             );
             result.should.be.bignumber.gte(new BigNumber(52287874528033750000000));
             result.should.be.bignumber.lte(new BigNumber(52287874528033760000000));
         });
     });
-
 });
