@@ -19,7 +19,6 @@ contract('Base', (accounts) => {
     const owner = accounts[0];
     const governor = accounts[1];
     const user = accounts[2];
-    const walletFee = accounts[3];
 
     before(async () => {
         mixr = await MIXR.deployed();
@@ -154,7 +153,7 @@ contract('Base', (accounts) => {
         });
     });
     describe('basketBalance', () => {
-        before(async () => {
+        beforeEach(async () => {
             someERC20Decimals = 18;
             someOtherERC20Decimals = 20;
             mixr = await MIXR.new();
@@ -183,20 +182,6 @@ contract('Base', (accounts) => {
                 from: governor,
             });
 
-            await mixr.setTokensTargetProportion(
-                [
-                    someERC20.address,
-                    someOtherERC20.address,
-                ],
-                [
-                    new BigNumber(await fixidityLibMock.newFixedFraction(1, 2)).toString(10),
-                    new BigNumber(await fixidityLibMock.newFixedFraction(1, 2)).toString(10),
-                ],
-                {
-                    from: governor,
-                },
-            );
-
             /**
              * give some to user for test purposes
              */
@@ -204,8 +189,6 @@ contract('Base', (accounts) => {
                 transformNumbers(someERC20Decimals, 90), { from: governor });
             await someOtherERC20.transfer(user,
                 transformNumbers(someOtherERC20Decimals, 80), { from: governor });
-
-            await mixr.setAccountForFees(walletFee, { from: governor });
         });
         it('basketBalance() = 0 before introducing any tokens', async () => {
             const converted = new BigNumber(
@@ -214,13 +197,11 @@ contract('Base', (accounts) => {
             converted.should.be.bignumber.equal(0);
         });
         it('basketBalance() = (10**24) after introducing 1 token of x type', async () => {
-            const amount = new BigNumber(10).pow(18).multipliedBy(1);
-            await someERC20.approve(mixr.address, amount.toString(10), {
-                from: user,
-            });
-            await mixr.depositToken(someERC20.address, amount.toString(10), {
-                from: user,
-            });
+            /**
+             * Introduce one token
+             */
+            await someERC20.transfer(mixr.address,
+                transformNumbers(someERC20Decimals, 1), { from: user });
 
             const converted = new BigNumber(
                 await mixr.basketBalance(),
@@ -228,13 +209,13 @@ contract('Base', (accounts) => {
             converted.should.be.bignumber.equal(new BigNumber(10).pow(24));
         });
         it('Test basketBalance() = 2*(10**24) after introducing 1 token of x type', async () => {
-            const amount = new BigNumber(10).pow(18).multipliedBy(1);
-            await someERC20.approve(mixr.address, amount.toString(10), {
-                from: user,
-            });
-            await mixr.depositToken(someERC20.address, amount.toString(10), {
-                from: user,
-            });
+            /**
+             * Introduce one token twice
+             */
+            await someERC20.transfer(mixr.address,
+                transformNumbers(someERC20Decimals, 1), { from: user });
+            await someERC20.transfer(mixr.address,
+                transformNumbers(someERC20Decimals, 1), { from: user });
 
             const converted = new BigNumber(
                 await mixr.basketBalance(),
@@ -242,55 +223,26 @@ contract('Base', (accounts) => {
             converted.should.be.bignumber.equal(new BigNumber(10).pow(24).multipliedBy(2));
         });
         it('Test basketBalance() = 3*(10**24) after introducing 1 token of y type', async () => {
-            const amount = new BigNumber(10).pow(20).multipliedBy(1);
-            await someOtherERC20.approve(mixr.address, amount.toString(10), {
-                from: user,
-            });
-            await mixr.depositToken(someOtherERC20.address, amount.toString(10), {
-                from: user,
-            });
+            /**
+             * Introduce one token twice and another token once
+             */
+            await someERC20.transfer(mixr.address,
+                transformNumbers(someERC20Decimals, 1), { from: user });
+            await someERC20.transfer(mixr.address,
+                transformNumbers(someERC20Decimals, 1), { from: user });
+            await someOtherERC20.transfer(mixr.address,
+                transformNumbers(someOtherERC20Decimals, 1), { from: user });
 
             const converted = new BigNumber(
                 await mixr.basketBalance(),
             );
             converted.should.be.bignumber.equal(new BigNumber(10).pow(24).multipliedBy(3));
         });
-        it('Test basketBalance() = 2*(10**24) after redeeming 1 MIX token for y tokens', async () => {
-            const amount = new BigNumber(10).pow(24).multipliedBy(1);
-            await mixr.approve(mixr.address, amount.toString(10), {
-                from: user,
-            });
-            await mixr.redeemMIXR(someOtherERC20.address, amount.toString(10), {
-                from: user,
-            });
-
-            const converted = new BigNumber(
-                await mixr.basketBalance(),
-            );
-            converted.should.be.bignumber.equal(new BigNumber(10).pow(24).multipliedBy(2));
-        });
-        it('Redeem 2 MIX tokens for x, we have an empty basket', async () => {
-            const amount = new BigNumber(10).pow(24).multipliedBy(2);
-            await mixr.approve(mixr.address, amount.toString(10), {
-                from: user,
-            });
-            await mixr.redeemMIXR(someERC20.address, amount.toString(10), {
-                from: user,
-            });
-
-            const converted = new BigNumber(
-                await mixr.basketBalance(),
-            );
-            converted.should.be.bignumber.equal(0);
-        });
         it('Test basketBalance() = (10**6) after introducing 1 wei of x type', async () => {
-            const amount = new BigNumber(1);
-            await someERC20.approve(mixr.address, amount.toString(10), {
-                from: user,
-            });
-            await mixr.depositToken(someERC20.address, amount.toString(10), {
-                from: user,
-            });
+            /**
+             * Introduce one wei of x
+             */
+            await someERC20.transfer(mixr.address, 1, { from: user });
 
             const converted = new BigNumber(
                 await mixr.basketBalance(),
@@ -298,13 +250,11 @@ contract('Base', (accounts) => {
             converted.should.be.bignumber.equal(new BigNumber(10).pow(6));
         });
         it('Test basketBalance() = (10**6)+(10**4) after introducing 1 token of y type', async () => {
-            const amount = new BigNumber(1);
-            await someOtherERC20.approve(mixr.address, amount.toString(10), {
-                from: user,
-            });
-            await mixr.depositToken(someOtherERC20.address, amount.toString(10), {
-                from: user,
-            });
+            /**
+             * Introduce one wei of x and one wei of y
+             */
+            await someERC20.transfer(mixr.address, 1, { from: user });
+            await someOtherERC20.transfer(mixr.address, 1, { from: user });
 
             const result = new BigNumber(
                 await mixr.basketBalance(),
