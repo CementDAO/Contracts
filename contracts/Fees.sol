@@ -97,14 +97,14 @@ contract Fees is Governance {
     {
         int256 tokenBalance = FixidityLib.newFixed(
             // The command below returns the balance of _token with this.decimals precision
-            convertTokens(_token, address(this)), 
+            Utils.safeCast(convertTokens(_token, address(this))), 
             // We specify that this already uses a fixed point representation of decimals 
             // to convert to the library representation and be able to use the add function
             ERC20Detailed(address(this)).decimals()
         );     
 
         int256 transactionAmount = FixidityLib.newFixed(
-            convertTokensAmount(_token, address(this), _transactionAmount), 
+            Utils.safeCast(convertTokensAmount(_token, address(this), _transactionAmount)), 
             ERC20Detailed(address(this)).decimals()
         );
         // Add the token balance to the amount to deposit, in fixidity units
@@ -198,7 +198,7 @@ contract Fees is Governance {
     function transactionFee(address _token, uint256 _amount, int8 _transactionType)
         public
         view
-        returns (int256) 
+        returns (uint256) 
     {
         // Basket position after deposit, make sure these are fixed point units
         TokenData memory token = tokens[_token];
@@ -280,9 +280,12 @@ contract Fees is Governance {
         } else revert("Transaction type not accepted.");
 
         if (fee < minimumFee) fee = minimumFee;
-        return FixidityLib.fromFixed(
-            fee,
-            ERC20Detailed(address(this)).decimals()
+        assert (fee >= 0);
+        return uint256(
+            FixidityLib.fromFixed(
+                fee,
+                ERC20Detailed(address(this)).decimals()
+            )
         );
     }
 }

@@ -35,13 +35,12 @@ contract MIXR is Fees, ERC20, ERC20Detailed {
         // Receive the token that was sent
         IERC20(_token).transferFrom(msg.sender, address(this), _amount);
         // Send an equal number of MIXR tokens back
-        int256 basketWei = convertTokensAmount(_token, address(this), _amount);
-        assert(basketWei >= 0);
-        _mint(address(this), uint256(basketWei));
-        IERC20(address(this)).approve(address(this), uint256(basketWei));
-        IERC20(address(this)).transferFrom(address(this), msg.sender, uint256(basketWei));
-        int256 fee = transactionFee(_token, uint256(basketWei), DEPOSIT());
-        IERC20(_token).transferFrom(msg.sender, address(this), uint256(fee));
+        uint256 basketWei = convertTokensAmount(_token, address(this), _amount);
+        _mint(address(this), basketWei);
+        IERC20(address(this)).approve(address(this), basketWei);
+        IERC20(address(this)).transferFrom(address(this), msg.sender, basketWei);
+        uint256 fee = transactionFee(_token, basketWei, DEPOSIT());
+        IERC20(_token).transferFrom(msg.sender, address(this), fee);
     }
 
     /**
@@ -59,10 +58,10 @@ contract MIXR is Fees, ERC20, ERC20Detailed {
         // Receive the MIXR token that was sent
         IERC20(address(this)).transferFrom(msg.sender, address(this), _amount);
         // Send an equal number of selected tokens back
-        int256 tokenWei = convertTokensAmount(address(this), _token, _amount);
+        uint256 tokenWei = convertTokensAmount(address(this), _token, _amount);
         assert(tokenWei >= 0);
-        IERC20(_token).approve(address(this), uint256(tokenWei));
-        IERC20(_token).transferFrom(address(this), msg.sender, uint256(tokenWei));
+        IERC20(_token).approve(address(this), tokenWei);
+        IERC20(_token).transferFrom(address(this), msg.sender, tokenWei);
         // We always mint and burn MIX amounts
         _burn(address(this), _amount);
     }

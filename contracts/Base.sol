@@ -169,7 +169,7 @@ contract Base {
     )
         public
         view
-        returns (int256)
+        returns (uint256)
     {
         uint8 originTokenDecimals;
         uint8 destinationTokenDecimals;
@@ -190,11 +190,13 @@ contract Base {
             destinationTokenDecimals = ERC20Detailed(_destinationToken).decimals();
         }
 
-        return FixidityLib.convertFixed(
+        int256 convertedAmount = FixidityLib.convertFixed(
             Utils.safeCast(_amount), 
             originTokenDecimals, 
             destinationTokenDecimals
         );
+        assert(convertedAmount >= 0);
+        return uint256(convertedAmount);
     } 
 
     /**
@@ -213,7 +215,7 @@ contract Base {
     )
         public
         view
-        returns (int256)
+        returns (uint256)
     {
         return convertTokensAmount(
             _originToken, 
@@ -259,7 +261,7 @@ contract Base {
                 balance, 
                 FixidityLib.newFixed(
                     // convertTokens below returns the balance in the basket decimals
-                    convertTokens(tokensInBasket[i], address(this)), 
+                    Utils.safeCast(convertTokens(tokensInBasket[i], address(this))), 
                     // We create a new fixed point number from basket decimals to the
                     // library precision to be able to use the add function
                     ERC20Detailed(address(this)).decimals()
