@@ -26,10 +26,9 @@ contract Base {
 
     /**
      * @dev Minimum that can be returned when calculating a fee, expressed in
-     * fixed point units. Also the minimum that can be set as a base fee.
-     * Test minimumFee = FixidityLib.fixed_1()/(10**6)
+     * MIX wei.
      */
-    int256 constant public minimumFee = 1000000000000000000000000000000;
+    uint256 constant public minimumFee = 1000000000000000000;
 
     /**
      * @dev (C1) Whitelist of addresses that can do governance.
@@ -51,23 +50,17 @@ contract Base {
          */
         int256 targetProportion;
         /**
-         * @dev (C20) The base deposit fees for each token in the basket using 
-         * fixidity units in a FixidityLib.fixed_1()/1000000 to 
-         * FixidityLib.max_fixed_mul() range.
+         * @dev (C20) The base deposit fees in MIX wei for each token in the basket.
          */
-        int256 depositFee;
+        uint256 depositFee;
         /**
-         * @dev (C20) The base redemption fees for each token in the basket using 
-         * fixidity units in a FixidityLib.fixed_1()/1000000 to 
-         * FixidityLib.max_fixed_mul() range.
+         * @dev (C20) The base redemption fees in MIX wei for each token in the basket.
          */
-        int256 redemptionFee;
+        uint256 redemptionFee;
         /**
-         * @dev (C20) The base transfer fees for each token in the basket using 
-         * fixidity units in a FixidityLib.fixed_1()/1000000 to 
-         * FixidityLib.max_fixed_mul() range.
+         * @dev (C20) The base transfer fees in MIX wei for each token in the basket.
          */
-        int256 transferFee;
+        uint256 transferFee;
     }
 
     mapping(address => TokenData) internal tokens;

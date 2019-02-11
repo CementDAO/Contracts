@@ -68,7 +68,7 @@ contract('Fees', (accounts) => {
                 },
             );
 
-            const baseFee = new BigNumber(await fixidityLibMock.newFixedFraction(1, 10)).toString(10);
+            const baseFee = new BigNumber(10).pow(23).toString(10);
 
             await mixr.setTransactionFee(
                 someERC20.address,
@@ -217,9 +217,11 @@ contract('Fees', (accounts) => {
                 },
             );
 
+            const baseFee = new BigNumber(10).pow(23).toString(10);
+
             await mixr.setTransactionFee(
                 someERC20.address,
-                new BigNumber(await fixidityLibMock.newFixedFraction(1, 10)).toString(10),
+                baseFee,
                 REDEMPTION.toString(10),
                 {
                     from: governor,
@@ -227,7 +229,7 @@ contract('Fees', (accounts) => {
             );
             await mixr.setTransactionFee(
                 someOtherERC20.address,
-                new BigNumber(await fixidityLibMock.newFixedFraction(1, 10)).toString(10),
+                baseFee,
                 REDEMPTION.toString(10),
                 {
                     from: governor,

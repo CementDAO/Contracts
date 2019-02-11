@@ -56,7 +56,7 @@ contract Fees is Governance {
      * Test setTransactionFee(minimumFee) works and token.transactionFee returns minimumFee
      * Test setTransactionFee(minimumFee-1) throws
      */
-    function setTransactionFee(address _token, int256 _fee, int8 _transactionType)
+    function setTransactionFee(address _token, uint256 _fee, int8 _transactionType)
         public
         onlyGovernor()
     {
@@ -203,7 +203,7 @@ contract Fees is Governance {
         // Basket position after deposit, make sure these are fixed point units
         TokenData memory token = tokens[_token];
         int256 deviation = deviationAfterTransaction(_token, _amount, _transactionType);
-        int256 fee = minimumFee;
+        int256 fee;
 
         // Floors and ceilings
         if (_transactionType == DEPOSIT()) {
@@ -264,33 +264,43 @@ contract Fees is Governance {
         
 
         if (_transactionType == DEPOSIT()) {
+            int256 baseFee = FixidityLib.newFixed(
+                Utils.safeCast(token.depositFee), 
+                ERC20Detailed(address(this)).decimals()
+            );
             int256 scaledLogit = FixidityLib.multiply(
                 FixidityLib.multiply(
-                    token.depositFee,
+                    baseFee,
                     scalingFactor
                 ),
                 deviationLogit
             );
             fee = FixidityLib.add(
-                token.depositFee,
+                baseFee,
                 scaledLogit
             );
         } else if (_transactionType == REDEMPTION()) {
+            int256 baseFee = FixidityLib.newFixed(
+                Utils.safeCast(token.redemptionFee), 
+                ERC20Detailed(address(this)).decimals()
+            );
             int256 scaledLogit = FixidityLib.multiply(
                 FixidityLib.multiply(
-                    token.redemptionFee,
+                    baseFee,
                     scalingFactor
                 ),
                 deviationLogit
             );
             fee = FixidityLib.subtract(
-                token.redemptionFee,
-                scaledLogit
+                    baseFee,
+                    scaledLogit
             );
         } else revert("Transaction type not accepted.");
 
-        if (fee < minimumFee) fee = minimumFee;
-        assert (fee >= 0);
+        assert(fee >= 0);
+        if (fee < Utils.safeCast(minimumFee)) 
+            fee = Utils.safeCast(minimumFee);
+
         return uint256(
             FixidityLib.fromFixed(
                 fee,
