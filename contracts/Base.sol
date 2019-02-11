@@ -127,6 +127,14 @@ contract Base {
             token.targetProportion > 0,
             "The given token can't accepted, the target proportion is 0."
         );
+        require(
+            token.depositFee >= minimumFee,
+            "The given token can't accepted, the base deposit fee is too low."
+        );
+        require(
+            token.redemptionFee >= minimumFee,
+            "The given token can't accepted, the base redemption fee is too low."
+        );
         _;
     }
 

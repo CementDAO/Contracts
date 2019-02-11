@@ -58,7 +58,6 @@ contract Fees is Governance {
      */
     function setTransactionFee(address _token, int256 _fee, int8 _transactionType)
         public
-        isAcceptedToken(_token)
         onlyGovernor()
     {
         require(_fee >= minimumFee, "Fees can't be set to less than the minimum fee.");

@@ -68,9 +68,11 @@ contract('Fees', (accounts) => {
                 },
             );
 
+            const baseFee = new BigNumber(await fixidityLibMock.newFixedFraction(1, 10)).toString(10);
+
             await mixr.setTransactionFee(
                 someERC20.address,
-                new BigNumber(await fixidityLibMock.newFixedFraction(1, 10)).toString(10),
+                baseFee,
                 DEPOSIT.toString(10),
                 {
                     from: governor,
@@ -78,7 +80,7 @@ contract('Fees', (accounts) => {
             );
             await mixr.setTransactionFee(
                 someOtherERC20.address,
-                new BigNumber(await fixidityLibMock.newFixedFraction(1, 10)).toString(10),
+                baseFee,
                 DEPOSIT.toString(10),
                 {
                     from: governor,
@@ -160,6 +162,20 @@ contract('Fees', (accounts) => {
             );
             result.should.be.bignumber.gte(new BigNumber(52287874528033750000000));
             result.should.be.bignumber.lte(new BigNumber(52287874528033760000000));
+        });
+        it('transactionFee(x,50,DEPOSIT) with 50 y in basket - Fee == Base Fee.', async () => {
+            const baseFee = new BigNumber(await fixidityLibMock.newFixedFraction(1, 10)).toString(10);
+            const amountInBasket = new BigNumber(10).pow(18).multipliedBy(50);
+            const amountToTransfer = new BigNumber(10).pow(18).multipliedBy(50);
+            await someOtherERC20.transfer(mixr.address, amountInBasket, { from: governor });
+            const result = new BigNumber(
+                await mixr.transactionFee(
+                    someERC20.address,
+                    amountToTransfer.toString(10),
+                    DEPOSIT.toString(10),
+                ),
+            );
+            result.should.be.bignumber.equal(new BigNumber(await fixidityLibMock.convertFixed(baseFee, 36, 24)));
         });
     });
 
@@ -290,6 +306,22 @@ contract('Fees', (accounts) => {
             );
             result.should.be.bignumber.gte(new BigNumber(52287874528033750000000));
             result.should.be.bignumber.lte(new BigNumber(52287874528033760000000));
+        });
+        it('transactionFee(x,50,REDEMPTION) - 100 x and 50 y in basket - Fee == Base Fee.', async () => {
+            const baseFee = new BigNumber(await fixidityLibMock.newFixedFraction(1, 10)).toString(10);
+            const xInBasket = new BigNumber(10).pow(18).multipliedBy(100);
+            const yInBasket = new BigNumber(10).pow(18).multipliedBy(50);
+            const amountToTransfer = new BigNumber(10).pow(18).multipliedBy(50);
+            await someERC20.transfer(mixr.address, xInBasket.toString(10), { from: governor });
+            await someOtherERC20.transfer(mixr.address, yInBasket.toString(10), { from: governor });
+            const result = new BigNumber(
+                await mixr.transactionFee(
+                    someERC20.address,
+                    amountToTransfer.toString(10),
+                    REDEMPTION.toString(10),
+                ),
+            );
+            result.should.be.bignumber.equal(new BigNumber(await fixidityLibMock.convertFixed(baseFee, 36, 24)));
         });
     });
 });

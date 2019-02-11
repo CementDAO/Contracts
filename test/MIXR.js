@@ -110,17 +110,33 @@ contract('MIXR', (accounts) => {
                     await someERC20.balanceOf(user),
                 );
                 const previousMixrBalance = new BigNumber(await mixr.balanceOf(user));
-                const basketWei = new BigNumber(
+                await mixr.setTransactionFee(
+                    someERC20.address,
+                    new BigNumber(await fixidityLibMock.newFixedFraction(1, 10)).toString(10),
+                    await mixr.DEPOSIT(),
+                    {
+                        from: governor,
+                    },
+                );
+                await mixr.setTransactionFee(
+                    someERC20.address,
+                    new BigNumber(await fixidityLibMock.newFixedFraction(1, 10)).toString(10),
+                    await mixr.REDEMPTION(),
+                    {
+                        from: governor,
+                    },
+                );
+                /* const basketWei = new BigNumber(
                     await mixr.convertTokensAmount(
                         someERC20.address,
                         mixr.address,
                         oneBgERC20.toString(10),
                     ),
-                );
+                ); */
                 const fee = new BigNumber(
                     await mixr.transactionFee(
                         someERC20.address,
-                        basketWei.toString(10),
+                        oneBgERC20.toString(10),
                         await mixr.DEPOSIT(),
                     ),
                 );
