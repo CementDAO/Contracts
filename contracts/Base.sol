@@ -26,7 +26,7 @@ contract Base {
 
     /**
      * @dev Minimum that can be returned when calculating a fee, expressed in
-     * fixed point units.
+     * fixed point units. Also the minimum that can be set as a base fee.
      * Test minimumFee = FixidityLib.fixed_1()/(10**6)
      */
     int256 constant public minimumFee = 1000000000000000000000000000000;
@@ -125,7 +125,15 @@ contract Base {
         );
         require(
             token.targetProportion > 0,
-            "The given token is accepted but doesn't have a target proportion."
+            "The given token can't accepted, the target proportion is 0."
+        );
+        require(
+            token.depositFee >= minimumFee,
+            "The given token can't accepted, the base deposit fee is too low."
+        );
+        require(
+            token.redemptionFee >= minimumFee,
+            "The given token can't accepted, the base redemption fee is too low."
         );
         _;
     }
