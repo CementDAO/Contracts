@@ -260,21 +260,31 @@ contract Fees is Governance {
             FixidityLib.newFixed(10),
             deviationCurve
         );
-        int256 scaledLogit = FixidityLib.multiply(
+        //newFixed(int256 x, uint8 _originDigits)
+        
+
+        if (_transactionType == DEPOSIT()) {
+            int256 scaledLogit = FixidityLib.multiply(
                 FixidityLib.multiply(
                     token.depositFee,
                     scalingFactor
                 ),
                 deviationLogit
             );
-        if (_transactionType == DEPOSIT()) {
             fee = FixidityLib.add(
                 token.depositFee,
                 scaledLogit
             );
         } else if (_transactionType == REDEMPTION()) {
+            int256 scaledLogit = FixidityLib.multiply(
+                FixidityLib.multiply(
+                    token.redemptionFee,
+                    scalingFactor
+                ),
+                deviationLogit
+            );
             fee = FixidityLib.subtract(
-                token.depositFee,
+                token.redemptionFee,
                 scaledLogit
             );
         } else revert("Transaction type not accepted.");

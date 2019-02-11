@@ -1,7 +1,7 @@
 import math
 
 scalingFactor = 0.5
-depositFee = 0.1
+redemptionFee = 0.1
 target = 0.5
 
 def lowerBound(_target):
@@ -22,8 +22,8 @@ def deviationCurve(_deviation, _target):
 def deviationLogit(_deviationCurve):
     return math.log(_deviationCurve, 10)
 
-def fee(_depositFee, _scalingFactor, _deviationLogit):
-    return depositFee - (_depositFee * _scalingFactor * _deviationLogit)
+def fee(_redemptionFee, _scalingFactor, _deviationLogit):
+    return redemptionFee - (_redemptionFee * _scalingFactor * _deviationLogit)
 
 _lowerBound = lowerBound(target)
 _lowerBound
@@ -53,7 +53,7 @@ _deviationLogit
 Traceback (most recent call last):
   File "<stdin>", line 1, in <module>
 NameError: name '_deviationLogit' is not defined
-fee(depositFee, scalingFactor, _deviationLogit)
+fee(redemptionFee, scalingFactor, _deviationLogit)
 Traceback (most recent call last):
   File "<stdin>", line 1, in <module>
 NameError: name '_deviationLogit' is not defined
@@ -65,7 +65,7 @@ _deviationCurve
 _deviationLogit = deviationLogit(_deviationCurve)
 _deviationLogit
 -3.99995656838024
-fee(depositFee, scalingFactor, _deviationLogit)
+fee(redemptionFee, scalingFactor, _deviationLogit)
 0.299997828419012
 
 transaction -= 2
@@ -85,7 +85,7 @@ _deviationCurve
 _deviationLogit = deviationLogit(_deviationCurve)
 _deviationLogit
 -1.4205058365707786
-fee(depositFee, scalingFactor, _deviationLogit)
+fee(redemptionFee, scalingFactor, _deviationLogit)
 0.17102529182853893
 
 transaction = ((_upperBound+target)*basket-token)/(_upperBound+target-1)
@@ -106,7 +106,7 @@ _deviationCurve
 _deviationLogit = deviationLogit(_deviationCurve)
 _deviationLogit
 0.9836974887776001
-fee(depositFee, scalingFactor, _deviationLogit)
+fee(redemptionFee, scalingFactor, _deviationLogit)
 0.05081512556112
 
 _deviation = 0.2
@@ -116,7 +116,7 @@ _deviationCurve
 _deviationLogit = deviationLogit(_deviationCurve)
 _deviationLogit
 0.9542425094393249
-fee(depositFee, scalingFactor, _deviationLogit)
+fee(redemptionFee, scalingFactor, _deviationLogit)
 0.05228787452803376
 
 transaction += 2
@@ -136,5 +136,5 @@ _deviationCurve
 _deviationLogit = deviationLogit(_deviationCurve)
 _deviationLogit
 0.9257539716278878
-fee(depositFee, scalingFactor, _deviationLogit)
+fee(redemptionFee, scalingFactor, _deviationLogit)
 0.05371230141860561

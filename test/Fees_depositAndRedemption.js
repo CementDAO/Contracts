@@ -220,7 +220,7 @@ contract('Fees', (accounts) => {
             await mixr.setTransactionFee(
                 someERC20.address,
                 new BigNumber(await fixidityLibMock.newFixedFraction(1, 10)).toString(10),
-                DEPOSIT.toString(10),
+                REDEMPTION.toString(10),
                 {
                     from: governor,
                 },
@@ -228,7 +228,7 @@ contract('Fees', (accounts) => {
             await mixr.setTransactionFee(
                 someOtherERC20.address,
                 new BigNumber(await fixidityLibMock.newFixedFraction(1, 10)).toString(10),
-                DEPOSIT.toString(10),
+                REDEMPTION.toString(10),
                 {
                     from: governor,
                 },
