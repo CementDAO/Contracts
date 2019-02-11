@@ -194,6 +194,7 @@ contract Fees is Governance {
     /**
      * @dev (C20) Calculates the deposit fee as decribed in the CementDAO.
      * whitepaper. Uses fixed point units from FixidityLib.
+     * The transaction amount passed on as a parameter is always in _token wei.
      */
     function transactionFee(address _token, uint256 _amount, int8 _transactionType)
         public

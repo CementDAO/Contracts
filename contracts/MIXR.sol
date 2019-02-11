@@ -28,19 +28,31 @@ contract MIXR is Fees, ERC20, ERC20Detailed {
      * It consists of several transactions that must be authorized by
      * the user prior to calling this function (See ERC20 transferFrom spec).
      */
-    function depositToken(address _token, uint256 _amount)
+    function depositToken(address _token, uint256 _depositInTokenWei)
         public
         isAcceptedToken(_token)
     {
         // Receive the token that was sent
-        IERC20(_token).transferFrom(msg.sender, address(this), _amount);
+        IERC20(_token).transferFrom(msg.sender, address(this), _depositInTokenWei);
+        
         // Send an equal number of MIXR tokens back
-        uint256 basketWei = convertTokensAmount(_token, address(this), _amount);
-        _mint(address(this), basketWei);
-        IERC20(address(this)).approve(address(this), basketWei);
-        IERC20(address(this)).transferFrom(address(this), msg.sender, basketWei);
-        uint256 fee = transactionFee(_token, basketWei, DEPOSIT());
-        IERC20(_token).transferFrom(msg.sender, address(this), fee);
+        uint256 depositInBasketWei = convertTokensAmount(
+            _token, 
+            address(this), 
+            _depositInTokenWei
+        );
+        _mint(address(this), depositInBasketWei);
+        IERC20(address(this)).approve(address(this), depositInBasketWei);
+        IERC20(address(this)).transferFrom(address(this), msg.sender, depositInBasketWei);
+        
+        // Charge a transaction fee
+        uint256 feeInBasketWei = transactionFee(_token, _depositInTokenWei, DEPOSIT());
+        uint256 feeInTokenWei = convertTokensAmount(
+            address(this),
+            _token, 
+            feeInBasketWei
+        );
+        IERC20(_token).transferFrom(msg.sender, address(this), feeInTokenWei);
     }
 
     /**
@@ -51,18 +63,30 @@ contract MIXR is Fees, ERC20, ERC20Detailed {
      * several different tokens that is managed from the frontend as
      * several consecutive but separate transactions.
      */
-    function redeemMIXR(address _token, uint256 _amount)
+    function redeemMIXR(address _token, uint256 _redemptionInBasketWei)
         public
         isAcceptedToken(_token)
     {
         // Receive the MIXR token that was sent
-        IERC20(address(this)).transferFrom(msg.sender, address(this), _amount);
+        IERC20(address(this)).transferFrom(msg.sender, address(this), _redemptionInBasketWei);
         // Send an equal number of selected tokens back
-        uint256 tokenWei = convertTokensAmount(address(this), _token, _amount);
-        assert(tokenWei >= 0);
-        IERC20(_token).approve(address(this), tokenWei);
-        IERC20(_token).transferFrom(address(this), msg.sender, tokenWei);
+        uint256 redemptionInTokenWei = convertTokensAmount(
+            address(this), 
+            _token, 
+            _redemptionInBasketWei
+        );
+        IERC20(_token).approve(address(this), redemptionInTokenWei);
+        IERC20(_token).transferFrom(address(this), msg.sender, redemptionInTokenWei);
         // We always mint and burn MIX amounts
-        _burn(address(this), _amount);
+        _burn(address(this), _redemptionInBasketWei);
+
+        // Charge a redemption fee
+        uint256 feeInBasketWei = transactionFee(_token, redemptionInTokenWei, REDEMPTION());
+        uint256 feeInTokenWei = convertTokensAmount(
+            address(this),
+            _token, 
+            feeInBasketWei
+        );
+        IERC20(_token).transferFrom(msg.sender, address(this), feeInTokenWei);
     }
 }
