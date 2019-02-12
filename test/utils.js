@@ -46,12 +46,12 @@ const itShouldThrow = (reason, fun, expectedMessage) => {
     });
 };
 
-const transformNumbers = (decimals, tokens) => new BigNumber(10)
+const tokenNumber = (decimals, tokens) => new BigNumber(10)
     .pow(decimals)
     .multipliedBy(tokens)
     .toString(10);
 
 module.exports = {
     itShouldThrow,
-    transformNumbers,
+    tokenNumber,
 };

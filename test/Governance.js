@@ -6,7 +6,7 @@ const SampleOtherERC20 = artifacts.require('./test/SampleOtherERC20.sol');
 
 const BigNumber = require('bignumber.js');
 const chai = require('chai');
-const { itShouldThrow, transformNumbers } = require('./utils');
+const { itShouldThrow, tokenNumber } = require('./utils');
 
 // use default BigNumber
 chai.use(require('chai-bignumber')()).should();
@@ -116,12 +116,12 @@ contract('MIXR governance', (accounts) => {
 
             someERC20 = await SampleERC20.new(
                 governor,
-                transformNumbers(someERC20Decimals, 100),
+                tokenNumber(someERC20Decimals, 100),
                 someERC20Decimals,
             );
             someOtherERC20 = await SampleOtherERC20.new(
                 governor,
-                transformNumbers(someOtherERC20Decimals, 100),
+                tokenNumber(someOtherERC20Decimals, 100),
                 someOtherERC20Decimals,
             );
 

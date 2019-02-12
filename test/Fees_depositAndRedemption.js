@@ -5,7 +5,7 @@ const SampleOtherERC20 = artifacts.require('./test/SampleOtherERC20.sol');
 
 const BigNumber = require('bignumber.js');
 const chai = require('chai');
-const { itShouldThrow, transformNumbers } = require('./utils');
+const { itShouldThrow, tokenNumber } = require('./utils');
 // use default BigNumber
 chai.use(require('chai-bignumber')()).should();
 
@@ -45,12 +45,12 @@ contract('Fees', (accounts) => {
 
             someERC20 = await SampleERC20.new(
                 governor,
-                transformNumbers(someERC20Decimals, 100),
+                tokenNumber(someERC20Decimals, 100),
                 someERC20Decimals,
             );
             someOtherERC20 = await SampleOtherERC20.new(
                 governor,
-                transformNumbers(someOtherERC20Decimals, 100),
+                tokenNumber(someOtherERC20Decimals, 100),
                 someOtherERC20Decimals,
             );
 
@@ -98,12 +98,12 @@ contract('Fees', (accounts) => {
             );
             await someERC20.transfer(
                 user,
-                transformNumbers(someERC20Decimals, 100),
+                tokenNumber(someERC20Decimals, 100),
                 { from: governor },
             );
             await someOtherERC20.transfer(
                 user,
-                transformNumbers(someOtherERC20Decimals, 100),
+                tokenNumber(someOtherERC20Decimals, 100),
                 { from: governor },
             );
         });
@@ -114,13 +114,13 @@ contract('Fees', (accounts) => {
         it('transactionFee(x,70,DEPOSIT) with 30 y in basket - Deposit at deviation ceiling', async () => {
             await someOtherERC20.transfer(
                 mixr.address,
-                transformNumbers(someOtherERC20Decimals, 30),
+                tokenNumber(someOtherERC20Decimals, 30),
                 { from: user },
             );
             const result = new BigNumber(
                 await mixr.transactionFee(
                     someERC20.address,
-                    transformNumbers(someERC20Decimals, 70),
+                    tokenNumber(someERC20Decimals, 70),
                     DEPOSIT.toString(10),
                 ),
             );
@@ -131,12 +131,12 @@ contract('Fees', (accounts) => {
         itShouldThrow('transactionFee(x,71,DEPOSIT) with 29 y in basket - Deposit above deviation ceiling.', async () => {
             await someOtherERC20.transfer(
                 mixr.address,
-                transformNumbers(someOtherERC20Decimals, 29),
+                tokenNumber(someOtherERC20Decimals, 29),
                 { from: user },
             );
             await mixr.transactionFee(
                 someERC20.address,
-                transformNumbers(someERC20Decimals, 71),
+                tokenNumber(someERC20Decimals, 71),
                 DEPOSIT.toString(10),
             );
         }, 'revert');
@@ -144,13 +144,13 @@ contract('Fees', (accounts) => {
         it('transactionFee(x,29,DEPOSIT) with 71 y in basket - Deposit below deviation floor.', async () => {
             await someOtherERC20.transfer(
                 mixr.address,
-                transformNumbers(someOtherERC20Decimals, 71),
+                tokenNumber(someOtherERC20Decimals, 71),
                 { from: user },
             );
             const result = new BigNumber(
                 await mixr.transactionFee(
                     someERC20.address,
-                    transformNumbers(someERC20Decimals, 29),
+                    tokenNumber(someERC20Decimals, 29),
                     DEPOSIT.toString(10),
                 ),
             );
@@ -160,13 +160,13 @@ contract('Fees', (accounts) => {
         it('transactionFee(x,30,DEPOSIT) with 70 y in basket - Deposit just at deviation floor.', async () => {
             await someOtherERC20.transfer(
                 mixr.address,
-                transformNumbers(someOtherERC20Decimals, 70),
+                tokenNumber(someOtherERC20Decimals, 70),
                 { from: user },
             );
             const result = new BigNumber(
                 await mixr.transactionFee(
                     someERC20.address,
-                    transformNumbers(someERC20Decimals, 30),
+                    tokenNumber(someERC20Decimals, 30),
                     DEPOSIT.toString(10),
                 ),
             );
@@ -179,13 +179,13 @@ contract('Fees', (accounts) => {
             ).toString(10);
             await someOtherERC20.transfer(
                 mixr.address,
-                transformNumbers(someOtherERC20Decimals, 50),
+                tokenNumber(someOtherERC20Decimals, 50),
                 { from: user },
             );
             const result = new BigNumber(
                 await mixr.transactionFee(
                     someERC20.address,
-                    transformNumbers(someERC20Decimals, 50),
+                    tokenNumber(someERC20Decimals, 50),
                     DEPOSIT.toString(10),
                 ),
             );

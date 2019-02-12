@@ -5,7 +5,7 @@ const SampleERC721 = artifacts.require('./test/SampleERC721.sol');
 
 const BigNumber = require('bignumber.js');
 const chai = require('chai');
-const { itShouldThrow, transformNumbers } = require('./utils');
+const { itShouldThrow, tokenNumber } = require('./utils');
 // use default BigNumber
 chai.use(require('chai-bignumber')()).should();
 
@@ -50,7 +50,7 @@ contract('MIXR', (accounts) => {
             });
             someERC20 = await SampleERC20.new(
                 governor,
-                transformNumbers(someERC20Decimals, 100),
+                tokenNumber(someERC20Decimals, 100),
                 someERC20Decimals,
             );
             /**
@@ -91,7 +91,7 @@ contract('MIXR', (accounts) => {
              */
             await someERC20.transfer(
                 user,
-                transformNumbers(someERC20Decimals, 100),
+                tokenNumber(someERC20Decimals, 100),
                 { from: governor },
             );
             /**
@@ -120,7 +120,7 @@ contract('MIXR', (accounts) => {
                      */
                     await mixr.depositToken(
                         someERC20.address,
-                        transformNumbers(someERC20Decimals, 1),
+                        tokenNumber(someERC20Decimals, 1),
                         {
                             from: user,
                         },
@@ -138,12 +138,12 @@ contract('MIXR', (accounts) => {
                      */
                     const someOtherERC20 = await SampleERC20.new(
                         user,
-                        transformNumbers(someERC20Decimals, 100),
+                        tokenNumber(someERC20Decimals, 100),
                         someERC20Decimals,
                     );
                     await mixr.depositToken(
                         someOtherERC20.address,
-                        transformNumbers(someERC20Decimals, 1),
+                        tokenNumber(someERC20Decimals, 1),
                         {
                             from: user,
                         },
@@ -161,7 +161,7 @@ contract('MIXR', (accounts) => {
                      */
                     await mixr.depositToken(
                         someERC721.address,
-                        transformNumbers(someERC20Decimals, 100),
+                        tokenNumber(someERC20Decimals, 100),
                         {
                             from: user,
                         },

@@ -5,7 +5,7 @@ const SampleOtherERC20 = artifacts.require('./test/SampleOtherERC20.sol');
 
 const BigNumber = require('bignumber.js');
 const chai = require('chai');
-const { transformNumbers } = require('./utils');
+const { tokenNumber } = require('./utils');
 // use default BigNumber
 chai.use(require('chai-bignumber')()).should();
 
@@ -33,12 +33,12 @@ contract('Base', (accounts) => {
             someOtherERC20Decimals = 20;
             someERC20 = await SampleERC20.new(
                 governor,
-                transformNumbers(someERC20Decimals, 100),
+                tokenNumber(someERC20Decimals, 100),
                 someERC20Decimals,
             );
             someOtherERC20 = await SampleOtherERC20.new(
                 governor,
-                transformNumbers(someOtherERC20Decimals, 100),
+                tokenNumber(someOtherERC20Decimals, 100),
                 someOtherERC20Decimals,
             );
         });
@@ -84,12 +84,12 @@ contract('Base', (accounts) => {
 
             someERC20 = await SampleERC20.new(
                 governor,
-                transformNumbers(someERC20Decimals, 100),
+                tokenNumber(someERC20Decimals, 100),
                 someERC20Decimals,
             );
             someOtherERC20 = await SampleOtherERC20.new(
                 governor,
-                transformNumbers(someOtherERC20Decimals, 100),
+                tokenNumber(someOtherERC20Decimals, 100),
                 someOtherERC20Decimals,
             );
 
@@ -121,9 +121,9 @@ contract('Base', (accounts) => {
              * give some to user for test purposes
              */
             await someERC20.transfer(user,
-                transformNumbers(someERC20Decimals, 90), { from: governor });
+                tokenNumber(someERC20Decimals, 90), { from: governor });
             await someOtherERC20.transfer(user,
-                transformNumbers(someOtherERC20Decimals, 80), { from: governor });
+                tokenNumber(someOtherERC20Decimals, 80), { from: governor });
 
             /**
              * send some tokens
@@ -163,12 +163,12 @@ contract('Base', (accounts) => {
 
             someERC20 = await SampleERC20.new(
                 governor,
-                transformNumbers(someERC20Decimals, 100),
+                tokenNumber(someERC20Decimals, 100),
                 someERC20Decimals,
             );
             someOtherERC20 = await SampleOtherERC20.new(
                 governor,
-                transformNumbers(someOtherERC20Decimals, 100),
+                tokenNumber(someOtherERC20Decimals, 100),
                 someOtherERC20Decimals,
             );
 
@@ -186,9 +186,9 @@ contract('Base', (accounts) => {
              * give some to user for test purposes
              */
             await someERC20.transfer(user,
-                transformNumbers(someERC20Decimals, 90), { from: governor });
+                tokenNumber(someERC20Decimals, 90), { from: governor });
             await someOtherERC20.transfer(user,
-                transformNumbers(someOtherERC20Decimals, 80), { from: governor });
+                tokenNumber(someOtherERC20Decimals, 80), { from: governor });
         });
         it('basketBalance() = 0 before introducing any tokens', async () => {
             const converted = new BigNumber(
@@ -201,7 +201,7 @@ contract('Base', (accounts) => {
              * Introduce one token
              */
             await someERC20.transfer(mixr.address,
-                transformNumbers(someERC20Decimals, 1), { from: user });
+                tokenNumber(someERC20Decimals, 1), { from: user });
 
             const converted = new BigNumber(
                 await mixr.basketBalance(),
@@ -213,9 +213,9 @@ contract('Base', (accounts) => {
              * Introduce one token twice
              */
             await someERC20.transfer(mixr.address,
-                transformNumbers(someERC20Decimals, 1), { from: user });
+                tokenNumber(someERC20Decimals, 1), { from: user });
             await someERC20.transfer(mixr.address,
-                transformNumbers(someERC20Decimals, 1), { from: user });
+                tokenNumber(someERC20Decimals, 1), { from: user });
 
             const converted = new BigNumber(
                 await mixr.basketBalance(),
@@ -227,11 +227,11 @@ contract('Base', (accounts) => {
              * Introduce one token twice and another token once
              */
             await someERC20.transfer(mixr.address,
-                transformNumbers(someERC20Decimals, 1), { from: user });
+                tokenNumber(someERC20Decimals, 1), { from: user });
             await someERC20.transfer(mixr.address,
-                transformNumbers(someERC20Decimals, 1), { from: user });
+                tokenNumber(someERC20Decimals, 1), { from: user });
             await someOtherERC20.transfer(mixr.address,
-                transformNumbers(someOtherERC20Decimals, 1), { from: user });
+                tokenNumber(someOtherERC20Decimals, 1), { from: user });
 
             const converted = new BigNumber(
                 await mixr.basketBalance(),
