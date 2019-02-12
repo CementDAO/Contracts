@@ -87,6 +87,6 @@ contract MIXR is Fees, ERC20, ERC20Detailed {
             _token, 
             feeInBasketWei
         );
-        IERC20(_token).transferFrom(msg.sender, address(this), feeInTokenWei);
+        IERC20(_token).transferFrom(msg.sender, accountForFees, feeInTokenWei);
     }
 }
