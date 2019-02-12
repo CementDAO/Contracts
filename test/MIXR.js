@@ -251,7 +251,7 @@ contract('MIXR', (accounts) => {
             });
             someERC20 = await SampleERC20.new(
                 governor,
-                transformNumbers(someERC20Decimals, 100),
+                tokenNumber(someERC20Decimals, 100),
                 someERC20Decimals,
             );
             /**
@@ -292,7 +292,7 @@ contract('MIXR', (accounts) => {
              */
             await someERC20.transfer(
                 user,
-                transformNumbers(someERC20Decimals, 100),
+                tokenNumber(someERC20Decimals, 100),
                 { from: governor },
             );
             /**
@@ -335,14 +335,14 @@ contract('MIXR', (accounts) => {
         describe('actions that should fail', () => {
             afterEach(async () => {
                 const mixrBalance = new BigNumber(await mixr.totalSupply());
-                mixrBalance.should.be.bignumber.equal(transformNumbers(mixrDecimals, 10));
+                mixrBalance.should.be.bignumber.equal(tokenNumber(mixrDecimals, 10));
             });
             itShouldThrow(
                 'forbids redeeming without allowance',
                 async () => {
                     await mixr.redeemMIXR(
                         someERC20.address,
-                        transformNumbers(someERC20Decimals, 1),
+                        tokenNumber(someERC20Decimals, 1),
                         {
                             from: user,
                         },
@@ -356,12 +356,12 @@ contract('MIXR', (accounts) => {
                 async () => {
                     const someOtherERC20 = await SampleERC20.new(
                         user,
-                        transformNumbers(someERC20Decimals, 100),
+                        tokenNumber(someERC20Decimals, 100),
                         someERC20Decimals,
                     );
                     await mixr.redeemMIXR(
                         someOtherERC20.address,
-                        transformNumbers(someERC20Decimals, 1),
+                        tokenNumber(someERC20Decimals, 1),
                         {
                             from: user,
                         },
@@ -375,7 +375,7 @@ contract('MIXR', (accounts) => {
                 async () => {
                     await mixr.redeemMIXR(
                         someERC721.address,
-                        transformNumbers(someERC20Decimals, 1),
+                        tokenNumber(someERC20Decimals, 1),
                         {
                             from: user,
                         },
@@ -455,7 +455,7 @@ contract('MIXR', (accounts) => {
                     .should.be.bignumber.equal(previousMixrBalance.minus(oneMIXR));
                 new BigNumber(
                     await someERC20.balanceOf(mixr.address),
-                ).should.be.bignumber.equal(transformNumbers(someERC20Decimals, 9));
+                ).should.be.bignumber.equal(tokenNumber(someERC20Decimals, 9));
             });
         });
     });
