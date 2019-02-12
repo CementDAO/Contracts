@@ -5,11 +5,10 @@ const SampleERC721 = artifacts.require('./test/SampleERC721.sol');
 
 const BigNumber = require('bignumber.js');
 const chai = require('chai');
-
+const { itShouldThrow, transformNumbers } = require('./utils');
 // use default BigNumber
 chai.use(require('chai-bignumber')()).should();
 
-const { itShouldThrow, transformNumbers } = require('./utils');
 
 contract('MIXR', (accounts) => {
     let mixr;
@@ -21,10 +20,11 @@ contract('MIXR', (accounts) => {
     const owner = accounts[0];
     const governor = accounts[1];
     const user = accounts[2];
-    const oneBgERC20 = new BigNumber(10).pow(someERC20Decimals);
-    const oneBgMIXR = new BigNumber(10).pow(mixrDecimals);
+    const walletFees = accounts[2];
     // eslint-disable-next-line camelcase
     let fixed_1;
+    let DEPOSIT;
+    let REDEMPTION;
 
     before(async () => {
         mixr = await MIXR.deployed();
@@ -33,20 +33,30 @@ contract('MIXR', (accounts) => {
         someERC721 = await SampleERC721.deployed();
         // eslint-disable-next-line camelcase
         fixed_1 = new BigNumber(await fixidityLibMock.fixed_1());
+        DEPOSIT = await mixr.DEPOSIT();
+        REDEMPTION = await mixr.REDEMPTION();
     });
 
     // These tests rely on another test to have changed the fixtures (ERC20 approval).
     // If the tests order is changed, or if these tests are ran in isolation they will fail.
     describe('deposit functionality', () => {
         beforeEach(async () => {
+            /**
+             * deploy mixr and sample erc20
+             */
             mixr = await MIXR.new();
-            someERC20 = await SampleERC20.new(governor,
-                transformNumbers(someERC20Decimals, 100),
-                18);
-
             await mixr.addGovernor(governor, {
                 from: owner,
             });
+            someERC20 = await SampleERC20.new(
+                governor,
+                transformNumbers(someERC20Decimals, 100),
+                someERC20Decimals,
+            );
+
+            /**
+             * approve tokens
+             */
             await mixr.approveToken(someERC20.address, {
                 from: governor,
             });
@@ -57,11 +67,40 @@ contract('MIXR', (accounts) => {
                     from: governor,
                 },
             );
+
+            /**
+             * set base fee
+             */
+            const baseFee = new BigNumber(10).pow(23).toString(10);
+            await mixr.setTransactionFee(
+                someERC20.address,
+                baseFee,
+                DEPOSIT,
+                {
+                    from: governor,
+                },
+            );
+            await mixr.setTransactionFee(
+                someERC20.address,
+                baseFee,
+                REDEMPTION,
+                {
+                    from: governor,
+                },
+            );
+
+            /**
+             * send tokens to user to use in tests
+             */
             await someERC20.transfer(
                 user,
-                oneBgERC20.multipliedBy(50).toString(10),
+                transformNumbers(someERC20Decimals, 100),
                 { from: governor },
             );
+
+            /**
+             * verify mixr balance is zero
+             */
             const mixrBalance = new BigNumber(await mixr.totalSupply());
             assert.equal(mixrBalance.comparedTo(new BigNumber(0)), 0, 'should be 0.');
         });
@@ -74,9 +113,13 @@ contract('MIXR', (accounts) => {
             itShouldThrow(
                 'forbids depositing without allowance',
                 async () => {
-                    await mixr.depositToken(someERC20.address, oneBgERC20.toString(10), {
-                        from: user,
-                    });
+                    await mixr.depositToken(
+                        someERC20.address,
+                        transformNumbers(someERC20Decimals, 1),
+                        {
+                            from: user,
+                        },
+                    );
                 },
                 'revert',
             );
@@ -87,9 +130,13 @@ contract('MIXR', (accounts) => {
                     const someOtherERC20 = await SampleERC20.new(user,
                         new BigNumber(10).pow(18).multipliedBy(100).toString(10),
                         18);
-                    await mixr.depositToken(someOtherERC20.address, oneBgERC20.toString(10), {
-                        from: user,
-                    });
+                    await mixr.depositToken(
+                        someOtherERC20.address,
+                        transformNumbers(someERC20Decimals, 1),
+                        {
+                            from: user,
+                        },
+                    );
                 },
                 'revert',
             );
@@ -97,9 +144,13 @@ contract('MIXR', (accounts) => {
             itShouldThrow(
                 'forbids depositing bad tokens',
                 async () => {
-                    await mixr.depositToken(someERC721.address, oneBgERC20.toString(10), {
-                        from: user,
-                    });
+                    await mixr.depositToken(
+                        someERC721.address,
+                        transformNumbers(someERC20Decimals, 100),
+                        {
+                            from: user,
+                        },
+                    );
                 },
                 'revert',
             );
@@ -110,41 +161,27 @@ contract('MIXR', (accounts) => {
                     await someERC20.balanceOf(user),
                 );
                 const previousMixrBalance = new BigNumber(await mixr.balanceOf(user));
-                await mixr.setTransactionFee(
-                    someERC20.address,
-                    new BigNumber(await fixidityLibMock.newFixedFraction(1, 10)).toString(10),
-                    await mixr.DEPOSIT(),
-                    {
-                        from: governor,
-                    },
-                );
-                await mixr.setTransactionFee(
-                    someERC20.address,
-                    new BigNumber(await fixidityLibMock.newFixedFraction(1, 10)).toString(10),
-                    await mixr.REDEMPTION(),
-                    {
-                        from: governor,
-                    },
-                );
-                /* const basketWei = new BigNumber(
-                    await mixr.convertTokensAmount(
-                        someERC20.address,
-                        mixr.address,
-                        oneBgERC20.toString(10),
-                    ),
-                ); */
-                const fee = new BigNumber(
+                const oneToken = new BigNumber(10).pow(someERC20Decimals).multipliedBy(1);
+                const oneMIXR = new BigNumber(10).pow(mixrDecimals).multipliedBy(1);
+                const feeInBasketWei = new BigNumber(
                     await mixr.transactionFee(
                         someERC20.address,
-                        oneBgERC20.toString(10),
+                        oneToken.toString(10),
                         await mixr.DEPOSIT(),
                     ),
                 );
-                const toApprove = oneBgERC20.plus(fee);
+                const feeInTokenWei = new BigNumber(
+                    await mixr.convertTokensAmount(
+                        mixr.address,
+                        someERC20.address,
+                        feeInBasketWei.toString(10),
+                    ),
+                );
+                const toApprove = oneToken.plus(feeInTokenWei);
                 await someERC20.approve(mixr.address, toApprove.toString(10), {
                     from: user,
                 });
-                await mixr.depositToken(someERC20.address, oneBgERC20.toString(10), {
+                await mixr.depositToken(someERC20.address, oneToken.toString(10), {
                     from: user,
                 });
 
@@ -154,12 +191,20 @@ contract('MIXR', (accounts) => {
                 const newMixrBalance = new BigNumber(await mixr.balanceOf(user));
 
                 newERC20Balance.should.be.bignumber.equal(
-                    previousERC20Balance.minus(oneBgERC20.plus(fee)),
+                    previousERC20Balance.minus(oneToken.plus(feeInTokenWei)),
                 );
-                /* newMixrBalance.should.be.bignumber.equal(previousMixrBalance.plus(oneBgMIXR));
-                oneBgERC20.should.be.bignumber.equal(
-                    new BigNumber(await someERC20.balanceOf(mixr.address)),
-                ); */
+                newMixrBalance.should.be.bignumber.equal(
+                    previousMixrBalance.plus(oneMIXR),
+                );
+
+                const convertedDecimals = new BigNumber(
+                    await mixr.convertTokensAmount(
+                        someERC20.address,
+                        mixr.address,
+                        new BigNumber(await someERC20.balanceOf(mixr.address)).minus(feeInTokenWei),
+                    ),
+                );
+                oneMIXR.should.be.bignumber.equal(convertedDecimals);
             });
         });
     });
