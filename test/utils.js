@@ -23,12 +23,25 @@ const itShouldThrow = (reason, fun, expectedMessage) => {
                 /invalid JUMP|invalid opcode|out of gas|The contract code couldn't be stored, please check your gas amount/,
             );
         // An expected exception message was passed - match it.
-        } else if (error.message.indexOf(expectedMessage) < 0) {
-            assert.equal(
-                error.message,
-                expectedMessage,
-                'threw the wrong exception type',
-            );
+        } else if (error.message.length > 0) {
+            // Get the error message from require method within the contract
+            const errorReason = error.message.match('Reason given: (.*)\\.');
+            // If there's no message error provided, check for default errors
+            if (errorReason === null) {
+                assert.ok(
+                    error.message.indexOf(expectedMessage) >= 0,
+                    'threw the wrong exception type',
+                );
+            } else {
+                assert.equal(
+                    expectedMessage,
+                    errorReason[1],
+                    'threw the wrong exception type',
+                );
+            }
+        // In case that nothing matches!
+        } else {
+            assert.ok(false, `something went wrong with asserts. Given error ${error}`);
         }
     });
 };

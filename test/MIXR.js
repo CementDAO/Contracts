@@ -53,7 +53,6 @@ contract('MIXR', (accounts) => {
                 transformNumbers(someERC20Decimals, 100),
                 someERC20Decimals,
             );
-
             /**
              * approve tokens
              */
@@ -67,7 +66,6 @@ contract('MIXR', (accounts) => {
                     from: governor,
                 },
             );
-
             /**
              * set base fee
              */
@@ -88,7 +86,6 @@ contract('MIXR', (accounts) => {
                     from: governor,
                 },
             );
-
             /**
              * send tokens to user to use in tests
              */
@@ -97,7 +94,6 @@ contract('MIXR', (accounts) => {
                 transformNumbers(someERC20Decimals, 100),
                 { from: governor },
             );
-
             /**
              * set account to receive fees
              */
@@ -118,6 +114,10 @@ contract('MIXR', (accounts) => {
             itShouldThrow(
                 'forbids depositing without allowance',
                 async () => {
+                    /**
+                     * try to deposit without authorization
+                     * should fail because it is not authorized yet.
+                     */
                     await mixr.depositToken(
                         someERC20.address,
                         transformNumbers(someERC20Decimals, 1),
@@ -132,6 +132,10 @@ contract('MIXR', (accounts) => {
             itShouldThrow(
                 'forbids depositing unknow token',
                 async () => {
+                    /**
+                     * deploy new erc20 contract and try to deposit
+                     * should fail because it is not accepted yet
+                     */
                     const someOtherERC20 = await SampleERC20.new(
                         user,
                         transformNumbers(someERC20Decimals, 100),
@@ -145,12 +149,16 @@ contract('MIXR', (accounts) => {
                         },
                     );
                 },
-                'revert',
+                'The given token isn\'t listed as accepted.',
             );
 
             itShouldThrow(
                 'forbids depositing bad tokens',
                 async () => {
+                    /**
+                     * try to deposit an erc721 token
+                     * should fail because it is not accepted yet
+                     */
                     await mixr.depositToken(
                         someERC721.address,
                         transformNumbers(someERC20Decimals, 100),
@@ -159,7 +167,7 @@ contract('MIXR', (accounts) => {
                         },
                     );
                 },
-                'revert',
+                'The given token isn\'t listed as accepted.',
             );
         });
         describe('actions that should work', () => {
