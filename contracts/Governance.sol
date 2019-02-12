@@ -89,12 +89,12 @@ contract Governance is Base, Ownable {
      * @dev (C4) This function sets a proportion for a token in the basket,
      * allowing this smart contract to receive them. This proportions are
      * stored as fixidity units.
-     * Test setTokenTargetProportions() throws if the proportions passed on the parameter don’t add up to FixidityLib.fixed_1()
+     * Test setTokenTargetProportions() throws if the proportions passed on the parameter don’t add up to FixidityLib.fixed1()
      * Test setTokenTargetProportions() throws if the proportions passed on the parameter don’t exactly match the approved tokens.
      * Test setTokenTargetProportions() throws if any of the proportions passed on the parameter is below 0
-     * Test setTokenTargetProportions([FixidityLib.fixed_1()]) works for one approved token.
-     * Test setTokenTargetProportions([FixidityLib.fixed_1()/2,FixidityLib.fixed_1()/2]) works for two approved tokens.
-     * Test setTokenTargetProportions([FixidityLib.fixed_1(),0]) works for two approved tokens.
+     * Test setTokenTargetProportions([FixidityLib.fixed1()]) works for one approved token.
+     * Test setTokenTargetProportions([FixidityLib.fixed1()/2,FixidityLib.fixed1()/2]) works for two approved tokens.
+     * Test setTokenTargetProportions([FixidityLib.fixed1(),0]) works for two approved tokens.
      */
     function setTokensTargetProportion(address[] memory _tokens, int256[] memory _proportions)
         public
@@ -106,7 +106,7 @@ contract Governance is Base, Ownable {
         for(uint256 x = 0; x < nTokens; x += 1) {
             TokenData memory token = tokens[_tokens[x]];
             require(
-                _proportions[x] >= 0 && _proportions[x] <= FixidityLib.fixed_1(),
+                _proportions[x] >= 0 && _proportions[x] <= FixidityLib.fixed1(),
                 "Invalid proportion."
             );
             require(
@@ -138,6 +138,6 @@ contract Governance is Base, Ownable {
                 newProportions = newProportions + token.targetProportion;
             }
         }
-        return (newProportions == FixidityLib.fixed_1());
+        return (newProportions == FixidityLib.fixed1());
     }
 }

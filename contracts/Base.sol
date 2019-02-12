@@ -20,7 +20,7 @@ contract Base {
     /**
      * @dev Scaling factor for the calculation of fees, expressed in fixed 
      * point units.
-     * Test scalingFactor = FixidityLib.fixed_1()/2
+     * Test scalingFactor = FixidityLib.fixed1()/2
      */
     int256 constant public scalingFactor = 500000000000000000000000000000000000;
 
@@ -43,9 +43,9 @@ contract Base {
         bool approved;
         /**
          * @dev (C4) The proportion of each token we want in the basket
-         * using fixed point units in a 0 to FixidityLib.fixed_1() range.
+         * using fixed point units in a 0 to FixidityLib.fixed1() range.
          * ToDo: Change so that it can be sanity-checked that all proportions add
-         * up to FixidityLib.fixed_1(). Otherwise we will have to do a costly 
+         * up to FixidityLib.fixed1(). Otherwise we will have to do a costly 
          * conversion with each fee calculation.
          */
         int256 targetProportion;

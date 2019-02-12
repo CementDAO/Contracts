@@ -52,7 +52,7 @@ contract Fees is Governance {
      * @dev (C5, C6, C7) As a Governance Function, I would like a API, which may only
      * be accessed by the whitelisted addresses, and which allows me
      * to set the base fee for deposit, redemption and transfer transactions. The fee is set in fixed
-     * point units in which fixed_1() is equal to 1.
+     * point units in which fixed1() is equal to 1.
      * Test setTransactionFee(minimumFee) works and token.transactionFee returns minimumFee
      * Test setTransactionFee(minimumFee-1) throws
      */
@@ -74,15 +74,15 @@ contract Fees is Governance {
      * @dev (C20) Returns what would be the proportion of a token in the basket
      * after depositing or redeeming a number of tokens. If adding, this 
      * function will throw if the amount of tokens deposited, the current token
-     * balance or the basket balance are greater than FixidityLib.max_fixed_add().
-     * This function returns values in the [0,fixed_1()] range.
+     * balance or the basket balance are greater than FixidityLib.maxFixedAdd().
+     * This function returns values in the [0,fixed1()] range.
      * Testing: With an empty basket.
-     * Test proportionAfterTransaction(token,1,DEPOSIT) returns fixed_1
+     * Test proportionAfterTransaction(token,1,DEPOSIT) returns fixed1
      * Introduce 1 token of x into the basket.
-     * Test proportionAfterTransaction(x,1,DEPOSIT) returns fixed_1
-     * Test proportionAfterTransaction(y,1,DEPOSIT) returns fixed_1/2
+     * Test proportionAfterTransaction(x,1,DEPOSIT) returns fixed1
+     * Test proportionAfterTransaction(y,1,DEPOSIT) returns fixed1/2
      * Testing: With a basket containing 2 wei each of x and y.
-     * Test proportionAfterTransaction(x,1,REDEMPTION) returns fixed_1/2
+     * Test proportionAfterTransaction(x,1,REDEMPTION) returns fixed1/2
      * Test proportionAfterTransaction(x,2,REDEMPTION) returns 0
      */
     function proportionAfterTransaction(
@@ -109,8 +109,8 @@ contract Fees is Governance {
         // Add the token balance to the amount to deposit, in fixidity units
         int256 tokenBalanceAfterTransaction;
         if (_transactionType == DEPOSIT()) {
-            require(tokenBalance < FixidityLib.max_fixed_add(), "Token balance to high to accept deposits.");
-            require(transactionAmount < FixidityLib.max_fixed_add(), "Deposit too large, risk of overflow.");
+            require(tokenBalance < FixidityLib.maxFixedAdd(), "Token balance to high to accept deposits.");
+            require(transactionAmount < FixidityLib.maxFixedAdd(), "Deposit too large, risk of overflow.");
             tokenBalanceAfterTransaction = FixidityLib.add(
                 tokenBalance, 
                 transactionAmount
@@ -133,8 +133,8 @@ contract Fees is Governance {
         );
         int256 basketAfterTransaction;
         if (_transactionType == DEPOSIT()) {
-            require(basketBeforeTransaction < FixidityLib.max_fixed_add(), "Basket balance too high to accept deposits.");
-            require(transactionAmount < FixidityLib.max_fixed_add(), "Deposit too large, risk of overflow.");
+            require(basketBeforeTransaction < FixidityLib.maxFixedAdd(), "Basket balance too high to accept deposits.");
+            require(transactionAmount < FixidityLib.maxFixedAdd(), "Deposit too large, risk of overflow.");
             basketAfterTransaction = FixidityLib.add(
                 basketBeforeTransaction, 
                 transactionAmount
@@ -153,14 +153,14 @@ contract Fees is Governance {
             basketAfterTransaction
         );
         
-        //assert(result >= 0 && result <= FixidityLib.fixed_1());
+        //assert(result >= 0 && result <= FixidityLib.fixed1());
         return result;
     }
 
     /**
      * @dev (C20) Returns what would be the deviation from the target 
      * proportion of a token in the basket after adding a number of tokens.
-     * This function returns values in the [-fixed_1(),fixed_1()] range.
+     * This function returns values in the [-fixed1(),fixed1()] range.
      * With an empty basket:
      * Set targetProportion of token x to 1
      * Test deviationAfterTransaction(x,1,DEPOSIT) returns 1
@@ -184,8 +184,8 @@ contract Fees is Governance {
             token.targetProportion
         );
         assert(
-            result >= FixidityLib.fixed_1()*(-1) && 
-            result <= FixidityLib.fixed_1()
+            result >= FixidityLib.fixed1()*(-1) && 
+            result <= FixidityLib.fixed1()
         );
         return result;
     }

@@ -22,7 +22,7 @@ contract('MIXR', (accounts) => {
     const user = accounts[2];
     const walletFees = accounts[3];
     // eslint-disable-next-line camelcase
-    let fixed_1;
+    let fixed1;
     let DEPOSIT;
     let REDEMPTION;
 
@@ -32,7 +32,7 @@ contract('MIXR', (accounts) => {
         someERC20 = await SampleERC20.deployed();
         someERC721 = await SampleERC721.deployed();
         // eslint-disable-next-line camelcase
-        fixed_1 = new BigNumber(await fixidityLibMock.fixed_1());
+        fixed1 = new BigNumber(await fixidityLibMock.fixed1());
         DEPOSIT = await mixr.DEPOSIT();
         REDEMPTION = await mixr.REDEMPTION();
     });
@@ -61,7 +61,7 @@ contract('MIXR', (accounts) => {
             });
             await mixr.setTokensTargetProportion(
                 [someERC20.address],
-                [fixed_1.toString(10)],
+                [fixed1.toString(10)],
                 {
                     from: governor,
                 },
@@ -255,7 +255,7 @@ contract('MIXR', (accounts) => {
             });
             await mixr.setTokensTargetProportion(
                 [someERC20.address],
-                [fixed_1.toString(10)],
+                [fixed1.toString(10)],
                 {
                     from: governor,
                 },
