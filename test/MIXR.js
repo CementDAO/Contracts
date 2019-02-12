@@ -20,7 +20,7 @@ contract('MIXR', (accounts) => {
     const owner = accounts[0];
     const governor = accounts[1];
     const user = accounts[2];
-    const walletFees = accounts[2];
+    const walletFees = accounts[3];
     // eslint-disable-next-line camelcase
     let fixed_1;
     let DEPOSIT;
@@ -99,6 +99,11 @@ contract('MIXR', (accounts) => {
             );
 
             /**
+             * set account to receive fees
+             */
+            await mixr.setAccountForFees(walletFees, { from: governor });
+
+            /**
              * verify mixr balance is zero
              */
             const mixrBalance = new BigNumber(await mixr.totalSupply());
@@ -127,9 +132,11 @@ contract('MIXR', (accounts) => {
             itShouldThrow(
                 'forbids depositing unknow token',
                 async () => {
-                    const someOtherERC20 = await SampleERC20.new(user,
-                        new BigNumber(10).pow(18).multipliedBy(100).toString(10),
-                        18);
+                    const someOtherERC20 = await SampleERC20.new(
+                        user,
+                        transformNumbers(someERC20Decimals, 100),
+                        someERC20Decimals,
+                    );
                     await mixr.depositToken(
                         someOtherERC20.address,
                         transformNumbers(someERC20Decimals, 1),
@@ -157,12 +164,21 @@ contract('MIXR', (accounts) => {
         });
         describe('actions that should work', () => {
             it('can accept approved tokens', async () => {
+                /**
+                 * get previous balances
+                 */
                 const previousERC20Balance = new BigNumber(
                     await someERC20.balanceOf(user),
                 );
                 const previousMixrBalance = new BigNumber(await mixr.balanceOf(user));
+                /**
+                 * define amounts
+                 */
                 const oneToken = new BigNumber(10).pow(someERC20Decimals).multipliedBy(1);
                 const oneMIXR = new BigNumber(10).pow(mixrDecimals).multipliedBy(1);
+                /**
+                 * estimate fees to authorize transactions
+                 */
                 const feeInBasketWei = new BigNumber(
                     await mixr.transactionFee(
                         someERC20.address,
@@ -178,33 +194,38 @@ contract('MIXR', (accounts) => {
                     ),
                 );
                 const toApprove = oneToken.plus(feeInTokenWei);
+                /**
+                 * approve and deposit
+                 */
                 await someERC20.approve(mixr.address, toApprove.toString(10), {
                     from: user,
                 });
                 await mixr.depositToken(someERC20.address, oneToken.toString(10), {
                     from: user,
                 });
-
-                const newERC20Balance = new BigNumber(
-                    await someERC20.balanceOf(user),
-                );
-                const newMixrBalance = new BigNumber(await mixr.balanceOf(user));
-
-                newERC20Balance.should.be.bignumber.equal(
+                /**
+                 * asserts - verify balances
+                 */
+                new BigNumber(await someERC20.balanceOf(user)).should.be.bignumber.equal(
                     previousERC20Balance.minus(oneToken.plus(feeInTokenWei)),
                 );
-                newMixrBalance.should.be.bignumber.equal(
+                new BigNumber(await mixr.balanceOf(user)).should.be.bignumber.equal(
                     previousMixrBalance.plus(oneMIXR),
                 );
-
-                const convertedDecimals = new BigNumber(
-                    await mixr.convertTokensAmount(
-                        someERC20.address,
-                        mixr.address,
-                        new BigNumber(await someERC20.balanceOf(mixr.address)).minus(feeInTokenWei),
+                new BigNumber(await someERC20.balanceOf(walletFees))
+                    .should.be.bignumber.equal(feeInTokenWei);
+                /**
+                 * since basket was empty, it should be exactly 1 MIXR now
+                 */
+                oneMIXR.should.be.bignumber.equal(
+                    new BigNumber(
+                        await mixr.convertTokensAmount(
+                            someERC20.address,
+                            mixr.address,
+                            new BigNumber(await someERC20.balanceOf(mixr.address)),
+                        ),
                     ),
                 );
-                oneMIXR.should.be.bignumber.equal(convertedDecimals);
             });
         });
     });
