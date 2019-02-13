@@ -192,18 +192,13 @@ contract('MIXR', (accounts) => {
                         await mixr.DEPOSIT(),
                     ),
                 );
-                const feeInTokenWei = new BigNumber(
-                    await mixr.convertTokensAmount(
-                        mixr.address,
-                        someERC20.address,
-                        feeInBasketWei.toString(10),
-                    ),
-                );
-                const toApprove = oneToken.plus(feeInTokenWei);
                 /**
                  * approve and deposit
                  */
-                await someERC20.approve(mixr.address, toApprove.toString(10), {
+                await mixr.approve(mixr.address, feeInBasketWei.toString(10), {
+                    from: user,
+                });
+                await someERC20.approve(mixr.address, oneToken.toString(10), {
                     from: user,
                 });
                 await mixr.depositToken(someERC20.address, oneToken.toString(10), {
@@ -213,13 +208,13 @@ contract('MIXR', (accounts) => {
                  * asserts - verify balances
                  */
                 new BigNumber(await someERC20.balanceOf(user)).should.be.bignumber.equal(
-                    previousERC20Balance.minus(oneToken.plus(feeInTokenWei)),
+                    previousERC20Balance.minus(oneToken),
                 );
                 new BigNumber(await mixr.balanceOf(user)).should.be.bignumber.equal(
-                    previousMixrBalance.plus(oneMIXR),
+                    previousMixrBalance.plus(oneMIXR.minus(feeInBasketWei)),
                 );
-                new BigNumber(await someERC20.balanceOf(walletFees))
-                    .should.be.bignumber.equal(feeInTokenWei);
+                new BigNumber(await mixr.balanceOf(walletFees))
+                    .should.be.bignumber.equal(feeInBasketWei);
                 /**
                  * since basket was empty, it should be exactly 1 MIXR now
                  */
@@ -312,18 +307,13 @@ contract('MIXR', (accounts) => {
                     await mixr.DEPOSIT(),
                 ),
             );
-            const feeInTokenWei = new BigNumber(
-                await mixr.convertTokensAmount(
-                    mixr.address,
-                    someERC20.address,
-                    feeInBasketWei.toString(10),
-                ),
-            );
             /**
              * approve and deposit
              */
-            const toApprove = tokensToTransfer.plus(feeInTokenWei);
-            await someERC20.approve(mixr.address, toApprove.toString(10), {
+            await mixr.approve(mixr.address, feeInBasketWei.toString(10), {
+                from: user,
+            });
+            await someERC20.approve(mixr.address, tokensToTransfer.toString(10), {
                 from: user,
             });
             await mixr.depositToken(someERC20.address, tokensToTransfer.toString(10), {
@@ -400,13 +390,6 @@ contract('MIXR', (accounts) => {
                         await mixr.REDEMPTION(),
                     ),
                 );
-                const feeInTokenWei = new BigNumber(
-                    await mixr.convertTokensAmount(
-                        mixr.address,
-                        someERC20.address,
-                        feeInBasketWei.toString(10),
-                    ),
-                );
                 /**
                  * approve and deposit
                  */
@@ -417,16 +400,10 @@ contract('MIXR', (accounts) => {
                         oneToken.toString(10),
                     ),
                 );
+                const totalApprove = amountInBasketWei.plus(feeInBasketWei);
                 await mixr.approve(
                     mixr.address,
-                    amountInBasketWei.toString(10),
-                    {
-                        from: user,
-                    },
-                );
-                await someERC20.approve(
-                    mixr.address,
-                    feeInTokenWei.toString(10),
+                    totalApprove.toString(10),
                     {
                         from: user,
                     },
@@ -447,10 +424,12 @@ contract('MIXR', (accounts) => {
                 new BigNumber(
                     await someERC20.balanceOf(user),
                 ).should.be.bignumber.equal(
-                    previousERC20Balance.plus(oneToken).minus(feeInTokenWei),
+                    previousERC20Balance.plus(oneToken),
                 );
                 new BigNumber(await mixr.balanceOf(user))
-                    .should.be.bignumber.equal(previousMixrBalance.minus(oneMIXR));
+                    .should.be.bignumber.equal(
+                        previousMixrBalance.minus(oneMIXR.plus(feeInBasketWei)),
+                    );
                 new BigNumber(
                     await someERC20.balanceOf(mixr.address),
                 ).should.be.bignumber.equal(tokenNumber(someERC20Decimals, 9));

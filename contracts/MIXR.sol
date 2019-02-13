@@ -47,12 +47,7 @@ contract MIXR is Fees, ERC20, ERC20Detailed {
         
         // Charge a transaction fee
         uint256 feeInBasketWei = transactionFee(_token, _depositInTokenWei, DEPOSIT());
-        uint256 feeInTokenWei = convertTokensAmount(
-            address(this),
-            _token, 
-            feeInBasketWei
-        );
-        IERC20(_token).transferFrom(msg.sender, accountForFees, feeInTokenWei);
+        IERC20(address(this)).transferFrom(msg.sender, accountForFees, feeInBasketWei);
     }
 
     /**
@@ -82,11 +77,6 @@ contract MIXR is Fees, ERC20, ERC20Detailed {
 
         // Charge a redemption fee
         uint256 feeInBasketWei = transactionFee(_token, redemptionInTokenWei, REDEMPTION());
-        uint256 feeInTokenWei = convertTokensAmount(
-            address(this),
-            _token, 
-            feeInBasketWei
-        );
-        IERC20(_token).transferFrom(msg.sender, accountForFees, feeInTokenWei);
+        IERC20(address(this)).transferFrom(msg.sender, accountForFees, feeInBasketWei);
     }
 }
