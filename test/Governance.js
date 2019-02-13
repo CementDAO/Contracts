@@ -101,6 +101,19 @@ contract('MIXR governance', (accounts) => {
             },
             'The specified address doesn\'t look like a deployed contract.',
         );
+
+        itShouldThrow(
+            'forbids approving an approved token',
+            async () => {
+                await mixr.approveToken(someERC20.address, {
+                    from: governor,
+                });
+                await mixr.approveToken(someERC20.address, {
+                    from: governor,
+                });
+            },
+            'Token is already approved!',
+        );
     });
 
     // These tests rely on another test to have changed the fixtures (ERC20 approval).
@@ -227,5 +240,35 @@ contract('MIXR governance', (accounts) => {
                 },
             );
         }, 'The given token isn\'t listed as accepted.');
+
+        itShouldThrow('forbids to send invalid proportion', async () => {
+            const tokensArray = [someERC20.address, someOtherERC20.address];
+            const proportionArray = [
+                new BigNumber(await fixidityLibMock.newFixedFraction(1, 2)).toString(10),
+                -1,
+            ];
+            await mixr.setTokensTargetProportion(
+                tokensArray,
+                proportionArray,
+                {
+                    from: governor,
+                },
+            );
+        }, 'Invalid proportion.');
+
+        itShouldThrow('forbids to send invalid total proportions', async () => {
+            const tokensArray = [someERC20.address, someOtherERC20.address];
+            const proportionArray = [
+                new BigNumber(await fixidityLibMock.newFixedFraction(1, 2)).toString(10),
+                new BigNumber(await fixidityLibMock.newFixedFraction(1, 4)).toString(10),
+            ];
+            await mixr.setTokensTargetProportion(
+                tokensArray,
+                proportionArray,
+                {
+                    from: governor,
+                },
+            );
+        }, 'Invalid total of proportions.');
     });
 });

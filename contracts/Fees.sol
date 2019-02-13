@@ -39,7 +39,6 @@ contract Fees is Governance {
         return 1;
     }
 
-
     /**
      * @dev (C13) As a Stablecoin Holder, I would like to be
      * able to pay any fees with any of the stablecoins on the basket list
@@ -63,7 +62,7 @@ contract Fees is Governance {
         require(_fee >= minimumFee, "Fees can't be set to less than the minimum fee.");
         TokenData memory token = tokens[_token];
         if (_transactionType == DEPOSIT()) token.depositFee = _fee;
-        else if (_transactionType == TRANSFER()) token.transferFee = _fee;
+        // else if (_transactionType == TRANSFER()) token.transferFee = _fee;
         else if (_transactionType == REDEMPTION()) token.redemptionFee = _fee;
         else revert("Transaction type not accepted.");
         
@@ -115,8 +114,7 @@ contract Fees is Governance {
                 tokenBalance, 
                 transactionAmount
             );
-        }
-        else if (_transactionType == REDEMPTION()) {
+        } else if (_transactionType == REDEMPTION()) {
             assert(transactionAmount <= tokenBalance);
             tokenBalanceAfterTransaction = FixidityLib.subtract(
                 tokenBalance, 
@@ -139,14 +137,13 @@ contract Fees is Governance {
                 basketBeforeTransaction, 
                 transactionAmount
             );
-        }
-        else if (_transactionType == REDEMPTION()) {
+        } else if (_transactionType == REDEMPTION()) {
             assert(transactionAmount <= basketBeforeTransaction);
             basketAfterTransaction = FixidityLib.subtract(
                 basketBeforeTransaction, 
                 transactionAmount
             );
-        } else revert("Transaction type not accepted.");
+        } // else statement does not happen here. It would have reverted above.
 
         int256 result = FixidityLib.divide(
             tokenBalanceAfterTransaction,
@@ -295,7 +292,7 @@ contract Fees is Governance {
                     baseFee,
                     scaledLogit
             );
-        } else revert("Transaction type not accepted.");
+        } // else statement does not happen here. It would have reverted above.
 
         assert(fee >= 0);
         if (fee < Utils.safeCast(minimumFee)) 

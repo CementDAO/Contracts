@@ -17,7 +17,6 @@ contract('Fees', (accounts) => {
     const owner = accounts[0];
     const governor = accounts[1];
     const user = accounts[2];
-    // eslint-disable-next-line camelcase
     let fixed1;
     let DEPOSIT;
     let REDEMPTION;
@@ -27,7 +26,6 @@ contract('Fees', (accounts) => {
         fixidityLibMock = await FixidityLibMock.deployed();
         someERC20 = await SampleERC20.deployed();
         someOtherERC20 = await SampleOtherERC20.deployed();
-        // eslint-disable-next-line camelcase
         fixed1 = new BigNumber(await fixidityLibMock.fixed1());
         DEPOSIT = await mixr.DEPOSIT();
         REDEMPTION = await mixr.REDEMPTION();
