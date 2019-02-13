@@ -70,13 +70,21 @@ contract MIXR is Fees, ERC20, ERC20Detailed {
             _token, 
             _redemptionInBasketWei
         );
-        IERC20(_token).approve(address(this), redemptionInTokenWei);
-        IERC20(_token).transferFrom(address(this), msg.sender, redemptionInTokenWei);
+        //
+        uint256 feeInBasketWei = transactionFee(_token, redemptionInTokenWei, REDEMPTION());
+        uint256 withoutFeeInBasketWei = _redemptionInBasketWei - feeInBasketWei;
+        uint256 withoutFeeInTokenWei = convertTokensAmount(
+            address(this), 
+            _token, 
+            withoutFeeInBasketWei
+        );
+        //
+        IERC20(_token).approve(address(this), withoutFeeInTokenWei);
+        IERC20(_token).transferFrom(address(this), msg.sender, withoutFeeInTokenWei);
         // We always mint and burn MIX amounts
-        _burn(address(this), _redemptionInBasketWei);
+        _burn(address(this), withoutFeeInBasketWei);
 
         // Charge a redemption fee
-        uint256 feeInBasketWei = transactionFee(_token, redemptionInTokenWei, REDEMPTION());
         IERC20(address(this)).transferFrom(msg.sender, accountForFees, feeInBasketWei);
     }
 }

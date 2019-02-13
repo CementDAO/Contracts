@@ -421,10 +421,25 @@ contract('MIXR', (accounts) => {
                 /**
                  * asserts
                  */
+                const withoutFeeInBasketWei = amountInBasketWei.minus(feeInBasketWei);
+                const withoutFeeInTokenWei = new BigNumber(
+                    await mixr.convertTokensAmount(
+                        mixr.address,
+                        someERC20.address,
+                        withoutFeeInBasketWei.toString(10),
+                    ),
+                );
+                const feeInTokenWei = new BigNumber(
+                    await mixr.convertTokensAmount(
+                        mixr.address,
+                        someERC20.address,
+                        feeInBasketWei.toString(10),
+                    ),
+                );
                 new BigNumber(
                     await someERC20.balanceOf(user),
                 ).should.be.bignumber.equal(
-                    previousERC20Balance.plus(oneToken),
+                    previousERC20Balance.plus(withoutFeeInTokenWei),
                 );
                 new BigNumber(await mixr.balanceOf(user))
                     .should.be.bignumber.equal(
@@ -432,7 +447,9 @@ contract('MIXR', (accounts) => {
                     );
                 new BigNumber(
                     await someERC20.balanceOf(mixr.address),
-                ).should.be.bignumber.equal(tokenNumber(someERC20Decimals, 9));
+                ).should.be.bignumber.equal(
+                    (new BigNumber(10).pow(someERC20Decimals).multipliedBy(9)).plus(feeInTokenWei),
+                );
             });
         });
     });
