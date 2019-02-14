@@ -95,6 +95,12 @@ contract MIXR is Fees, ERC20, ERC20Detailed {
             "Redemptions at or below the minimum fee are not accepted."
         );
 
+        // Check that we have enough of _token to return
+        require (
+            returnInTokenWei <= IERC20(_token).balanceOf(address(this)), 
+            "The MIXR doesn't have enough stablecoins for this redemption."
+        );
+
         // Receive the MIXR token that was sent
         IERC20(address(this)).transferFrom(msg.sender, address(this), _redemptionInBasketWei);
 
