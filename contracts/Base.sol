@@ -132,7 +132,7 @@ contract Base {
     }
 
     /**
-     * @dev Returns an address array of approved tokens, and it's size
+     * @dev Returns an address array of approved tokens, and its size
      */
     function getApprovedTokens() 
         public 
@@ -144,7 +144,7 @@ contract Base {
         address[] memory activeAddresses = new address[](totalAddresses);
         for (uint256 totalIndex = 0; totalIndex < totalAddresses; totalIndex += 1) {
             TokenData memory token = tokens[tokensList[totalIndex]];
-            if (token.approved == true) {
+            if (token.approved) {
                 activeAddresses[activeIndex] = tokensList[totalIndex];
                 activeIndex += 1; // Unlikely to overflow
             }
