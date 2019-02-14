@@ -169,7 +169,7 @@ contract('MIXR', (accounts) => {
             );
         });
         describe('depositToken', () => {
-            it('depositToken(18 decimals, 1 token)', async () => {
+            it('depositToken(50)', async () => {
                 /**
                  * get previous balances
                  */
