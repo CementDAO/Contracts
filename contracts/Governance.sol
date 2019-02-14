@@ -82,7 +82,7 @@ contract Governance is Base, Ownable {
          * TODO: we should also verify that it's not a contract address.
          * Maybe we also want multiple verification.
          */
-        accountForFees = _wallet;
+        stakeholderAccount = _wallet;
     }
 
     /**

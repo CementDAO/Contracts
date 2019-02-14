@@ -32,22 +32,33 @@ contract MIXR is Fees, ERC20, ERC20Detailed {
         public
         isAcceptedToken(_token)
     {
-        // Receive the token that was sent
-        IERC20(_token).transferFrom(msg.sender, address(this), _depositInTokenWei);
-        
-        // Send an equal number of MIXR tokens back
+        // Calculate the deposit fee and the returned amount
+        uint256 feeInBasketWei = transactionFee(_token, _depositInTokenWei, DEPOSIT());
         uint256 depositInBasketWei = convertTokensAmount(
             _token, 
             address(this), 
             _depositInTokenWei
         );
+        uint256 returnInBasketWei = depositInBasketWei.sub(feeInBasketWei);
+
+        // Check for minimum viable deposit
+        require (
+            feeInBasketWei < depositInBasketWei, 
+            "Deposits at or below the minimum fee are not accepted."
+        );
+
+        // We should check for deposits that force us to mint more MIX than we want
+
+        // Receive the token that was sent and mint an equal number of MIX
+        IERC20(_token).transferFrom(msg.sender, address(this), _depositInTokenWei);
         _mint(address(this), depositInBasketWei);
         IERC20(address(this)).approve(address(this), depositInBasketWei);
-        IERC20(address(this)).transferFrom(address(this), msg.sender, depositInBasketWei);
-        
-        // Charge a transaction fee
-        uint256 feeInBasketWei = transactionFee(_token, _depositInTokenWei, DEPOSIT());
-        IERC20(address(this)).transferFrom(msg.sender, accountForFees, feeInBasketWei);
+
+        // Send the deposit fee to the stakeholder account
+        IERC20(address(this)).transferFrom(address(this), stakeholderAccount, feeInBasketWei);
+
+        // Return an equal nubmer of MIX minus the fee to sender
+        IERC20(address(this)).transferFrom(address(this), msg.sender, returnInBasketWei);
     }
 
     /**
@@ -62,9 +73,8 @@ contract MIXR is Fees, ERC20, ERC20Detailed {
         public
         isAcceptedToken(_token)
     {
-        // Receive the MIXR token that was sent
-        IERC20(address(this)).transferFrom(msg.sender, address(this), _redemptionInBasketWei);
-        // Send an equal number of selected tokens back
+
+        // Calculate fee and redemption return
         uint256 redemptionInTokenWei = convertTokensAmount(
             address(this), 
             _token, 
@@ -72,19 +82,31 @@ contract MIXR is Fees, ERC20, ERC20Detailed {
         );
         //
         uint256 feeInBasketWei = transactionFee(_token, redemptionInTokenWei, REDEMPTION());
-        uint256 withoutFeeInBasketWei = _redemptionInBasketWei - feeInBasketWei;
-        uint256 withoutFeeInTokenWei = convertTokensAmount(
+        uint256 withoutFeeInBasketWei = _redemptionInBasketWei.sub(feeInBasketWei);
+        uint256 returnInTokenWei = convertTokensAmount(
             address(this), 
             _token, 
             withoutFeeInBasketWei
         );
-        //
-        IERC20(_token).approve(address(this), withoutFeeInTokenWei);
-        IERC20(_token).transferFrom(address(this), msg.sender, withoutFeeInTokenWei);
+
+        // Check for minimum viable redemption
+        require (
+            feeInBasketWei < _redemptionInBasketWei, 
+            "Redemptions at or below the minimum fee are not accepted."
+        );
+
+        // Receive the MIXR token that was sent
+        IERC20(address(this)).transferFrom(msg.sender, address(this), _redemptionInBasketWei);
+
+        // Send the fee in MIX to the stakeholder account
+        IERC20(address(this)).approve(address(this), feeInBasketWei);
+        IERC20(address(this)).transferFrom(address(this), stakeholderAccount, feeInBasketWei);
+
+        // Return the token equivalent to the redeemed MIX minus the fee back to the sender
+        IERC20(_token).approve(address(this), returnInTokenWei);
+        IERC20(_token).transferFrom(address(this), msg.sender, returnInTokenWei);
+        
         // We always mint and burn MIX amounts
         _burn(address(this), withoutFeeInBasketWei);
-
-        // Charge a redemption fee
-        IERC20(address(this)).transferFrom(msg.sender, accountForFees, feeInBasketWei);
     }
 }

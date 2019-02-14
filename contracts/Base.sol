@@ -80,7 +80,7 @@ contract Base {
     /**
      * @dev This is also part of (C13)
      */
-    address internal accountForFees;
+    address internal stakeholderAccount;
 
     /**
      * @dev This is one of the possible solutions allowing to check

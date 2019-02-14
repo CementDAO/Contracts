@@ -128,7 +128,7 @@ contract('MIXR', (accounts) => {
             );
 
             itShouldThrow(
-                'forbids depositing unknow token',
+                'forbids depositing unknown token',
                 async () => {
                     /**
                      * deploy new erc20 contract and try to deposit
@@ -168,8 +168,8 @@ contract('MIXR', (accounts) => {
                 'The given token isn\'t listed as accepted.',
             );
         });
-        describe('actions that should work', () => {
-            it('can accept approved tokens', async () => {
+        describe('depositToken', () => {
+            it('depositToken(18 decimals, 1 token)', async () => {
                 /**
                  * get previous balances
                  */
@@ -180,52 +180,42 @@ contract('MIXR', (accounts) => {
                 /**
                  * define amounts
                  */
-                const oneToken = new BigNumber(10).pow(someERC20Decimals);
-                const oneMIXR = new BigNumber(10).pow(mixrDecimals);
+                const tokensToDeposit = tokenNumber(18, 50);
+                const MIXToMint = tokenNumber(24, 50);
                 /**
-                 * estimate fees to authorize transactions
+                 * The deposit fee should be 0.1 MIX
                  */
-                const feeInBasketWei = new BigNumber(
-                    await mixr.transactionFee(
-                        someERC20.address,
-                        oneToken.toString(10),
-                        await mixr.DEPOSIT(),
-                    ),
-                );
+                const depositFee = new BigNumber(10).pow(23).toString(10);
                 /**
                  * approve and deposit
                  */
-                await mixr.approve(mixr.address, feeInBasketWei.toString(10), {
+                await mixr.approve(mixr.address, MIXToMint.toString(10), {
                     from: user,
                 });
-                await someERC20.approve(mixr.address, oneToken.toString(10), {
+                await someERC20.approve(mixr.address, tokensToDeposit.toString(10), {
                     from: user,
                 });
-                await mixr.depositToken(someERC20.address, oneToken.toString(10), {
+                await mixr.depositToken(someERC20.address, tokensToDeposit.toString(10), {
                     from: user,
                 });
                 /**
                  * asserts - verify balances
                  */
+                // User spends the stablecoin
                 new BigNumber(await someERC20.balanceOf(user)).should.be.bignumber.equal(
-                    previousERC20Balance.minus(oneToken),
+                    previousERC20Balance.minus(tokensToDeposit),
                 );
+                // User receives the MIX minus the fee
                 new BigNumber(await mixr.balanceOf(user)).should.be.bignumber.equal(
-                    previousMixrBalance.plus(oneMIXR.minus(feeInBasketWei)),
+                    previousMixrBalance.plus(MIXToMint.minus(depositFee)),
                 );
+                // The stakeholder account should get the fees
                 new BigNumber(await mixr.balanceOf(walletFees))
-                    .should.be.bignumber.equal(feeInBasketWei);
-                /**
-                 * since basket was empty, it should be exactly 1 MIXR now
-                 */
-                oneMIXR.should.be.bignumber.equal(
-                    new BigNumber(
-                        await mixr.convertTokensAmount(
-                            someERC20.address,
-                            mixr.address,
-                            new BigNumber(await someERC20.balanceOf(mixr.address)),
-                        ),
-                    ),
+                    .should.be.bignumber.equal(depositFee);
+
+                // Since basket was empty, it should be exactly equal to the deposit
+                MIXToMint.should.be.bignumber.equal(
+                    await someERC20.balanceOf(mixr.address),
                 );
             });
         });
