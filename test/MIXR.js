@@ -181,7 +181,7 @@ contract('MIXR', (accounts) => {
                  * define amounts
                  */
                 const tokensToDeposit = tokenNumber(18, 50);
-                const MIXToMint = tokenNumber(24, 50);
+                const MIXToMint = new BigNumber(10 ** 24).multipliedBy(50);
                 /**
                  * The deposit fee should be 0.1 MIX
                  */
@@ -214,8 +214,8 @@ contract('MIXR', (accounts) => {
                     .should.be.bignumber.equal(depositFee);
 
                 // Since basket was empty, it should be exactly equal to the deposit
-                MIXToMint.should.be.bignumber.equal(
-                    await someERC20.balanceOf(mixr.address),
+                tokensToDeposit.should.be.bignumber.equal(
+                    new BigNumber(await someERC20.balanceOf(mixr.address)),
                 );
             });
         });
