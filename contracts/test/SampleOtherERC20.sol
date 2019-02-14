@@ -8,7 +8,7 @@ import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
  * @dev The SampleERC20 contract isn't part of the business logic
  * for CementDAO. It is a fixture that is only used during tests.
  */
-contract SampleERC20 is ERC20, ERC20Detailed {
+contract SampleOtherERC20 is ERC20, ERC20Detailed {
 
     /**
     * @dev Constructor that gives _owner all of existing tokens.
@@ -18,7 +18,7 @@ contract SampleERC20 is ERC20, ERC20Detailed {
     */
     constructor(address _owner, uint256 supply, uint8 decimals)
         public
-        ERC20Detailed("SampleERC20", "NEO", decimals)
+        ERC20Detailed("SampleOtherERC20", "TIR", decimals)
     {
         _mint(_owner, supply);
     }
