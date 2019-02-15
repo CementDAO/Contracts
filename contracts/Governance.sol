@@ -7,12 +7,15 @@ import "./Utils.sol";
 
 
 /**
- * @title Governance contract.
+ * @title Governance.
+ * @author Bernardo Vieira.
+ * @notice Implements governance functions for a MIXR token as described in the
+ * CementDAO whitepaper.
  */
 contract Governance is Base, Ownable {
 
     /**
-     * @dev Modifier that enforces that the transaction sender is
+     * @notice Modifier that enforces that the transaction sender is
      * whitelisted to perform governance.
      */
     modifier onlyGovernor() {
@@ -24,7 +27,7 @@ contract Governance is Base, Ownable {
     }
 
     /**
-     * @dev Add new user to governors
+     * @notice Add new user to governors
      * @param _userAddress The user address to be added.
      */
     function addGovernor(address _userAddress)
@@ -35,7 +38,7 @@ contract Governance is Base, Ownable {
     }
 
     /**
-     * @dev Allows to query whether or not a given address is a governor.
+     * @notice Allows to query whether or not a given address is a governor.
      * @param _userAddress The address to be checked.
      * @return true if the provided user is a governor, false otherwise.
      */
@@ -48,7 +51,7 @@ contract Governance is Base, Ownable {
     }
 
     /**
-     * @dev Remove user from governors
+     * @notice Remove user from governors
      * @param _userAddress the user address to remove
      */
     function removeGovernor(address _userAddress)
@@ -59,7 +62,7 @@ contract Governance is Base, Ownable {
     }
 
     /**
-     * @dev (C3) This function adds an ERC20 token to the approved tokens list.
+     * @notice This function adds an ERC20 token to the approved tokens list.
      */
     function approveToken(address _token)
         public
@@ -73,6 +76,10 @@ contract Governance is Base, Ownable {
         tokensList.push(_token);
     }
 
+    /**
+     * @notice Set which account will hold the transaction fees prior to 
+     * distribution to stakeholders.
+     */
     function setAccountForFees(address _wallet)
         public
         onlyGovernor()
@@ -86,9 +93,10 @@ contract Governance is Base, Ownable {
     }
 
     /**
-     * @dev (C4) This function sets a proportion for a token in the basket,
+     * @notice This function sets a proportion for a token in the basket,
      * allowing this smart contract to receive them. This proportions are
      * stored as fixidity units.
+     * @dev
      * Test setTokenTargetProportions() throws if the proportions passed on the parameter don’t add up to FixidityLib.fixed1()
      * Test setTokenTargetProportions() throws if the proportions passed on the parameter don’t exactly match the approved tokens.
      * Test setTokenTargetProportions() throws if any of the proportions passed on the parameter is below 0
@@ -123,7 +131,8 @@ contract Governance is Base, Ownable {
     }
 
     /**
-     * @dev sum the new proportions
+     * @notice Check if the token target proportions are valid by verifying
+     * that they add up to fixed1().
      */
     function areNewProportionsValid()
         private

@@ -8,15 +8,18 @@ import "./fixidity/LogarithmLib.sol";
 import "./Governance.sol";
 import "./Utils.sol";
 
-
 /**
  * @title Fees contract.
+ * @author Alberto Cuesta Canada, Bernardo Vieira
+ * @notice Calculates the fees for deposits and redemptions according to the 
+ * CementDAO whitepaper formulas, using FixidityLib for arithmetic and MIXR.sol
+ * to retrieve token basket parameters.
  */
 contract Fees is Governance {
     using SafeMath for uint256;
 
     /**
-     * @dev Accepted transaction type for the proportion, deviation and fee
+     * @notice Accepted transaction type for the proportion, deviation and fee
      * calculation functions.
      */
     function REDEMPTION() public pure returns(int8) {
@@ -24,7 +27,7 @@ contract Fees is Governance {
     }
 
     /**
-     * @dev Accepted transaction type for the proportion, deviation and fee
+     * @notice Accepted transaction type for the proportion, deviation and fee
      * calculation functions.
      */
     function TRANSFER() public pure returns(int8) {
@@ -32,7 +35,7 @@ contract Fees is Governance {
     }
 
     /**
-     * @dev Accepted transaction type for the proportion, deviation and fee
+     * @notice Accepted transaction type for the proportion, deviation and fee
      * calculation functions.
      */
     function DEPOSIT() public pure returns(int8) {
@@ -40,18 +43,19 @@ contract Fees is Governance {
     }
 
     /**
-     * @dev (C13) As a Stablecoin Holder, I would like to be
+     * @notice (C13) As a Stablecoin Holder, I would like to be
      * able to pay any fees with any of the stablecoins on the basket list
      */
-    function setPayFeesWith(address _token) public {
+    /* function setPayFeesWith(address _token) public {
         payFeesWith[msg.sender] = _token;
-    }
+    }* 
 
     /**
-     * @dev (C5, C6, C7) As a Governance Function, I would like a API, which may only
+     * @notice (C5, C6, C7) As a Governance Function, I would like a API, which may only
      * be accessed by the whitelisted addresses, and which allows me
-     * to set the base fee for deposit, redemption and transfer transactions. The fee is set in fixed
-     * point units in which fixed1() is equal to 1.
+     * to set the base fee for deposit, redemption and transfer transactions.
+     * *param uint256 _fee Amount to set in MIX wei.
+     * @dev
      * Test setTransactionFee(minimumFee) works and token.transactionFee returns minimumFee
      * Test setTransactionFee(minimumFee-1) throws
      */
@@ -70,11 +74,14 @@ contract Fees is Governance {
     }
 
     /**
-     * @dev (C20) Returns what would be the proportion of a token in the basket
+     * @notice (C20) Returns what would be the proportion of a token in the basket
      * after depositing or redeeming a number of tokens. If adding, this 
      * function will throw if the amount of tokens deposited, the current token
      * balance or the basket balance are greater than FixidityLib.maxFixedAdd().
-     * This function returns values in the [0,fixed1()] range.
+     * *param uint256 _transactionAmount Amount to deposit or redeem in _token wei.
+     * @return int256 A fixed point value representing the proportion in the 
+     * [0,fixed1()] range.
+     * @dev 
      * Testing: With an empty basket.
      * Test proportionAfterTransaction(token,1,DEPOSIT) returns fixed1
      * Introduce 1 token of x into the basket.
@@ -155,9 +162,12 @@ contract Fees is Governance {
     }
 
     /**
-     * @dev (C20) Returns what would be the deviation from the target 
-     * proportion of a token in the basket after adding a number of tokens.
-     * This function returns values in the [-fixed1(),fixed1()] range.
+     * @notice (C20) Returns what would be the deviation from the target 
+     * proportion of a token in the basket after a deposit or a redemption.
+     * *param uint256 _transactionAmount Amount to deposit or redeem in _token wei.
+     * @return int256 A fixed point value representing the proportion in the 
+     * [-fixed1(),fixed1()] range.
+     * @dev
      * With an empty basket:
      * Set targetProportion of token x to 1
      * Test deviationAfterTransaction(x,1,DEPOSIT) returns 1
@@ -168,7 +178,7 @@ contract Fees is Governance {
      */
     function deviationAfterTransaction(
         address _token, 
-        uint256 _amount,
+        uint256 _transactionAmount,
         int8 _transactionType
     )
         public
@@ -177,7 +187,7 @@ contract Fees is Governance {
     {
         TokenData memory token = tokens[_token];
         int256 result = FixidityLib.subtract(
-            proportionAfterTransaction(_token, _amount, _transactionType),
+            proportionAfterTransaction(_token, _transactionAmount, _transactionType),
             token.targetProportion
         );
         assert(
@@ -188,18 +198,18 @@ contract Fees is Governance {
     }
 
     /**
-     * @dev (C20) Calculates the deposit fee as decribed in the CementDAO.
-     * whitepaper. Uses fixed point units from FixidityLib.
-     * The transaction amount passed on as a parameter is always in _token wei.
+     * @notice (C20) Calculates the deposit or redemption fee as decribed in the CementDAO.
+     * whitepaper.
+     * *param uint256 _transactionAmount Amount to deposit or redeem in _token wei.
+     * @return uint256 The calculated fee in MIX wei.
      */
-    function transactionFee(address _token, uint256 _amount, int8 _transactionType)
+    function transactionFee(address _token, uint256 _transactionAmount, int8 _transactionType)
         public
         view
         returns (uint256) 
     {
-        // Basket position after deposit, make sure these are fixed point units
         TokenData memory token = tokens[_token];
-        int256 deviation = deviationAfterTransaction(_token, _amount, _transactionType);
+        int256 deviation = deviationAfterTransaction(_token, _transactionAmount, _transactionType);
         int256 fee;
 
         // Floors and ceilings
@@ -257,8 +267,6 @@ contract Fees is Governance {
             FixidityLib.newFixed(10),
             deviationCurve
         );
-        //newFixed(int256 x, uint8 _originDigits)
-        
 
         if (_transactionType == DEPOSIT()) {
             int256 baseFee = FixidityLib.newFixed(

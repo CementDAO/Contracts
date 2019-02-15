@@ -8,77 +8,79 @@ import "./fixidity/FixidityLib.sol";
 import "./Utils.sol";
 
 /**
- * @title Base contract.
- * Base         = Basket Token which contains other tokens
- * Fees         = How to calculate values based on basket
- * Governance   = How to set parameters using a DAO
- * MIXR         = Stablecoin
+ * @title Base MIXR contract. 
+ * @author Alberto Cuesta Canada, Bernardo Vieira
+ * @notice Implements a basket of stablecoins as an ERC20 token, as described
+ * in the CementDAO whitepaper.
  */
 contract Base {
     using SafeMath for uint256;
 
     /**
-     * @dev Scaling factor for the calculation of fees, expressed in fixed 
+     * @notice Scaling factor for the calculation of fees, expressed in fixed 
      * point units.
-     * Test scalingFactor = FixidityLib.fixed1()/2
+     * @dev Test scalingFactor = FixidityLib.fixed1()/2
      */
     int256 constant public scalingFactor = 500000000000000000000000000000000000;
 
     /**
-     * @dev Minimum that can be returned when calculating a fee, expressed in
+     * @notice Minimum that can be returned when calculating a fee, expressed in
      * MIX wei.
      */
     uint256 constant public minimumFee = 1000000000000000000;
 
     /**
-     * @dev (C1) Whitelist of addresses that can do governance.
+     * @notice (C1) Whitelist of addresses that can do governance.
      */
     mapping(address => bool) internal governors;
 
+    /**
+     * @notice Additional token data which is required for MIXR transactions.
+     */
     struct TokenData {
         /**
-         * @dev (C2, C3) This is list of stablecoins that can be stored in the basket,
-         * only if their proportion is set to > 0.
+         * @notice Whether a stablecoin has been approved for transactions with
+         * the basket.
          */
         bool approved;
         /**
-         * @dev (C4) The proportion of each token we want in the basket
-         * using fixed point units in a 0 to FixidityLib.fixed1() range.
-         * ToDo: Change so that it can be sanity-checked that all proportions add
-         * up to FixidityLib.fixed1(). Otherwise we will have to do a costly 
-         * conversion with each fee calculation.
+         * @notice The proportion of this token that we want in the basket. 
+         * It uses fixed point units in a 0 to FixidityLib.fixed1() range. 
+         * If it is set to 0 no deposits are accepted for it.
          */
         int256 targetProportion;
         /**
-         * @dev (C20) The base deposit fees in MIX wei for each token in the basket.
+         * @notice The base deposit fees in MIX wei for this token.
          */
         uint256 depositFee;
         /**
-         * @dev (C20) The base redemption fees in MIX wei for each token in the basket.
+         * @notice The base redemption fees in MIX wei for this token.
          */
         uint256 redemptionFee;
         /**
-         * @dev (C20) The base transfer fees in MIX wei for each token in the basket.
+         * @notice The base transfer fees in MIX wei for this token.
          */
         uint256 transferFee;
     }
 
+    /**
+     * @notice Mapping of tokens either candidates for or in the basket.
+     */
     mapping(address => TokenData) internal tokens;
     /**
-     * Since it's not possible to iterate over a mapping, it's necessary
-     * to have an array, so we can iterate over it and verify all the
-     * information on the mapping.
+     * @dev Since it's not possible to iterate over a mapping, it's necessary
+     * to have an array to iterate over it and verify all the entries.
      */
     address[] internal tokensList;
 
     /**
-     * @dev (C13) As a Stablecoin Holder, I would like to be able to pay any
+     * @notice (C13) As a Stablecoin Holder, I would like to be able to pay any
      * fees with any of the stablecoins on the basket list
      */
-    mapping(address => address) internal payFeesWith;
+    // mapping(address => address) internal payFeesWith;
     
     /**
-     * @dev This is also part of (C13)
+     * @notice Holding account for fees, before they are distributed to stakeholders.
      */
     address internal stakeholderAccount;
 
@@ -107,8 +109,9 @@ contract Base {
     }
 
     /**
-     * @dev In order to make the code easier to read
-     * this method is only a group of requires
+     * @notice Modifier to ensure a token is accepted for transactions.
+     * @dev In order to make the code easier to read this method is only a 
+     * group of requires
      */
     modifier isAcceptedToken(address _token) {
         TokenData memory token = tokens[_token];
@@ -118,7 +121,7 @@ contract Base {
         );
         require(
             token.targetProportion > 0,
-            "The given token can't accepted, the target proportion is 0."
+            "The given token can't be accepted, the target proportion is 0."
         );
         require(
             token.depositFee >= minimumFee,
@@ -132,7 +135,7 @@ contract Base {
     }
 
     /**
-     * @dev Returns an address array of approved tokens, and its size
+     * @notice Returns an address array of approved tokens, and its size
      */
     function getApprovedTokens() 
         public 
@@ -153,11 +156,10 @@ contract Base {
     }
 
     /**
-     * @dev (C20) Converts a token amount from the precision of _originToken
+     * @notice Converts a token amount from the precision of _originToken
      * to that of _destinationToken. Use the address of the MIXR contract to
      * convert to and from MIX.
-     * README: Stablecoins need to be ERC20Detailed
-     * Test:
+     * @dev Test:
      * Create a token x with 18 decimals and a token y with 20 decimals
      * Test convertTokensAmount(x, y, 1) = 100
      * Test convertTokensAmount(y, x, 100) = 1
@@ -201,10 +203,10 @@ contract Base {
     } 
 
     /**
-     * @dev (C20) Returns the _originToken balance in the precision of
+     * @notice Returns the _originToken balance in the precision of
      * _destinationToken. Use the address of the MIXR contract to
      * convert to and from MIX.
-     * Test:
+     * @dev Test:
      * Create a token x with 18 decimals and a token y with 20 decimals
      * Mint 1 wei for x and 100 wei for y
      * Test convertTokens(x, y) = 100
@@ -225,15 +227,15 @@ contract Base {
     }
 
     /**
-     * @dev (C20) Returns the total amount of tokens in the basket. Tokens 
+     * @notice Returns the total amount of tokens in the basket. Tokens 
      * always use a kind of fixed point representation were a whole token 
      * equals a value of something like 10**18 in the balance, with a uint8
      * decimals member. This function finds the difference in decimals between
      * the fixed point library and the token definition and multiplies or 
      * divides accordingly to be able to aggregate the balances of all the
-     * tokens to the same fixed point standard.
-     * TODO: Make sure that no redemptions are accepted for a token if this would
-     * bring its balance in the basket below 0.
+     * tokens to the same fixed point standard. 
+     * @dev 
+     * In MIXR it should be identical to IERC20(address(this)).totalSupply()
      * Make token x to have 18 decimals and y 20 decimals
      * Make sure the MIX basket is constructed with 24 decimals
      * Test basketBalance() = 0 before introducing any tokens.
