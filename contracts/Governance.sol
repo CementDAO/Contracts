@@ -3,6 +3,7 @@ pragma solidity ^0.5.0;
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "./fixidity/FixidityLib.sol";
 import "./Base.sol";
+import "./Fees.sol";
 import "./UtilsLib.sol";
 
 
@@ -90,6 +91,29 @@ contract Governance is Base, Ownable {
          * Maybe we also want multiple verification.
          */
         stakeholderAccount = _wallet;
+    }
+
+    /**
+     * @notice Set the base fee for deposit, redemption and transfer transactions.
+     * @param _token Address for the token that we are setting the fees for.
+     * @param _fee Amount to set in MIX wei.
+     * @param _transactionType One of REDEMPTION(), DEPOSIT() or TRANSFER().
+     * @dev
+     * Test setTransactionFee(minimumFee) works and token.transactionFee returns minimumFee
+     * Test setTransactionFee(minimumFee-1) throws
+     */
+    function setTransactionFee(address _token, uint256 _fee, int8 _transactionType)
+        public
+        onlyGovernor()
+    {
+        require(_fee >= minimumFee, "Fees can't be set to less than the minimum fee.");
+        TokenData memory token = tokens[_token];
+        if (_transactionType == Fees.DEPOSIT()) token.depositFee = _fee;
+        else if (_transactionType == Fees.TRANSFER()) token.transferFee = _fee;
+        else if (_transactionType == Fees.REDEMPTION()) token.redemptionFee = _fee;
+        else revert("Transaction type not accepted.");
+        
+        tokens[_token] = token;
     }
 
     /**

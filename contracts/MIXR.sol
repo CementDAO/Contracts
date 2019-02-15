@@ -2,8 +2,7 @@ pragma solidity ^0.5.0;
 
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
-import "./fixidity/FixidityLib.sol";
-import "./fixidity/LogarithmLib.sol";
+import "./Governance.sol";
 import "./Fees.sol";
 
 
@@ -14,7 +13,7 @@ import "./Fees.sol";
  * can react to transfers of tokens other than itself.
  * TODO: Change all hardcoded "36" to a constant.
  */
-contract MIXR is Fees, ERC20, ERC20Detailed {
+contract MIXR is Governance, ERC20, ERC20Detailed {
 
     /**
      * @dev Constructor with the details of the ERC20.
@@ -23,17 +22,20 @@ contract MIXR is Fees, ERC20, ERC20Detailed {
     }
 
     /**
-     * @dev (C11) This function allows to deposit an accepted ERC20 token
-     * in exchange for some MIXR tokens.
+     * @notice This function allows to deposit an accepted ERC20 token in 
+     * exchange for MIX tokens. Transaction fees are deducted from the returned
+     * amount. The MIX tokens returned are minted by this function.
      * It consists of several transactions that must be authorized by
      * the user prior to calling this function (See ERC20 transferFrom spec).
+     * @param _token Address of the token to deposit.
+     * @param _depositInTokenWei Amount of token wei to deposit.
      */
     function depositToken(address _token, uint256 _depositInTokenWei)
         public
         isAcceptedToken(_token)
     {
         // Calculate the deposit fee and the returned amount
-        uint256 feeInBasketWei = transactionFee(_token, _depositInTokenWei, DEPOSIT());
+        uint256 feeInBasketWei = Fees.transactionFee(_token, address(this), _depositInTokenWei, Fees.DEPOSIT());
         uint256 depositInBasketWei = UtilsLib.convertTokenAmount(
             _token, 
             address(this), 
@@ -62,12 +64,12 @@ contract MIXR is Fees, ERC20, ERC20Detailed {
     }
 
     /**
-     * @dev (C12) This function allows to deposit to the MIXR basket
-     * an amount ERC20 token in the list, and returns a MIXR token in exchange.
-     * 
-     * Alberto: I would suggest that if the redeemer wants to receive
-     * several different tokens that is managed from the frontend as
-     * several consecutive but separate transactions.
+     * @notice This function allows to redeem MIX tokens in exhange from
+     * accepted ERC20 tokens from the MIXR basket. Transaction fees are
+     * deducted from the amount returned and the MIX tokens redeemed are 
+     * burned.
+     * @param _token Address of the token to deposit.
+     * @param _redemptioninBasketWei Amount of MIX wei to redeem.
      */
     function redeemMIXR(address _token, uint256 _redemptionInBasketWei)
         public
@@ -81,7 +83,7 @@ contract MIXR is Fees, ERC20, ERC20Detailed {
             _redemptionInBasketWei
         );
         //
-        uint256 feeInBasketWei = transactionFee(_token, redemptionInTokenWei, REDEMPTION());
+        uint256 feeInBasketWei = Fees.transactionFee(_token, address(this), redemptionInTokenWei, Fees.REDEMPTION());
         uint256 withoutFeeInBasketWei = _redemptionInBasketWei.sub(feeInBasketWei);
         uint256 returnInTokenWei = UtilsLib.convertTokenAmount(
             address(this), 

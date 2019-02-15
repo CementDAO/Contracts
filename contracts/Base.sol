@@ -109,6 +109,18 @@ contract Base {
     }
 
     /**
+     * @notice Modifier to ensure a token is known to the basket.
+     */
+    modifier isKnownToken(address _token) {
+        TokenData memory token = tokens[_token];
+        require(
+            token.approved == true,
+            "The given token hasn't been introduced to the basket."
+        );
+        _;
+    }
+
+    /**
      * @notice Modifier to ensure a token is accepted for transactions.
      * @dev In order to make the code easier to read this method is only a 
      * group of requires
@@ -132,6 +144,80 @@ contract Base {
             "The given token can't accepted, the base redemption fee is too low."
         );
         _;
+    }
+
+    /**
+     * @notice Returns the scaling factor for MIXR, in fixed point units.
+     */
+    function getScalingFactor() 
+    public
+    pure
+    returns(int256)
+    {
+        return scalingFactor;
+    }
+
+    /**
+     * @notice Returns minimum fee that will be charged for transactions, in MIX wei.
+     */
+    function getMinimumFee() 
+    public
+    pure
+    returns(uint256)
+    {
+        return minimumFee;
+    }
+
+    /**
+     * @notice Returns the target proportion of a token, in fixed point units.
+     */
+    function getTargetProportion(address _token) 
+    public
+    view
+    isKnownToken(_token)
+    returns(int256)
+    {
+        TokenData memory token = tokens[_token];
+        return token.targetProportion;
+    }
+
+    /**
+     * @notice Returns the base deposit fee for a token, in MIX wei.
+     */
+    function getDepositFee(address _token) 
+    public
+    view
+    isKnownToken(_token)
+    returns(uint256)
+    {
+        TokenData memory token = tokens[_token];
+        return token.depositFee;
+    }
+
+    /**
+     * @notice Returns the base redemption fee for a token, in MIX wei.
+     */
+    function getRedemptionFee(address _token) 
+    public
+    view
+    isKnownToken(_token)
+    returns(uint256)
+    {
+        TokenData memory token = tokens[_token];
+        return token.redemptionFee;
+    }
+
+    /**
+     * @notice Returns the base transfer fee for a token, in MIX wei.
+     */
+    function getTransferFee(address _token) 
+    public
+    view
+    isKnownToken(_token)
+    returns(uint256)
+    {
+        TokenData memory token = tokens[_token];
+        return token.transferFee;
     }
 
     /**

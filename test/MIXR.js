@@ -1,4 +1,5 @@
 const MIXR = artifacts.require('./MIXR.sol');
+const FeesMock = artifacts.require('./FeesMock.sol');
 const FixidityLibMock = artifacts.require('./FixidityLibMock.sol');
 const UtilsLibMock = artifacts.require('./UtilsLibMock.sol');
 const SampleERC20 = artifacts.require('./test/SampleERC20.sol');
@@ -96,15 +97,9 @@ const redemptionTest = async (
     const utilsLibMock = await UtilsLibMock.deployed();
 
     /**
-     * estimate fees to authorize transactions
+     * The redemption fee should be 0.1 MIX
      */
-    const feeInBasketWei = new BigNumber(
-        await mixr.transactionFee(
-            someERC20.address,
-            oneToken.toString(10),
-            await mixr.REDEMPTION(),
-        ),
-    );
+    const redemptionFee = new BigNumber(10).pow(23).toString(10);
     /**
      * approve and deposit
      */
@@ -115,7 +110,7 @@ const redemptionTest = async (
             oneToken.toString(10),
         ),
     );
-    const totalApprove = amountInBasketWei.plus(feeInBasketWei);
+    const totalApprove = amountInBasketWei.plus(redemptionFee);
     await mixr.approve(
         mixr.address,
         totalApprove.toString(10),
@@ -136,7 +131,7 @@ const redemptionTest = async (
     /**
      * asserts
      */
-    const withoutFeeInBasketWei = amountInBasketWei.minus(feeInBasketWei);
+    const withoutFeeInBasketWei = amountInBasketWei.minus(redemptionFee);
     const withoutFeeInTokenWei = new BigNumber(
         await utilsLibMock.convertTokenAmount(
             mixr.address,
@@ -148,7 +143,7 @@ const redemptionTest = async (
         await utilsLibMock.convertTokenAmount(
             mixr.address,
             someERC20.address,
-            feeInBasketWei.toString(10),
+            redemptionFee.toString(10),
         ),
     );
     /**
@@ -179,11 +174,12 @@ const redemptionTest = async (
     );
     // The stakeholder account should get the fees
     new BigNumber(await mixr.balanceOf(walletFees))
-        .should.be.bignumber.equal(previousWalletFeeBalance.plus(feeInBasketWei));
+        .should.be.bignumber.equal(previousWalletFeeBalance.plus(redemptionFee));
 };
 
 contract('MIXR', (accounts) => {
     let mixr;
+    let feesMock;
     let fixidityLibMock;
     let someERC20;
     let someERC721;
@@ -200,12 +196,13 @@ contract('MIXR', (accounts) => {
 
     before(async () => {
         mixr = await MIXR.deployed();
+        feesMock = await FeesMock.deployed();
         fixidityLibMock = await FixidityLibMock.deployed();
         someERC20 = await SampleERC20.deployed();
         someERC721 = await SampleERC721.deployed();
         fixed1 = new BigNumber(await fixidityLibMock.fixed1());
-        DEPOSIT = await mixr.DEPOSIT();
-        REDEMPTION = await mixr.REDEMPTION();
+        DEPOSIT = await feesMock.DEPOSIT();
+        REDEMPTION = await feesMock.REDEMPTION();
     });
 
     // These tests rely on another test to have changed the fixtures (ERC20 approval).
@@ -424,19 +421,9 @@ contract('MIXR', (accounts) => {
             const tokensToTransfer = new BigNumber(10)
                 .pow(someERC20Decimals).multipliedBy(defaultAmountOfTokens);
             /**
-             * estimate fees to authorize transactions
+             * approve transfers and deposit
              */
-            const feeInBasketWei = new BigNumber(
-                await mixr.transactionFee(
-                    someERC20.address,
-                    tokensToTransfer.toString(10),
-                    await mixr.DEPOSIT(),
-                ),
-            );
-            /**
-             * approve and deposit
-             */
-            await mixr.approve(mixr.address, feeInBasketWei.toString(10), {
+            await mixr.approve(mixr.address, baseFee.toString(10), {
                 from: user,
             });
             await someERC20.approve(mixr.address, tokensToTransfer.toString(10), {

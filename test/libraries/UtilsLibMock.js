@@ -1,4 +1,3 @@
-//const MIXR = artifacts.require('./MIXR.sol');
 const UtilsLibMock = artifacts.require('../../contracts/mocks/UtilsLibMock.sol');
 const SampleERC20 = artifacts.require('../test/SampleERC20.sol');
 const SampleOtherERC20 = artifacts.require('../test/SampleOtherERC20.sol');
@@ -10,18 +9,14 @@ const { tokenNumber } = require('../utils');
 chai.use(require('chai-bignumber')()).should();
 
 contract('Base', (accounts) => {
-    //let mixr;
     let utilsLibMock;
     let someERC20;
     let someOtherERC20;
     let someERC20Decimals;
     let someOtherERC20Decimals;
-    const owner = accounts[0];
     const governor = accounts[1];
-    const user = accounts[2];
 
     before(async () => {
-        //mixr = await MIXR.deployed();
         utilsLibMock = await UtilsLibMock.deployed();
         someERC20 = await SampleERC20.deployed();
         someOtherERC20 = await SampleOtherERC20.deployed();

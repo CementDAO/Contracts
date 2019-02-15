@@ -5,17 +5,17 @@ import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./fixidity/FixidityLib.sol";
 import "./fixidity/LogarithmLib.sol";
-import "./Governance.sol";
 import "./UtilsLib.sol";
+import "./Base.sol";
 
 /**
- * @title Fees contract.
+ * @title Fee calculation library.
  * @author Alberto Cuesta Canada, Bernardo Vieira
  * @notice Calculates the fees for deposits and redemptions according to the 
  * CementDAO whitepaper formulas, using FixidityLib for arithmetic and MIXR.sol
  * to retrieve token basket parameters.
  */
-contract Fees is Governance {
+library Fees {
     using SafeMath for uint256;
 
     /**
@@ -43,56 +43,29 @@ contract Fees is Governance {
     }
 
     /**
-     * @notice (C13) As a Stablecoin Holder, I would like to be
-     * able to pay any fees with any of the stablecoins on the basket list
-     */
-    /* function setPayFeesWith(address _token) public {
-        payFeesWith[msg.sender] = _token;
-    }* 
-
-    /**
-     * @notice (C5, C6, C7) As a Governance Function, I would like a API, which may only
-     * be accessed by the whitelisted addresses, and which allows me
-     * to set the base fee for deposit, redemption and transfer transactions.
-     * *param uint256 _fee Amount to set in MIX wei.
-     * @dev
-     * Test setTransactionFee(minimumFee) works and token.transactionFee returns minimumFee
-     * Test setTransactionFee(minimumFee-1) throws
-     */
-    function setTransactionFee(address _token, uint256 _fee, int8 _transactionType)
-        public
-        onlyGovernor()
-    {
-        require(_fee >= minimumFee, "Fees can't be set to less than the minimum fee.");
-        TokenData memory token = tokens[_token];
-        if (_transactionType == DEPOSIT()) token.depositFee = _fee;
-        // else if (_transactionType == TRANSFER()) token.transferFee = _fee;
-        else if (_transactionType == REDEMPTION()) token.redemptionFee = _fee;
-        else revert("Transaction type not accepted.");
-        
-        tokens[_token] = token;
-    }
-
-    /**
      * @notice (C20) Returns what would be the proportion of a token in the basket
      * after depositing or redeeming a number of tokens. If adding, this 
      * function will throw if the amount of tokens deposited, the current token
      * balance or the basket balance are greater than FixidityLib.maxFixedAdd().
-     * *param uint256 _transactionAmount Amount to deposit or redeem in _token wei.
+     * @param _token Address of the token to calculate the proportion for.
+     * @param _basket Address of the MIXR basket.
+     * @param _transactionAmount Amount to deposit or redeem in _token wei.
+     * @param _transactionType Fees.DEPOSIT or Fees.REDEMPTION.
      * @return int256 A fixed point value representing the proportion in the 
      * [0,fixed1()] range.
      * @dev 
      * Testing: With an empty basket.
      * Test proportionAfterTransaction(token,1,DEPOSIT) returns fixed1
      * Introduce 1 token of x into the basket.
-     * Test proportionAfterTransaction(x,1,DEPOSIT) returns fixed1
-     * Test proportionAfterTransaction(y,1,DEPOSIT) returns fixed1/2
+     * Test proportionAfterTransaction(x,basket,1,DEPOSIT) returns fixed1
+     * Test proportionAfterTransaction(y,basket,1,DEPOSIT) returns fixed1/2
      * Testing: With a basket containing 2 wei each of x and y.
-     * Test proportionAfterTransaction(x,1,REDEMPTION) returns fixed1/2
-     * Test proportionAfterTransaction(x,2,REDEMPTION) returns 0
+     * Test proportionAfterTransaction(x,basket,1,REDEMPTION) returns fixed1/2
+     * Test proportionAfterTransaction(x,basket,2,REDEMPTION) returns 0
      */
     function proportionAfterTransaction(
-        address _token, 
+        address _token,
+        address _basket, 
         uint256 _transactionAmount, 
         int8 _transactionType
     )
@@ -105,22 +78,22 @@ contract Fees is Governance {
             UtilsLib.safeCast(
                 UtilsLib.convertTokenAmount(
                     _token, 
-                    address(this),
-                    IERC20(_token).balanceOf(address(this)))
+                    _basket,
+                    IERC20(_token).balanceOf(_basket))
                 ), 
             // We specify that this already uses a fixed point representation of decimals 
             // to convert to the library representation and be able to use the add function
-            ERC20Detailed(address(this)).decimals()
+            ERC20Detailed(_basket).decimals()
         );     
 
         int256 transactionAmount = FixidityLib.newFixed(
             UtilsLib.safeCast(
                 UtilsLib.convertTokenAmount(
                     _token, 
-                    address(this), 
+                    _basket, 
                     _transactionAmount)
                 ), 
-            ERC20Detailed(address(this)).decimals()
+            ERC20Detailed(_basket).decimals()
         );
         // Add the token balance to the amount to deposit, in fixidity units
         int256 tokenBalanceAfterTransaction;
@@ -143,8 +116,8 @@ contract Fees is Governance {
         // dividing by zero on an empty basket.
         
         int256 basketBeforeTransaction = FixidityLib.newFixed(
-                UtilsLib.safeCast(basketBalance()),
-                ERC20Detailed(address(this)).decimals()
+                UtilsLib.safeCast(Base(_basket).basketBalance()),
+                ERC20Detailed(_basket).decimals()
         );
         int256 basketAfterTransaction;
         if (_transactionType == DEPOSIT()) {
@@ -172,22 +145,26 @@ contract Fees is Governance {
     }
 
     /**
-     * @notice (C20) Returns what would be the deviation from the target 
+     * @notice Returns what would be the deviation from the target 
      * proportion of a token in the basket after a deposit or a redemption.
-     * *param uint256 _transactionAmount Amount to deposit or redeem in _token wei.
+     * @param _token Address of the token to calculate the deviation for.
+     * @param _basket Address of the MIXR basket.
+     * @param _transactionAmount Amount to deposit or redeem in _token wei.
+     * @param _transactionType Fees.DEPOSIT or Fees.REDEMPTION.
      * @return int256 A fixed point value representing the proportion in the 
      * [-fixed1(),fixed1()] range.
      * @dev
      * With an empty basket:
      * Set targetProportion of token x to 1
-     * Test deviationAfterTransaction(x,1,DEPOSIT) returns 1
+     * Test deviationAfterTransaction(x,basket,1,DEPOSIT) returns 1
      * Introduce 1 token of type y (not x) to the basket.
-     * Test deviationAfterTransaction(x,1,DEPOSIT) returns -0.5
+     * Test deviationAfterTransaction(x,basket,1,DEPOSIT) returns -0.5
      * Set targetProportion of token x to 0
-     * Test deviationAfterTransaction(x,1,DEPOSIT) returns 0.5
+     * Test deviationAfterTransaction(x,basket,1,DEPOSIT) returns 0.5
      */
     function deviationAfterTransaction(
-        address _token, 
+        address _token,
+        address _basket, 
         uint256 _transactionAmount,
         int8 _transactionType
     )
@@ -195,10 +172,9 @@ contract Fees is Governance {
         view
         returns (int256)
     {
-        TokenData memory token = tokens[_token];
         int256 result = FixidityLib.subtract(
-            proportionAfterTransaction(_token, _transactionAmount, _transactionType),
-            token.targetProportion
+            proportionAfterTransaction(_token, _basket, _transactionAmount, _transactionType),
+            Base(_basket).getTargetProportion(_token)
         );
         assert(
             result >= FixidityLib.fixed1()*(-1) && 
@@ -208,18 +184,26 @@ contract Fees is Governance {
     }
 
     /**
-     * @notice (C20) Calculates the deposit or redemption fee as decribed in the CementDAO.
+     * @notice Calculates the deposit or redemption fee as decribed in the CementDAO.
      * whitepaper.
-     * *param uint256 _transactionAmount Amount to deposit or redeem in _token wei.
+     * @param _token Address of the token to calculate the transaction fee for.
+     * @param _basket Address of the MIXR basket.
+     * @param _transactionAmount Amount to deposit or redeem in _token wei.
+     * @param _transactionType Fees.DEPOSIT or Fees.REDEMPTION.
      * @return uint256 The calculated fee in MIX wei.
      */
-    function transactionFee(address _token, uint256 _transactionAmount, int8 _transactionType)
+    function transactionFee(
+        address _token, 
+        address _basket,
+        uint256 _transactionAmount, 
+        int8 _transactionType
+    )
         public
         view
         returns (uint256) 
     {
-        TokenData memory token = tokens[_token];
-        int256 deviation = deviationAfterTransaction(_token, _transactionAmount, _transactionType);
+        int256 deviation = deviationAfterTransaction(_token, _basket, _transactionAmount, _transactionType);
+        int256 targetProportion = Base(_basket).getTargetProportion(_token);
         int256 fee;
 
         // Floors and ceilings
@@ -227,7 +211,7 @@ contract Fees is Governance {
             // When the deviation goes above this value the deposit is rejected
             int256 upperBound = FixidityLib.multiply(
                 FixidityLib.newFixedFraction(4,10),
-                token.targetProportion
+                targetProportion
             );
             if (deviation > upperBound)
                 revert("Token not accepted, basket has too many.");
@@ -235,7 +219,7 @@ contract Fees is Governance {
             // Deposits have a floor on -0.4 * targetProportion for deviation 
             int256 lowerBound = FixidityLib.multiply(
                 FixidityLib.newFixedFraction(-4,10),
-                token.targetProportion
+                targetProportion
             );
             if (deviation <= lowerBound)
                 deviation = lowerBound;
@@ -243,7 +227,7 @@ contract Fees is Governance {
             // Redemptions have a ceiling on 0.4 * targetProportion for deviation
             int256 upperBound = FixidityLib.multiply(
                 FixidityLib.newFixedFraction(4,10),
-                token.targetProportion
+                targetProportion
             );
             if (deviation > upperBound)
                 deviation = upperBound;
@@ -251,7 +235,7 @@ contract Fees is Governance {
             // Redemptions have a floor on -0.4999 * targetProportion for deviation
             int256 lowerBound = FixidityLib.multiply(
                 FixidityLib.newFixedFraction(-4999,10000),
-                token.targetProportion
+                targetProportion
             );
             if (deviation < lowerBound)
                 deviation = lowerBound;
@@ -260,7 +244,7 @@ contract Fees is Governance {
         
         // Calculate the fee following the formula from the inside out
         int256 t2 = FixidityLib.divide(
-            token.targetProportion,
+            targetProportion,
             FixidityLib.newFixed(2)
         );
         int256 deviationCurve = FixidityLib.divide(
@@ -278,48 +262,45 @@ contract Fees is Governance {
             deviationCurve
         );
 
+        uint256 baseFee;
         if (_transactionType == DEPOSIT()) {
-            int256 baseFee = FixidityLib.newFixed(
-                UtilsLib.safeCast(token.depositFee), 
-                ERC20Detailed(address(this)).decimals()
-            );
-            int256 scaledLogit = FixidityLib.multiply(
-                FixidityLib.multiply(
-                    baseFee,
-                    scalingFactor
-                ),
-                deviationLogit
-            );
+            baseFee = Base(_basket).getDepositFee(_token);
+        } else if (_transactionType == REDEMPTION()) {
+            baseFee = Base(_basket).getRedemptionFee(_token);
+        }
+        int256 convertedBaseFee = FixidityLib.newFixed(
+            UtilsLib.safeCast(baseFee), 
+            ERC20Detailed(_basket).decimals()
+        );
+        int256 scalingFactor = Base(_basket).getScalingFactor();
+        int256 scaledLogit = FixidityLib.multiply(
+            FixidityLib.multiply(
+                convertedBaseFee,
+                scalingFactor
+            ),
+            deviationLogit
+        );
+        if (_transactionType == DEPOSIT()) {
             fee = FixidityLib.add(
-                baseFee,
+                convertedBaseFee,
                 scaledLogit
             );
         } else if (_transactionType == REDEMPTION()) {
-            int256 baseFee = FixidityLib.newFixed(
-                UtilsLib.safeCast(token.redemptionFee), 
-                ERC20Detailed(address(this)).decimals()
-            );
-            int256 scaledLogit = FixidityLib.multiply(
-                FixidityLib.multiply(
-                    baseFee,
-                    scalingFactor
-                ),
-                deviationLogit
-            );
             fee = FixidityLib.subtract(
-                    baseFee,
-                    scaledLogit
+                convertedBaseFee,
+                scaledLogit
             );
         } // else statement does not happen here. It would have reverted above.
 
         assert(fee >= 0);
-        if (fee < UtilsLib.safeCast(minimumFee)) 
-            fee = UtilsLib.safeCast(minimumFee);
+        if (fee < UtilsLib.safeCast(Base(_basket).getMinimumFee())) 
+            fee = UtilsLib.safeCast(Base(_basket).getMinimumFee());
 
+        uint8 basketDecimals = ERC20Detailed(_basket).decimals();
         return uint256(
             FixidityLib.fromFixed(
                 fee,
-                ERC20Detailed(address(this)).decimals()
+                basketDecimals
             )
         );
     }
