@@ -27,7 +27,7 @@ contract('Base', (accounts) => {
         someOtherERC20 = await SampleOtherERC20.deployed();
     });
 
-    describe('convertTokensAmount', () => {
+    /* describe('convertTokenAmount', () => {
         before(async () => {
             someERC20Decimals = 18;
             someOtherERC20Decimals = 20;
@@ -42,9 +42,9 @@ contract('Base', (accounts) => {
                 someOtherERC20Decimals,
             );
         });
-        it('convertTokensAmount(x, y, 1)', async () => {
+        it('convertTokenAmount(x, y, 1)', async () => {
             const converted = new BigNumber(
-                await mixr.convertTokensAmount(
+                await mixr.convertTokenAmount(
                     someERC20.address,
                     someOtherERC20.address,
                     1,
@@ -52,9 +52,9 @@ contract('Base', (accounts) => {
             );
             converted.should.be.bignumber.equal(100);
         });
-        it('convertTokensAmount(y, x, 100)', async () => {
+        it('convertTokenAmount(y, x, 100)', async () => {
             const converted = new BigNumber(
-                await mixr.convertTokensAmount(
+                await mixr.convertTokenAmount(
                     someOtherERC20.address,
                     someERC20.address,
                     100,
@@ -62,9 +62,9 @@ contract('Base', (accounts) => {
             );
             converted.should.be.bignumber.equal(1);
         });
-        it('convertTokensAmount(y, x, 110)', async () => {
+        it('convertTokenAmount(y, x, 110)', async () => {
             const converted = new BigNumber(
-                await mixr.convertTokensAmount(
+                await mixr.convertTokenAmount(
                     someOtherERC20.address,
                     someERC20.address,
                     110,
@@ -72,8 +72,8 @@ contract('Base', (accounts) => {
             );
             converted.should.be.bignumber.equal(1);
         });
-    });
-    describe('convertTokens', () => {
+    }); */
+    /* describe('convertTokens', () => {
         before(async () => {
             someERC20Decimals = 18;
             someOtherERC20Decimals = 20;
@@ -93,9 +93,8 @@ contract('Base', (accounts) => {
                 someOtherERC20Decimals,
             );
 
-            /**
-             * approve tokens!
-             */
+            // approve tokens!
+            
             await mixr.approveToken(someERC20.address, {
                 from: governor,
             });
@@ -117,17 +116,15 @@ contract('Base', (accounts) => {
                 },
             );
 
-            /**
-             * give some to user for test purposes
-             */
+            // give some to user for test purposes
+            
             await someERC20.transfer(user,
                 tokenNumber(someERC20Decimals, 90), { from: governor });
             await someOtherERC20.transfer(user,
                 tokenNumber(someOtherERC20Decimals, 80), { from: governor });
 
-            /**
-             * send some tokens
-             */
+            // send some tokens
+            
             let amount = new BigNumber(1);
             await someERC20.transfer(mixr.address, amount.toString(10), { from: user });
             amount = new BigNumber(100);
@@ -151,7 +148,7 @@ contract('Base', (accounts) => {
             );
             converted.should.be.bignumber.equal(1);
         });
-    });
+    }); */
     describe('basketBalance', () => {
         beforeEach(async () => {
             someERC20Decimals = 18;

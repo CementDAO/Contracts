@@ -102,14 +102,24 @@ contract Fees is Governance {
     {
         int256 tokenBalance = FixidityLib.newFixed(
             // The command below returns the balance of _token with this.decimals precision
-            Utils.safeCast(convertTokens(_token, address(this))), 
+            Utils.safeCast(
+                Utils.convertTokenAmount(
+                    _token, 
+                    address(this),
+                    IERC20(_token).balanceOf(address(this)))
+                ), 
             // We specify that this already uses a fixed point representation of decimals 
             // to convert to the library representation and be able to use the add function
             ERC20Detailed(address(this)).decimals()
         );     
 
         int256 transactionAmount = FixidityLib.newFixed(
-            Utils.safeCast(convertTokensAmount(_token, address(this), _transactionAmount)), 
+            Utils.safeCast(
+                Utils.convertTokenAmount(
+                    _token, 
+                    address(this), 
+                    _transactionAmount)
+                ), 
             ERC20Detailed(address(this)).decimals()
         );
         // Add the token balance to the amount to deposit, in fixidity units

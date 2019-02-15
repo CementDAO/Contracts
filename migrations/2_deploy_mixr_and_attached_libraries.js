@@ -8,6 +8,7 @@ module.exports = (deployer) => {
     deployer.deploy(FixidityLib);
     deployer.link(FixidityLib, MIXR);
     deployer.link(FixidityLib, LogarithmLib);
+    deployer.link(FixidityLib, Utils);
     // deploy logarithm
     deployer.deploy(LogarithmLib);
     deployer.link(LogarithmLib, MIXR);

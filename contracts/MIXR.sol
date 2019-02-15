@@ -34,7 +34,7 @@ contract MIXR is Fees, ERC20, ERC20Detailed {
     {
         // Calculate the deposit fee and the returned amount
         uint256 feeInBasketWei = transactionFee(_token, _depositInTokenWei, DEPOSIT());
-        uint256 depositInBasketWei = convertTokensAmount(
+        uint256 depositInBasketWei = Utils.convertTokenAmount(
             _token, 
             address(this), 
             _depositInTokenWei
@@ -75,7 +75,7 @@ contract MIXR is Fees, ERC20, ERC20Detailed {
     {
 
         // Calculate fee and redemption return
-        uint256 redemptionInTokenWei = convertTokensAmount(
+        uint256 redemptionInTokenWei = Utils.convertTokenAmount(
             address(this), 
             _token, 
             _redemptionInBasketWei
@@ -83,7 +83,7 @@ contract MIXR is Fees, ERC20, ERC20Detailed {
         //
         uint256 feeInBasketWei = transactionFee(_token, redemptionInTokenWei, REDEMPTION());
         uint256 withoutFeeInBasketWei = _redemptionInBasketWei.sub(feeInBasketWei);
-        uint256 returnInTokenWei = convertTokensAmount(
+        uint256 returnInTokenWei = Utils.convertTokenAmount(
             address(this), 
             _token, 
             withoutFeeInBasketWei

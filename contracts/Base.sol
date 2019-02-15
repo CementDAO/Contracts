@@ -156,53 +156,6 @@ contract Base {
     }
 
     /**
-     * @notice Converts a token amount from the precision of _originToken
-     * to that of _destinationToken. Use the address of the MIXR contract to
-     * convert to and from MIX.
-     * @dev Test:
-     * Create a token x with 18 decimals and a token y with 20 decimals
-     * Test convertTokensAmount(x, y, 1) = 100
-     * Test convertTokensAmount(y, x, 100) = 1
-     * Test convertTokensAmount(y, x, 110) = 1
-     */
-    function convertTokensAmount(
-        address _originToken, 
-        address _destinationToken, 
-        uint256 _amount
-    )
-        public
-        view
-        returns (uint256)
-    {
-        uint8 originTokenDecimals;
-        uint8 destinationTokenDecimals;
-
-        if ( _originToken == address(this)) {
-            originTokenDecimals = ERC20Detailed(address(this)).decimals();
-        }
-        else {
-            // assert(tokens.contains(_originToken))
-            originTokenDecimals = ERC20Detailed(_originToken).decimals();
-        }
-
-        if ( _destinationToken == address(this)) {
-            destinationTokenDecimals = ERC20Detailed(address(this)).decimals();
-        }
-        else {
-            // assert(tokens.contains(_destinationToken))
-            destinationTokenDecimals = ERC20Detailed(_destinationToken).decimals();
-        }
-
-        int256 convertedAmount = FixidityLib.convertFixed(
-            Utils.safeCast(_amount), 
-            originTokenDecimals, 
-            destinationTokenDecimals
-        );
-        assert(convertedAmount >= 0);
-        return uint256(convertedAmount);
-    } 
-
-    /**
      * @notice Returns the _originToken balance in the precision of
      * _destinationToken. Use the address of the MIXR contract to
      * convert to and from MIX.
@@ -212,7 +165,7 @@ contract Base {
      * Test convertTokens(x, y) = 100
      * Test convertTokens(y, x) = 1
      */
-    function convertTokens(
+    /* function convertTokens(
         address _originToken, 
         address _destinationToken
     )
@@ -220,11 +173,11 @@ contract Base {
         view
         returns (uint256)
     {
-        return convertTokensAmount(
+        return convertTokenAmount(
             _originToken, 
             _destinationToken, 
             IERC20(_originToken).balanceOf(address(this)));
-    }
+    } */
 
     /**
      * @notice Returns the total amount of tokens in the basket. Tokens 
@@ -264,7 +217,12 @@ contract Base {
                 balance, 
                 FixidityLib.newFixed(
                     // convertTokens below returns the balance in the basket decimals
-                    Utils.safeCast(convertTokens(tokensInBasket[i], address(this))), 
+                    Utils.safeCast(
+                        Utils.convertTokenAmount(
+                            tokensInBasket[i], 
+                            address(this), 
+                            IERC20(tokensInBasket[i]).balanceOf(address(this)))
+                        ), 
                     // We create a new fixed point number from basket decimals to the
                     // library precision to be able to use the add function
                     ERC20Detailed(address(this)).decimals()

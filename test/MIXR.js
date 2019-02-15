@@ -1,5 +1,6 @@
 const MIXR = artifacts.require('./MIXR.sol');
 const FixidityLibMock = artifacts.require('./FixidityLibMock.sol');
+const UtilsMock = artifacts.require('./UtilsMock.sol');
 const SampleERC20 = artifacts.require('./test/SampleERC20.sol');
 const SampleERC721 = artifacts.require('./test/SampleERC721.sol');
 
@@ -22,6 +23,7 @@ chai.use(require('chai-bignumber')()).should();
  */
 const depositTest = async (
     tokens, user, walletFees, someERC20, someERC20Decimals, mixr, mixrDecimals) => {
+
     /**
      * get previous balances
      */
@@ -91,6 +93,7 @@ const redemptionTest = async (
     const previousWalletFeeBalance = new BigNumber(await mixr.balanceOf(walletFees));
     const oneToken = new BigNumber(10).pow(someERC20Decimals).multipliedBy(tokens);
     const oneMIXR = new BigNumber(10).pow(mixrDecimals).multipliedBy(tokens);
+    const utilsMock = await UtilsMock.deployed();
 
     /**
      * estimate fees to authorize transactions
@@ -106,7 +109,7 @@ const redemptionTest = async (
      * approve and deposit
      */
     const amountInBasketWei = new BigNumber(
-        await mixr.convertTokensAmount(
+        await utilsMock.convertTokenAmount(
             someERC20.address,
             mixr.address,
             oneToken.toString(10),
@@ -135,14 +138,14 @@ const redemptionTest = async (
      */
     const withoutFeeInBasketWei = amountInBasketWei.minus(feeInBasketWei);
     const withoutFeeInTokenWei = new BigNumber(
-        await mixr.convertTokensAmount(
+        await utilsMock.convertTokenAmount(
             mixr.address,
             someERC20.address,
             withoutFeeInBasketWei.toString(10),
         ),
     );
     const feeInTokenWei = new BigNumber(
-        await mixr.convertTokensAmount(
+        await utilsMock.convertTokenAmount(
             mixr.address,
             someERC20.address,
             feeInBasketWei.toString(10),
