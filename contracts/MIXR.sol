@@ -32,7 +32,7 @@ contract MIXR is Governance, ERC20, ERC20Detailed {
      */
     function depositToken(address _token, uint256 _depositInTokenWei)
         public
-        isAcceptedToken(_token)
+        isInBasketToken(_token)
     {
         // Calculate the deposit fee and the returned amount
         uint256 feeInBasketWei = Fees.transactionFee(_token, address(this), _depositInTokenWei, Fees.DEPOSIT());
@@ -69,11 +69,11 @@ contract MIXR is Governance, ERC20, ERC20Detailed {
      * deducted from the amount returned and the MIX tokens redeemed are 
      * burned.
      * @param _token Address of the token to deposit.
-     * @param _redemptioninBasketWei Amount of MIX wei to redeem.
+     * @param _redemptionInBasketWei Amount of MIX wei to redeem.
      */
     function redeemMIXR(address _token, uint256 _redemptionInBasketWei)
         public
-        isAcceptedToken(_token)
+        isInBasketToken(_token)
     {
 
         // Calculate fee and redemption return

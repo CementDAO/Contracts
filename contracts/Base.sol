@@ -111,7 +111,7 @@ contract Base {
     /**
      * @notice Modifier to ensure a token is known to the basket.
      */
-    modifier isKnownToken(address _token) {
+    modifier isApprovedToken(address _token) {
         TokenData memory token = tokens[_token];
         require(
             token.approved == true,
@@ -125,7 +125,7 @@ contract Base {
      * @dev In order to make the code easier to read this method is only a 
      * group of requires
      */
-    modifier isAcceptedToken(address _token) {
+    modifier isInBasketToken(address _token) {
         TokenData memory token = tokens[_token];
         require(
             token.approved == true,
@@ -174,7 +174,7 @@ contract Base {
     function getTargetProportion(address _token) 
     public
     view
-    isKnownToken(_token)
+    isApprovedToken(_token)
     returns(int256)
     {
         TokenData memory token = tokens[_token];
@@ -187,7 +187,7 @@ contract Base {
     function getDepositFee(address _token) 
     public
     view
-    isKnownToken(_token)
+    isApprovedToken(_token)
     returns(uint256)
     {
         TokenData memory token = tokens[_token];
@@ -200,7 +200,7 @@ contract Base {
     function getRedemptionFee(address _token) 
     public
     view
-    isKnownToken(_token)
+    isApprovedToken(_token)
     returns(uint256)
     {
         TokenData memory token = tokens[_token];
@@ -213,7 +213,7 @@ contract Base {
     function getTransferFee(address _token) 
     public
     view
-    isKnownToken(_token)
+    isApprovedToken(_token)
     returns(uint256)
     {
         TokenData memory token = tokens[_token];
