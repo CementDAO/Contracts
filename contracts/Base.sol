@@ -5,7 +5,7 @@ import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./fixidity/FixidityLib.sol";
-import "./Utils.sol";
+import "./UtilsLib.sol";
 
 /**
  * @title Base MIXR contract. 
@@ -217,8 +217,8 @@ contract Base {
                 balance, 
                 FixidityLib.newFixed(
                     // convertTokens below returns the balance in the basket decimals
-                    Utils.safeCast(
-                        Utils.convertTokenAmount(
+                    UtilsLib.safeCast(
+                        UtilsLib.convertTokenAmount(
                             tokensInBasket[i], 
                             address(this), 
                             IERC20(tokensInBasket[i]).balanceOf(address(this)))

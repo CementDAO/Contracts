@@ -1,8 +1,8 @@
 pragma solidity ^0.5.0;
 
-import "../Utils.sol";
+import "../UtilsLib.sol";
 
-contract UtilsMock {
+contract UtilsLibMock {
     /**
      * @notice Cast safely from uint256 (token balances) to int256 (proportions and fees)
      * @param x Number to cast from uint256 to int256
@@ -12,7 +12,7 @@ contract UtilsMock {
         pure 
         returns(int256)
     {
-        return Utils.safeCast(x);
+        return UtilsLib.safeCast(x);
     }
 
     /**
@@ -34,6 +34,6 @@ contract UtilsMock {
         view
         returns (uint256)
     {
-        return Utils.convertTokenAmount(_originToken, _destinationToken, _amount);
+        return UtilsLib.convertTokenAmount(_originToken, _destinationToken, _amount);
     } 
 }

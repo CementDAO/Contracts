@@ -3,7 +3,7 @@ pragma solidity ^0.5.0;
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
 import "./fixidity/FixidityLib.sol";
 
-library Utils {
+library UtilsLib {
     /**
      * @notice Cast safely from uint256 (token balances) to int256 (proportions and fees)
      * @param x Number to cast from uint256 to int256

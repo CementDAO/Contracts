@@ -6,7 +6,7 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./fixidity/FixidityLib.sol";
 import "./fixidity/LogarithmLib.sol";
 import "./Governance.sol";
-import "./Utils.sol";
+import "./UtilsLib.sol";
 
 /**
  * @title Fees contract.
@@ -102,8 +102,8 @@ contract Fees is Governance {
     {
         int256 tokenBalance = FixidityLib.newFixed(
             // The command below returns the balance of _token with this.decimals precision
-            Utils.safeCast(
-                Utils.convertTokenAmount(
+            UtilsLib.safeCast(
+                UtilsLib.convertTokenAmount(
                     _token, 
                     address(this),
                     IERC20(_token).balanceOf(address(this)))
@@ -114,8 +114,8 @@ contract Fees is Governance {
         );     
 
         int256 transactionAmount = FixidityLib.newFixed(
-            Utils.safeCast(
-                Utils.convertTokenAmount(
+            UtilsLib.safeCast(
+                UtilsLib.convertTokenAmount(
                     _token, 
                     address(this), 
                     _transactionAmount)
@@ -143,7 +143,7 @@ contract Fees is Governance {
         // dividing by zero on an empty basket.
         
         int256 basketBeforeTransaction = FixidityLib.newFixed(
-                Utils.safeCast(basketBalance()),
+                UtilsLib.safeCast(basketBalance()),
                 ERC20Detailed(address(this)).decimals()
         );
         int256 basketAfterTransaction;
@@ -280,7 +280,7 @@ contract Fees is Governance {
 
         if (_transactionType == DEPOSIT()) {
             int256 baseFee = FixidityLib.newFixed(
-                Utils.safeCast(token.depositFee), 
+                UtilsLib.safeCast(token.depositFee), 
                 ERC20Detailed(address(this)).decimals()
             );
             int256 scaledLogit = FixidityLib.multiply(
@@ -296,7 +296,7 @@ contract Fees is Governance {
             );
         } else if (_transactionType == REDEMPTION()) {
             int256 baseFee = FixidityLib.newFixed(
-                Utils.safeCast(token.redemptionFee), 
+                UtilsLib.safeCast(token.redemptionFee), 
                 ERC20Detailed(address(this)).decimals()
             );
             int256 scaledLogit = FixidityLib.multiply(
@@ -313,8 +313,8 @@ contract Fees is Governance {
         } // else statement does not happen here. It would have reverted above.
 
         assert(fee >= 0);
-        if (fee < Utils.safeCast(minimumFee)) 
-            fee = Utils.safeCast(minimumFee);
+        if (fee < UtilsLib.safeCast(minimumFee)) 
+            fee = UtilsLib.safeCast(minimumFee);
 
         return uint256(
             FixidityLib.fromFixed(
