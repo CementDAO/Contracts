@@ -110,6 +110,7 @@ contract Base {
 
     /**
      * @notice Modifier to ensure a token is known to the basket.
+     * @param _token The token ERC20 contract address that we are validating.
      */
     modifier isApprovedToken(address _token) {
         TokenData memory token = tokens[_token];
@@ -122,6 +123,7 @@ contract Base {
 
     /**
      * @notice Modifier to ensure a token is accepted for transactions.
+     * @param _token The token ERC20 contract address that we are validating.
      * @dev In order to make the code easier to read this method is only a 
      * group of requires
      */
@@ -170,6 +172,10 @@ contract Base {
 
     /**
      * @notice Returns the target proportion of a token, in fixed point units.
+     * @param _token The token ERC20 contract address that we are retrieving a
+     * target proportion for. The token needs to have been approved for
+     * management within the CementDAO set of contracts, but doesn't need to be
+     * in the basket.
      */
     function getTargetProportion(address _token) 
     public
@@ -183,6 +189,10 @@ contract Base {
 
     /**
      * @notice Returns the base deposit fee for a token, in MIX wei.
+     * @param _token The token ERC20 contract address that we are retrieving 
+     * the base deposit fee for. The token needs to have been approved for
+     * management within the CementDAO set of contracts, but doesn't need to be
+     * in the basket.
      */
     function getDepositFee(address _token) 
     public
@@ -196,6 +206,10 @@ contract Base {
 
     /**
      * @notice Returns the base redemption fee for a token, in MIX wei.
+     * @param _token The token ERC20 contract address that we are retrieving 
+     * the base redemption fee for. The token needs to have been approved for
+     * management within the CementDAO set of contracts, but doesn't need to be
+     * in the basket.
      */
     function getRedemptionFee(address _token) 
     public
@@ -209,6 +223,10 @@ contract Base {
 
     /**
      * @notice Returns the base transfer fee for a token, in MIX wei.
+     * @param _token The token ERC20 contract address that we are retrieving 
+     * the base transfer fee for. The token needs to have been approved for
+     * management within the CementDAO set of contracts, but doesn't need to be
+     * in the basket.
      */
     function getTransferFee(address _token) 
     public
@@ -240,28 +258,4 @@ contract Base {
         }
         return (activeAddresses, activeIndex);
     }
-
-    /**
-     * @notice Returns the _originToken balance in the precision of
-     * _destinationToken. Use the address of the MIXR contract to
-     * convert to and from MIX.
-     * @dev Test:
-     * Create a token x with 18 decimals and a token y with 20 decimals
-     * Mint 1 wei for x and 100 wei for y
-     * Test convertTokens(x, y) = 100
-     * Test convertTokens(y, x) = 1
-     */
-    /* function convertTokens(
-        address _originToken, 
-        address _destinationToken
-    )
-        public
-        view
-        returns (uint256)
-    {
-        return convertTokenAmount(
-            _originToken, 
-            _destinationToken, 
-            IERC20(_originToken).balanceOf(address(this)));
-    } */
 }
