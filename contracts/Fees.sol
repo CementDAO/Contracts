@@ -6,7 +6,7 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./fixidity/FixidityLib.sol";
 import "./fixidity/LogarithmLib.sol";
 import "./UtilsLib.sol";
-import "./Base.sol";
+import "./MIXR.sol";
 
 /**
  * @title Fee calculation library.
@@ -116,7 +116,7 @@ library Fees {
         // dividing by zero on an empty basket.
         
         int256 basketBeforeTransaction = FixidityLib.newFixed(
-                UtilsLib.safeCast(Base(_basket).basketBalance()),
+                UtilsLib.safeCast(MIXR(_basket).basketBalance()),
                 ERC20Detailed(_basket).decimals()
         );
         int256 basketAfterTransaction;
