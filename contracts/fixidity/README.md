@@ -1,7 +1,7 @@
-= FixidityLib =
+# FixidityLib
 An overflow-protected fixed-point arithmetic library for Solidity.
 
-== Introduction ==
+## Introduction
 FixidityLib provide fixed point arithmetic for Solidity. This is achieved by
 using int256 as the type throughout the library and designating a number of
 digits in each int256 for holding the fractional part. This is equivalent to
@@ -40,7 +40,9 @@ remember whether a given int256 is a FixidityLibe fixed point number or not,
 and to take care to use the newFixed() and fromFixed() functions accordingly
 to create fixed point numbers and convert them back to non-integers.
 
-== FixidityLib.sol ==
+## FixidityLib.sol
+This library implements  addition, subtraction,
+multiplication and division, along with the related constants and limits.
 
 **function digits() public pure returns(uint8)**
 Number of positions that the comma is shifted to the right.
@@ -55,10 +57,6 @@ Default: 1000000000000000000000000000000000000
 The amount of decimals lost on each multiplication operand.
 Calcualted as mulPrecision() = sqrt(fixed1)
 Default: 1000000000000000000
-
-**function fixedE() public pure returns(int256)**
-This is e in the fixed point units used in this library.
-Default: 27182818284590452353602874713526624977572470936999595749669676277240766303535/fixed1()
 
 **function maxInt256() public pure returns(int256)**
 Maximum value that can be represented in an int256
@@ -172,3 +170,26 @@ x*y. If any of the operators is higher than maxFixedMul() it might overflow.
 x/y. If the dividend is higher than maxFixedDiv() it might overflow. You can 
 use multiply(x,reciprocal(y)) instead.
 There is a loss of precision on division for the lower mulPrecision() decimals.
+
+## LogarithmLib.sol
+This library extends FixidityLib by implementing logarithms, along with the related constants and limits.
+
+**function fixedE() public pure returns(int256)**
+This is e in the fixed point units used in this library.
+Default: 27182818284590452353602874713526624977572470936999595749669676277240766303535/fixed1()
+
+**function fixedLn1_5() public pure returns(int256)**
+ln(1.5)
+Default: 405465108108164381978013115464349137;
+
+**function fixedLn10() public pure returns (int256)**
+ln(10)
+Default: 2302585092994045684017991454684364208;
+
+**function ln(int256 value) public pure returns (int256)**
+ln(x). This function has a 1/50 deviation close to ln(-1), 1/maxFixedMul() deviation at fixedE()**2, but diverges to 10x deviation at maxNewFixed().
+
+**function log_b(int256 b, int256 x) public pure returns (int256)**
+log_b(x)
+ - int256 b Base in fixed point representation.
+ - int256 x Value to calculate the logarithm for in fixed point representation.

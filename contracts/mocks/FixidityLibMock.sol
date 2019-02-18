@@ -34,14 +34,6 @@ contract FixidityLibMock {
     }
 
     /**
-     * @dev This is e in the fixed point units used in this library.
-     * Hardcoded to 36 digits.
-     */
-    function fixedE() public pure returns(int256) {
-        return FixidityLib.fixedE();
-    }
-
-    /**
      * @dev Maximum value that can be represented in an int256
      * 2^256 / 2 -1
      * Hardcoded to 36 digits.
