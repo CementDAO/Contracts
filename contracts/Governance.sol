@@ -64,33 +64,6 @@ contract Governance is Base, Ownable {
     }
 
     /**
-     * @notice This function adds an ERC20 token to the registered tokens list.
-     */
-    function registerToken(address _token, uint8 _decimals)
-        public
-        onlyGovernor()
-        isCompliantToken(_token)
-    {
-        TokenData memory token = tokens[_token];
-        require(token.registered == false, "Token is already registered!");
-        token.registered = true;
-        token.decimals = _decimals;
-        tokens[_token] = token;
-        tokensList.push(_token);
-    }
-
-    /**
-     * @notice This function adds an ERC20Detailed token to the registered tokens list.
-     */
-    function registerToken(address _token)
-        public
-        onlyGovernor()
-        isCompliantToken(_token)
-    {
-        registerToken(_token, ERC20Detailed(_token).decimals());
-    }
-
-    /**
      * @notice Set which account will hold the transaction fees prior to 
      * distribution to stakeholders.
      */
@@ -104,6 +77,33 @@ contract Governance is Base, Ownable {
          * Maybe we also want multiple verification.
          */
         stakeholderAccount = _wallet;
+    }
+
+    /**
+     * @notice This function adds an ERC20Detailed token to the registered tokens list.
+     */
+    function registerToken(address _token)
+        public
+        onlyGovernor()
+        isCompliantToken(_token)
+    {
+        registerTokenWithDecimals(_token, ERC20Detailed(_token).decimals());
+    }
+
+    /**
+     * @notice This function adds an ERC20 token to the registered tokens list.
+     */
+    function registerTokenWithDecimals(address _token, uint8 _decimals)
+        public
+        onlyGovernor()
+        isCompliantToken(_token)
+    {
+        TokenData memory token = tokens[_token];
+        require(token.registered == false, "Token is already registered!");
+        token.registered = true;
+        token.decimals = _decimals;
+        tokens[_token] = token;
+        tokensList.push(_token);
     }
 
     /**

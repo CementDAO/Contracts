@@ -3,6 +3,7 @@ const FixidityLibMock = artifacts.require('./FixidityLibMock.sol');
 const SampleERC721 = artifacts.require('./test/SampleERC721.sol');
 const SampleERC20 = artifacts.require('./test/SampleERC20.sol');
 const SampleOtherERC20 = artifacts.require('./test/SampleOtherERC20.sol');
+const SamplePlainERC20 = artifacts.require('./test/SamplePlainERC20.sol');
 
 const BigNumber = require('bignumber.js');
 const chai = require('chai');
@@ -16,9 +17,11 @@ contract('MIXR governance', (accounts) => {
     let fixidityLibMock;
     let someERC20;
     let someOtherERC20;
+    let somePlainERC20;
     let someERC721;
     let someERC20Decimals;
     let someOtherERC20Decimals;
+    let somePlainERC20Decimals;
     const owner = accounts[0];
     const governor = accounts[1];
     const user = accounts[2];
@@ -29,14 +32,15 @@ contract('MIXR governance', (accounts) => {
         fixidityLibMock = await FixidityLibMock.deployed();
         someERC20 = await SampleERC20.deployed();
         someOtherERC20 = await SampleOtherERC20.deployed();
+        somePlainERC20 = await SamplePlainERC20.deployed();
     });
 
-    describe('whitelist management', () => {
+    describe('onlyGovernor modifier', () => {
         beforeEach(async () => {
             mixr = await MIXR.new();
         });
         itShouldThrow(
-            'forbids an arbitrary user to add a governor',
+            'a non-governor can\'t set the account for fees.',
             async () => {
                 await mixr.addGovernor(accounts[3], {
                     from: user,
@@ -44,6 +48,36 @@ contract('MIXR governance', (accounts) => {
             },
             'revert',
         );
+
+        it('a governor can set the stakeholder fee holding account.', async () => {
+        });
+    });
+
+    describe('whitelist management', () => {
+        beforeEach(async () => {
+            mixr = await MIXR.new();
+        });
+        itShouldThrow(
+            'only owner can add a governor',
+            async () => {
+                await mixr.addGovernor(accounts[3], {
+                    from: user,
+                });
+            },
+            'revert',
+        );
+
+        it('isGovernor returns true with a governor account.', async () => {
+        });
+
+        it('isGovernor returns false with a non-governor account.', async () => {
+        });
+
+        it('allows the owner to add a governor.', async () => {
+        });
+
+        it('allows the owner to remove a governor.', async () => {
+        });
 
         it('allows the contract to add and then remove an additional governor', async () => {
             assert.equal(false, await mixr.isGovernor(accounts[3]));
@@ -58,17 +92,30 @@ contract('MIXR governance', (accounts) => {
         });
     });
 
-    describe('token approval', () => {
+
+    describe('setting the stakeholder fee holding account', () => {
+        beforeEach(async () => {
+            mixr = await MIXR.new();
+        });
+        itShouldThrow(
+            'only valid addresses are allowed as the stakeholder fee holding account.',
+            async () => {
+                await mixr.addGovernor(accounts[3], {
+                    from: user,
+                });
+            },
+            'revert',
+        );
+
+        it('a governor can set the stakeholder fee holding account.', async () => {
+        });
+    });
+
+    describe('token registering', () => {
         beforeEach(async () => {
             mixr = await MIXR.new();
             await mixr.addGovernor(governor, {
                 from: owner,
-            });
-        });
-
-        it('allows a governor to approve a valid token', async () => {
-            await mixr.registerToken(someERC20.address, {
-                from: governor,
             });
         });
 
@@ -113,6 +160,28 @@ contract('MIXR governance', (accounts) => {
                 });
             },
             'Token is already registered!',
+        );
+
+        it('allows a governor to approve an ERC20Detailed token', async () => {
+            await mixr.registerToken(someERC20.address, {
+                from: governor,
+            });
+        });
+
+        it('allows a governor to approve an ERC20 token', async () => {
+            await mixr.registerTokenWithDecimals(somePlainERC20.address, 18, {
+                from: governor,
+            });
+        });
+
+        itShouldThrow(
+            'forbids approving an ERC20 token without decimals',
+            async () => {
+                await mixr.registerToken(somePlainERC20.address, {
+                    from: governor,
+                });
+            },
+            'revert',
         );
     });
 
