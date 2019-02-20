@@ -43,9 +43,16 @@ contract Base {
          */
         bool registered;
         /**
+         * @notice The number of decimals that this token can be broken into.
+         */
+        uint8 decimals;
+        /**
          * @notice The proportion of this token that we want in the basket. 
          * It uses fixed point units in a 0 to FixidityLib.fixed1() range. 
          * If it is set to 0 no deposits are accepted for it.
+         * @dev We don't use decimals() from ERC20Detailed for tokens in the
+         * basket because tokens we might want in the basket might not
+         * implement it.
          */
         int256 targetProportion;
         /**
@@ -108,10 +115,11 @@ contract Base {
     }
 
     /**
-     * @notice Modifier to ensure a token is known to the basket.
+     * @notice Modifier to ensure a token is known to the DAO.
      * @param _token The token ERC20 contract address that we are validating.
      */
-    modifier isRegistered(address _token) {
+    modifier isRegistered(address _token) 
+    {
         TokenData memory token = tokens[_token];
         require(
             token.registered == true,
@@ -150,7 +158,8 @@ contract Base {
      * @dev In order to make the code easier to read this method is only a 
      * group of requires
      */
-    modifier acceptedForRedemptions(address _token) {
+    modifier acceptedForRedemptions(address _token) 
+    {
         TokenData memory token = tokens[_token];
         require(
             token.registered == true,
@@ -186,11 +195,28 @@ contract Base {
     }
 
     /**
+     * @notice Returns the decimals of a token.
+     * @param _token The token ERC20 contract address that we are retrieving a
+     * target proportion for. The token needs to have been registered in 
+     * CementDAO.
+     * @dev The MIX token inheriting from Base implements ERC20Detailed and you
+     * can retrieve its decimals as mixr.decimals().
+     */
+    function getDecimals(address _token) 
+    public
+    view
+    isRegistered(_token)
+    returns(uint8)
+    {
+        TokenData memory token = tokens[_token];
+        return token.decimals;
+    }
+
+    /**
      * @notice Returns the target proportion of a token, in fixed point units.
      * @param _token The token ERC20 contract address that we are retrieving a
-     * target proportion for. The token needs to have been approved for
-     * management within the CementDAO set of contracts, but doesn't need to be
-     * in the basket.
+     * target proportion for. The token needs to have been registered in 
+     * CementDAO.
      */
     function getTargetProportion(address _token) 
     public
@@ -205,9 +231,8 @@ contract Base {
     /**
      * @notice Returns the base deposit fee for a token, in MIX wei.
      * @param _token The token ERC20 contract address that we are retrieving 
-     * the base deposit fee for. The token needs to have been approved for
-     * management within the CementDAO set of contracts, but doesn't need to be
-     * in the basket.
+     * the base deposit fee for. The token needs to have been registered in 
+     * CementDAO.
      */
     function getDepositFee(address _token) 
     public
@@ -222,9 +247,8 @@ contract Base {
     /**
      * @notice Returns the base redemption fee for a token, in MIX wei.
      * @param _token The token ERC20 contract address that we are retrieving 
-     * the base redemption fee for. The token needs to have been approved for
-     * management within the CementDAO set of contracts, but doesn't need to be
-     * in the basket.
+     * the base redemption fee for. The token needs to have been registered in 
+     * CementDAO.
      */
     function getRedemptionFee(address _token) 
     public
@@ -239,9 +263,8 @@ contract Base {
     /**
      * @notice Returns the base transfer fee for a token, in MIX wei.
      * @param _token The token ERC20 contract address that we are retrieving 
-     * the base transfer fee for. The token needs to have been approved for
-     * management within the CementDAO set of contracts, but doesn't need to be
-     * in the basket.
+     * the base transfer fee for. The token needs to have been registered in 
+     * CementDAO.
      */
     function getTransferFee(address _token) 
     public

@@ -26,14 +26,14 @@ contract UtilsLibMock {
      * Test convertTokenAmount(y, x, 110) = 1
      */
     function convertTokenAmount(
-        address _originToken, 
-        address _destinationToken, 
+        uint8 _originTokenDecimals, 
+        uint8 _destinationTokenDecimals, 
         uint256 _amount
     )
         public
-        view
+        pure
         returns (uint256)
     {
-        return UtilsLib.convertTokenAmount(_originToken, _destinationToken, _amount);
+        return UtilsLib.convertTokenAmount(_originTokenDecimals, _destinationTokenDecimals, _amount);
     } 
 }

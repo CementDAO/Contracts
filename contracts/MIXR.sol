@@ -61,8 +61,8 @@ contract MIXR is Governance, ERC20, ERC20Detailed {
                     // convertTokens below returns the balance in the basket decimals
                     UtilsLib.safeCast(
                         UtilsLib.convertTokenAmount(
-                            tokensInBasket[i], 
-                            address(this), 
+                            getDecimals(tokensInBasket[i]), 
+                            ERC20Detailed(address(this)).decimals(), 
                             IERC20(tokensInBasket[i]).balanceOf(address(this)))
                         ), 
                     // We create a new fixed point number from basket decimals to the
@@ -92,8 +92,8 @@ contract MIXR is Governance, ERC20, ERC20Detailed {
         // Calculate the deposit fee and the returned amount
         uint256 feeInBasketWei = Fees.transactionFee(_token, address(this), _depositInTokenWei, Fees.DEPOSIT());
         uint256 depositInBasketWei = UtilsLib.convertTokenAmount(
-            _token, 
-            address(this), 
+            getDecimals(_token), 
+            ERC20Detailed(address(this)).decimals(), 
             _depositInTokenWei
         );
         uint256 returnInBasketWei = depositInBasketWei.sub(feeInBasketWei);
@@ -133,16 +133,16 @@ contract MIXR is Governance, ERC20, ERC20Detailed {
 
         // Calculate fee and redemption return
         uint256 redemptionInTokenWei = UtilsLib.convertTokenAmount(
-            address(this), 
-            _token, 
+            ERC20Detailed(address(this)).decimals(), 
+            getDecimals(_token), 
             _redemptionInBasketWei
         );
         //
         uint256 feeInBasketWei = Fees.transactionFee(_token, address(this), redemptionInTokenWei, Fees.REDEMPTION());
         uint256 withoutFeeInBasketWei = _redemptionInBasketWei.sub(feeInBasketWei);
         uint256 returnInTokenWei = UtilsLib.convertTokenAmount(
-            address(this), 
-            _token, 
+            ERC20Detailed(address(this)).decimals(), 
+            getDecimals(_token), 
             withoutFeeInBasketWei
         );
 

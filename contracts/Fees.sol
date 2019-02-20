@@ -77,8 +77,8 @@ library Fees {
             // The command below returns the balance of _token with this.decimals precision
             UtilsLib.safeCast(
                 UtilsLib.convertTokenAmount(
-                    _token, 
-                    _basket,
+                    MIXR(_basket).getDecimals(_token),
+                    ERC20Detailed(_basket).decimals(),
                     IERC20(_token).balanceOf(_basket))
                 ), 
             // We specify that this already uses a fixed point representation of decimals 
@@ -89,8 +89,8 @@ library Fees {
         int256 transactionAmount = FixidityLib.newFixed(
             UtilsLib.safeCast(
                 UtilsLib.convertTokenAmount(
-                    _token, 
-                    _basket, 
+                    MIXR(_basket).getDecimals(_token),
+                    ERC20Detailed(_basket).decimals(),
                     _transactionAmount)
                 ), 
             ERC20Detailed(_basket).decimals()

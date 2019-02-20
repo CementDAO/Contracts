@@ -106,8 +106,8 @@ const redemptionTest = async (
      */
     const amountInBasketWei = new BigNumber(
         await utilsLibMock.convertTokenAmount(
-            someERC20.address,
-            mixr.address,
+            someERC20Decimals,
+            mixrDecimals,
             oneToken.toString(10),
         ),
     );
@@ -135,15 +135,15 @@ const redemptionTest = async (
     const withoutFeeInBasketWei = amountInBasketWei.minus(redemptionFee);
     const withoutFeeInTokenWei = new BigNumber(
         await utilsLibMock.convertTokenAmount(
-            mixr.address,
-            someERC20.address,
+            mixrDecimals,
+            someERC20Decimals,
             withoutFeeInBasketWei.toString(10),
         ),
     );
     const feeInTokenWei = new BigNumber(
         await utilsLibMock.convertTokenAmount(
-            mixr.address,
-            someERC20.address,
+            mixrDecimals,
+            someERC20Decimals,
             redemptionFee.toString(10),
         ),
     );

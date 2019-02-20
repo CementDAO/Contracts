@@ -26,7 +26,7 @@ contract('Base', (accounts) => {
         before(async () => {
             someERC20Decimals = 18;
             someOtherERC20Decimals = 20;
-            someERC20 = await SampleERC20.new(
+            /* someERC20 = await SampleERC20.new(
                 governor,
                 tokenNumber(someERC20Decimals, 100),
                 someERC20Decimals,
@@ -35,13 +35,13 @@ contract('Base', (accounts) => {
                 governor,
                 tokenNumber(someOtherERC20Decimals, 100),
                 someOtherERC20Decimals,
-            );
+            ); */
         });
         it('convertTokenAmount(x, y, 1)', async () => {
             const converted = new BigNumber(
                 await utilsLibMock.convertTokenAmount(
-                    someERC20.address,
-                    someOtherERC20.address,
+                    someERC20Decimals,
+                    someOtherERC20Decimals,
                     1,
                 ),
             );
@@ -50,8 +50,8 @@ contract('Base', (accounts) => {
         it('convertTokenAmount(y, x, 100)', async () => {
             const converted = new BigNumber(
                 await utilsLibMock.convertTokenAmount(
-                    someOtherERC20.address,
-                    someERC20.address,
+                    someOtherERC20Decimals,
+                    someERC20Decimals,
                     100,
                 ),
             );
@@ -60,8 +60,8 @@ contract('Base', (accounts) => {
         it('convertTokenAmount(y, x, 110)', async () => {
             const converted = new BigNumber(
                 await utilsLibMock.convertTokenAmount(
-                    someOtherERC20.address,
-                    someERC20.address,
+                    someOtherERC20Decimals,
+                    someERC20Decimals,
                     110,
                 ),
             );

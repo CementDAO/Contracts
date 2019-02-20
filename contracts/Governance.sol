@@ -1,6 +1,7 @@
 pragma solidity ^0.5.0;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
 import "./fixidity/FixidityLib.sol";
 import "./Base.sol";
 import "./Fees.sol";
@@ -65,7 +66,7 @@ contract Governance is Base, Ownable {
     /**
      * @notice This function adds an ERC20 token to the registered tokens list.
      */
-    function registerToken(address _token)
+    function registerToken(address _token, uint8 _decimals)
         public
         onlyGovernor()
         isCompliantToken(_token)
@@ -73,8 +74,20 @@ contract Governance is Base, Ownable {
         TokenData memory token = tokens[_token];
         require(token.registered == false, "Token is already registered!");
         token.registered = true;
+        token.decimals = _decimals;
         tokens[_token] = token;
         tokensList.push(_token);
+    }
+
+    /**
+     * @notice This function adds an ERC20Detailed token to the registered tokens list.
+     */
+    function registerToken(address _token)
+        public
+        onlyGovernor()
+        isCompliantToken(_token)
+    {
+        registerToken(_token, ERC20Detailed(_token).decimals());
     }
 
     /**
