@@ -224,8 +224,8 @@ contract('Fees', (accounts) => {
             });
 
             await mixr.setTokensTargetProportion(
-                [someERC20.address],
-                [fixed1.toString(10)],
+                [someERC20.address, someOtherERC20.address],
+                [fixed1.toString(10), 0],
                 {
                     from: governor,
                 },
