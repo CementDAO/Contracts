@@ -49,9 +49,9 @@ contract MIXR is Governance, ERC20, ERC20Detailed {
     {
         int256 balance = 0;
         uint256 totalTokens;
-        address[] memory tokensInBasket;
+        address[] memory registeredTokens;
 
-        (tokensInBasket, totalTokens) = getRegisteredTokens();
+        (registeredTokens, totalTokens) = getRegisteredTokens();
 
         for ( uint256 i = 0; i < totalTokens; i += 1 )
         {
@@ -61,9 +61,9 @@ contract MIXR is Governance, ERC20, ERC20Detailed {
                     // convertTokens below returns the balance in the basket decimals
                     UtilsLib.safeCast(
                         UtilsLib.convertTokenAmount(
-                            getDecimals(tokensInBasket[i]), 
+                            getDecimals(registeredTokens[i]), 
                             ERC20Detailed(address(this)).decimals(), 
-                            IERC20(tokensInBasket[i]).balanceOf(address(this)))
+                            IERC20(registeredTokens[i]).balanceOf(address(this)))
                         ), 
                     // We create a new fixed point number from basket decimals to the
                     // library precision to be able to use the add function

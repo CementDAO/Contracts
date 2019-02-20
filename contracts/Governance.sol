@@ -145,49 +145,49 @@ contract Governance is Base, Ownable {
         public
         onlyGovernor()
     {
-        uint256 nTokens = _tokens.length;
-        uint256 nProportions = _proportions.length;
         require(
-            nTokens == nProportions, 
-            "Target proportions must be set for all registered tokens simultaneously."
+            _tokens.length == _proportions.length, 
+            "The number of target proportions supplied doesn't match the number of token addresses supplied."
         );
-        for(uint256 x = 0; x < nTokens; x += 1) {
-            TokenData memory token = tokens[_tokens[x]];
+
+        // Check proportions supplied for all registered tokens.
+        uint256 totalTokens;
+        address[] memory registeredTokens;
+        (registeredTokens, totalTokens) = getRegisteredTokens();
+        
+        for(uint256 x = 0; x < registeredTokens.length; x += 1) {
+            bool found = false;
+            for(uint256 y = 0; y < _tokens.length; y += 1) {
+                if (registeredTokens[x] == _tokens[y]) {
+                    found = true; 
+                    break;
+                }
+            }
+            require(
+                found == true,
+                "Proportions must be given for all registered tokens."
+            );
+        }
+
+        // Check proportions supplied are valid.
+        int256 totalProportions = 0;
+        for(uint256 x = 0; x < _proportions.length; x += 1) {
             require(
                 _proportions[x] >= 0 && _proportions[x] <= FixidityLib.fixed1(),
                 "Target proportion not in the [0,1] range."
             );
-            require( // This should use the isRegistered modifier somehow.
-                token.registered == true,
-                "The given token is not registered."
-            );
+            totalProportions = totalProportions + _proportions[x];
+        }
+        require (
+            totalProportions == FixidityLib.fixed1(),
+            "The target proportions supplied must add up to 1."
+        );
+
+        // Apply changes.
+        for(uint256 x = 0; x < _proportions.length; x += 1) {
+            TokenData memory token = tokens[_tokens[x]];
             token.targetProportion = _proportions[x];
             tokens[_tokens[x]] = token;
         }
-        require(
-            areNewProportionsValid() == true,
-            "The target proportions supplied must add up to 1."
-        );
-    }
-
-    /**
-     * @notice Check if the token target proportions are valid by verifying
-     * that they add up to fixed1().
-     */
-    function areNewProportionsValid()
-        private
-        view
-        returns(bool)
-    {
-        int256 newProportions = 0;
-        // This should use getRegisteredTokens()
-        uint256 nExistingTokens = tokensList.length;
-        for(uint256 x = 0; x < nExistingTokens; x += 1) {
-            TokenData memory token = tokens[tokensList[x]];
-            if (token.registered == true) {
-                newProportions = newProportions + token.targetProportion;
-            }
-        }
-        return (newProportions == FixidityLib.fixed1());
     }
 }

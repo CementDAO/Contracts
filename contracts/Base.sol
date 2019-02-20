@@ -294,6 +294,6 @@ contract Base {
                 activeIndex += 1; // Unlikely to overflow
             }
         }
-        return (activeAddresses, activeIndex);
+        return (activeAddresses, activeIndex); // Do we need to return activeIndex? Can't the caller use activeAddresses.length?
     }
 }

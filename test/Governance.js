@@ -146,10 +146,25 @@ contract('MIXR governance', (accounts) => {
             });
         });
 
+        itShouldThrow('stops setting proportions with mismatched token and proportion arrays.', async () => {
+            const tokensArray = [someERC20.address];
+            const proportionArray = [
+                new BigNumber(await fixidityLibMock.newFixedFraction(1, 2)).toString(10),
+                new BigNumber(await fixidityLibMock.newFixedFraction(1, 4)).toString(10),
+            ];
+            await mixr.setTokensTargetProportion(
+                tokensArray,
+                proportionArray,
+                {
+                    from: governor,
+                },
+            );
+        }, 'The number of target proportions supplied doesn\'t match the number of token addresses supplied.');
+
         itShouldThrow(
-            'stops operations with non registered tokens',
+            'stops setting proportions for only a subset of registered tokens.',
             async () => {
-                const tokensArray = [someERC721.address];
+                const tokensArray = [someERC20.address];
                 const proportionArray = [
                     new BigNumber(await fixidityLibMock.newFixed(1)).toString(10),
                 ];
@@ -161,15 +176,78 @@ contract('MIXR governance', (accounts) => {
                     },
                 );
             },
-            'The given token is not registered.',
+            'Proportions must be given for all registered tokens.',
         );
 
         itShouldThrow(
-            'stops operations from non-governors',
+            'stops setting proportions to non registered tokens',
             async () => {
-                const tokensArray = [someERC20.address];
+                const tokensArray = [
+                    someERC721.address,
+                    someERC20.address,
+                ];
                 const proportionArray = [
-                    new BigNumber(await fixidityLibMock.newFixed(1)).toString(10),
+                    new BigNumber(await fixidityLibMock.newFixed(1)).dividedBy(2).toString(10),
+                    new BigNumber(await fixidityLibMock.newFixed(1)).dividedBy(2).toString(10),
+                ];
+                await mixr.setTokensTargetProportion(
+                    tokensArray,
+                    proportionArray,
+                    {
+                        from: governor,
+                    },
+                );
+            },
+            'Proportions must be given for all registered tokens.',
+        );
+
+
+        itShouldThrow('forbids to set token target proportions that outside the [0,1] range.', async () => {
+            const tokensArray = [
+                someERC20.address,
+                someOtherERC20.address,
+            ];
+            const proportionArray = [
+                new BigNumber(await fixidityLibMock.newFixed(1)).multipliedBy(2).toString(10),
+                new BigNumber(await fixidityLibMock.newFixed(1)).dividedBy(2).toString(10),
+            ];
+            await mixr.setTokensTargetProportion(
+                tokensArray,
+                proportionArray,
+                {
+                    from: governor,
+                },
+            );
+        }, 'Target proportion not in the [0,1] range.');
+
+        itShouldThrow('forbids to send invalid total proportions', async () => {
+            const tokensArray = [
+                someERC20.address,
+                someOtherERC20.address,
+            ];
+            const proportionArray = [
+                new BigNumber(await fixidityLibMock.newFixed(1)).dividedBy(4).toString(10),
+                new BigNumber(await fixidityLibMock.newFixed(1)).dividedBy(2).toString(10),
+            ];
+            await mixr.setTokensTargetProportion(
+                tokensArray,
+                proportionArray,
+                {
+                    from: governor,
+                },
+            );
+        }, 'The target proportions supplied must add up to 1.');
+
+        itShouldThrow(
+            'stops non-governors from setting target proportions.',
+            async () => {
+                const tokensArray = [
+                    someERC20.address,
+                    someOtherERC20.address,
+                ];
+                const proportionArray = [
+                    new BigNumber(await fixidityLibMock.newFixed(1)).dividedBy(2).toString(10),
+                    new BigNumber(await fixidityLibMock.newFixed(1)).dividedBy(2).toString(10),
                 ];
                 await mixr.setTokensTargetProportion(
                     tokensArray,
@@ -182,10 +260,14 @@ contract('MIXR governance', (accounts) => {
             'Message sender isn\'t part of the governance whitelist.',
         );
 
-        it('allows a governor to set a proportion for a registered token', async () => {
-            const tokensArray = [someERC20.address];
+        it('allows a governor to set target proportions', async () => {
+            const tokensArray = [
+                someERC20.address,
+                someOtherERC20.address,
+            ];
             const proportionArray = [
-                new BigNumber(await fixidityLibMock.newFixed(1)).toString(10),
+                new BigNumber(await fixidityLibMock.newFixed(1)).dividedBy(2).toString(10),
+                new BigNumber(await fixidityLibMock.newFixed(1)).dividedBy(2).toString(10),
             ];
             await mixr.setTokensTargetProportion(
                 tokensArray,
@@ -195,80 +277,5 @@ contract('MIXR governance', (accounts) => {
                 },
             );
         });
-
-        it('allows to send valid information', async () => {
-            const tokensArray = [someERC20.address, someOtherERC20.address];
-            const proportionArray = [
-                new BigNumber(await fixidityLibMock.newFixedFraction(1, 2)).toString(10),
-                new BigNumber(await fixidityLibMock.newFixedFraction(1, 2)).toString(10),
-            ];
-            await mixr.setTokensTargetProportion(
-                tokensArray,
-                proportionArray,
-                {
-                    from: governor,
-                },
-            );
-        });
-
-        itShouldThrow('forbids to set proportions for only a subset of registered tokens.', async () => {
-            const tokensArray = [someERC20.address];
-            const proportionArray = [
-                new BigNumber(await fixidityLibMock.newFixedFraction(1, 2)).toString(10),
-                new BigNumber(await fixidityLibMock.newFixedFraction(1, 4)).toString(10),
-            ];
-            await mixr.setTokensTargetProportion(
-                tokensArray,
-                proportionArray,
-                {
-                    from: governor,
-                },
-            );
-        }, 'Target proportions must be set for all registered tokens simultaneously.');
-
-        itShouldThrow('forbids to set target proportions for non registered tokens.', async () => {
-            const tokensArray = [someERC20.address, someERC721.address];
-            const proportionArray = [
-                new BigNumber(await fixidityLibMock.newFixedFraction(1, 2)).toString(10),
-                new BigNumber(await fixidityLibMock.newFixedFraction(1, 4)).toString(10),
-            ];
-            await mixr.setTokensTargetProportion(
-                tokensArray,
-                proportionArray,
-                {
-                    from: governor,
-                },
-            );
-        }, 'The given token is not registered.');
-
-        itShouldThrow('forbids to set token target proportions that outside the [0,1] range.', async () => {
-            const tokensArray = [someERC20.address, someOtherERC20.address];
-            const proportionArray = [
-                new BigNumber(await fixidityLibMock.newFixedFraction(1, 2)).toString(10),
-                -1,
-            ];
-            await mixr.setTokensTargetProportion(
-                tokensArray,
-                proportionArray,
-                {
-                    from: governor,
-                },
-            );
-        }, 'Target proportion not in the [0,1] range.');
-
-        itShouldThrow('forbids to send invalid total proportions', async () => {
-            const tokensArray = [someERC20.address, someOtherERC20.address];
-            const proportionArray = [
-                new BigNumber(await fixidityLibMock.newFixedFraction(1, 2)).toString(10),
-                new BigNumber(await fixidityLibMock.newFixedFraction(1, 4)).toString(10),
-            ];
-            await mixr.setTokensTargetProportion(
-                tokensArray,
-                proportionArray,
-                {
-                    from: governor,
-                },
-            );
-        }, 'The target proportions supplied must add up to 1.');
     });
 });
