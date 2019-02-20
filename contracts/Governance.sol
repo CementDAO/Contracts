@@ -63,16 +63,16 @@ contract Governance is Base, Ownable {
     }
 
     /**
-     * @notice This function adds an ERC20 token to the approved tokens list.
+     * @notice This function adds an ERC20 token to the registered tokens list.
      */
-    function approveToken(address _token)
+    function registerToken(address _token)
         public
         onlyGovernor()
         isCompliantToken(_token)
     {
         TokenData memory token = tokens[_token];
-        require(token.approved == false, "Token is already approved!");
-        token.approved = true;
+        require(token.registered == false, "Token is already registered!");
+        token.registered = true;
         tokens[_token] = token;
         tokensList.push(_token);
     }
@@ -134,23 +134,26 @@ contract Governance is Base, Ownable {
     {
         uint256 nTokens = _tokens.length;
         uint256 nProportions = _proportions.length;
-        require(nTokens == nProportions, "Invalid number of elements!");
+        require(
+            nTokens == nProportions, 
+            "Target proportions must be set for all registered tokens simultaneously."
+        );
         for(uint256 x = 0; x < nTokens; x += 1) {
             TokenData memory token = tokens[_tokens[x]];
             require(
                 _proportions[x] >= 0 && _proportions[x] <= FixidityLib.fixed1(),
-                "Invalid proportion."
+                "Target proportion not in the [0,1] range."
             );
-            require(
-                token.approved == true,
-                "The given token isn't listed as accepted."
+            require( // This should use the isRegistered modifier somehow.
+                token.registered == true,
+                "The given token is not registered."
             );
             token.targetProportion = _proportions[x];
             tokens[_tokens[x]] = token;
         }
         require(
             areNewProportionsValid() == true,
-            "Invalid total of proportions."
+            "The target proportions supplied must add up to 1."
         );
     }
 
@@ -164,10 +167,11 @@ contract Governance is Base, Ownable {
         returns(bool)
     {
         int256 newProportions = 0;
+        // This should use getRegisteredTokens()
         uint256 nExistingTokens = tokensList.length;
         for(uint256 x = 0; x < nExistingTokens; x += 1) {
             TokenData memory token = tokens[tokensList[x]];
-            if (token.approved == true) {
+            if (token.registered == true) {
                 newProportions = newProportions + token.targetProportion;
             }
         }

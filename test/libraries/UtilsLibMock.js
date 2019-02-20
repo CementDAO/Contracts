@@ -90,10 +90,10 @@ contract('Base', (accounts) => {
 
             // approve tokens!
             
-            await mixr.approveToken(someERC20.address, {
+            await mixr.registerToken(someERC20.address, {
                 from: governor,
             });
-            await mixr.approveToken(someOtherERC20.address, {
+            await mixr.registerToken(someOtherERC20.address, {
                 from: governor,
             });
 

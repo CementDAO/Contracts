@@ -230,10 +230,10 @@ contract('MIXR', (accounts) => {
             /**
              * approve tokens!
              */
-            await mixr.approveToken(someERC20.address, {
+            await mixr.registerToken(someERC20.address, {
                 from: governor,
             });
-            await mixr.approveToken(someOtherERC20.address, {
+            await mixr.registerToken(someOtherERC20.address, {
                 from: governor,
             });
 
@@ -339,7 +339,7 @@ contract('MIXR', (accounts) => {
             /**
              * approve tokens
              */
-            await mixr.approveToken(someERC20.address, {
+            await mixr.registerToken(someERC20.address, {
                 from: governor,
             });
             await mixr.setTokensTargetProportion(
@@ -416,7 +416,7 @@ contract('MIXR', (accounts) => {
             );
 
             itShouldThrow(
-                'forbids depositing unknown token',
+                'forbids depositing a token that has not been registered first.',
                 async () => {
                     /**
                      * deploy new erc20 contract and try to deposit
@@ -435,11 +435,11 @@ contract('MIXR', (accounts) => {
                         },
                     );
                 },
-                'The given token isn\'t listed as accepted.',
+                'The given token is not registered.',
             );
 
             itShouldThrow(
-                'forbids depositing bad tokens',
+                'forbids depositing a token that has not been registered.',
                 async () => {
                     /**
                      * try to deposit an erc721 token
@@ -453,7 +453,7 @@ contract('MIXR', (accounts) => {
                         },
                     );
                 },
-                'The given token isn\'t listed as accepted.',
+                'The given token is not registered.',
             );
         });
 
@@ -485,9 +485,9 @@ contract('MIXR', (accounts) => {
                 someERC20Decimals,
             );
             /**
-             * approve tokens
+             * Register tokens and set token data to allow transactions.
              */
-            await mixr.approveToken(someERC20.address, {
+            await mixr.registerToken(someERC20.address, {
                 from: governor,
             });
             await mixr.setTokensTargetProportion(
@@ -574,7 +574,7 @@ contract('MIXR', (accounts) => {
             );
 
             itShouldThrow(
-                'forbids redeeming unknown token',
+                'forbids redeeming a token that hasn\'t been registered yet.',
                 async () => {
                     const someOtherERC20 = await SampleERC20.new(
                         user,
@@ -589,7 +589,7 @@ contract('MIXR', (accounts) => {
                         },
                     );
                 },
-                'The given token isn\'t listed as accepted.',
+                'The given token is not registered.',
             );
 
             itShouldThrow(
@@ -603,7 +603,7 @@ contract('MIXR', (accounts) => {
                         },
                     );
                 },
-                'The given token isn\'t listed as accepted.',
+                'The given token is not registered.',
             );
         });
 

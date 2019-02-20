@@ -67,7 +67,7 @@ contract('MIXR governance', (accounts) => {
         });
 
         it('allows a governor to approve a valid token', async () => {
-            await mixr.approveToken(someERC20.address, {
+            await mixr.registerToken(someERC20.address, {
                 from: governor,
             });
         });
@@ -75,7 +75,7 @@ contract('MIXR governance', (accounts) => {
         itShouldThrow(
             'forbids non-governors to approve a valid token',
             async () => {
-                await mixr.approveToken(someERC20.address, {
+                await mixr.registerToken(someERC20.address, {
                     from: user,
                 });
             },
@@ -85,7 +85,7 @@ contract('MIXR governance', (accounts) => {
         itShouldThrow(
             'forbids approving a non-valid token',
             async () => {
-                await mixr.approveToken(someERC721.address, {
+                await mixr.registerToken(someERC721.address, {
                     from: governor,
                 });
             },
@@ -95,7 +95,7 @@ contract('MIXR governance', (accounts) => {
         itShouldThrow(
             'forbids approving a non-contract address',
             async () => {
-                await mixr.approveToken(user, {
+                await mixr.registerToken(user, {
                     from: governor,
                 });
             },
@@ -105,14 +105,14 @@ contract('MIXR governance', (accounts) => {
         itShouldThrow(
             'forbids approving an approved token',
             async () => {
-                await mixr.approveToken(someERC20.address, {
+                await mixr.registerToken(someERC20.address, {
                     from: governor,
                 });
-                await mixr.approveToken(someERC20.address, {
+                await mixr.registerToken(someERC20.address, {
                     from: governor,
                 });
             },
-            'Token is already approved!',
+            'Token is already registered!',
         );
     });
 
@@ -138,16 +138,16 @@ contract('MIXR governance', (accounts) => {
                 someOtherERC20Decimals,
             );
 
-            await mixr.approveToken(someERC20.address, {
+            await mixr.registerToken(someERC20.address, {
                 from: governor,
             });
-            await mixr.approveToken(someOtherERC20.address, {
+            await mixr.registerToken(someOtherERC20.address, {
                 from: governor,
             });
         });
 
         itShouldThrow(
-            'forbids to perform for non-accepted tokens',
+            'stops operations with non registered tokens',
             async () => {
                 const tokensArray = [someERC721.address];
                 const proportionArray = [
@@ -161,11 +161,11 @@ contract('MIXR governance', (accounts) => {
                     },
                 );
             },
-            'The given token isn\'t listed as accepted.',
+            'The given token is not registered.',
         );
 
         itShouldThrow(
-            'forbids to perform for non-governors',
+            'stops operations from non-governors',
             async () => {
                 const tokensArray = [someERC20.address];
                 const proportionArray = [
@@ -182,7 +182,7 @@ contract('MIXR governance', (accounts) => {
             'Message sender isn\'t part of the governance whitelist.',
         );
 
-        it('allows a governor to set a proportion for an approved token', async () => {
+        it('allows a governor to set a proportion for a registered token', async () => {
             const tokensArray = [someERC20.address];
             const proportionArray = [
                 new BigNumber(await fixidityLibMock.newFixed(1)).toString(10),
@@ -211,7 +211,7 @@ contract('MIXR governance', (accounts) => {
             );
         });
 
-        itShouldThrow('forbids to send invalid number of elements', async () => {
+        itShouldThrow('forbids to set proportions for only a subset of registered tokens.', async () => {
             const tokensArray = [someERC20.address];
             const proportionArray = [
                 new BigNumber(await fixidityLibMock.newFixedFraction(1, 2)).toString(10),
@@ -224,9 +224,9 @@ contract('MIXR governance', (accounts) => {
                     from: governor,
                 },
             );
-        }, 'Invalid number of elements!');
+        }, 'Target proportions must be set for all registered tokens simultaneously.');
 
-        itShouldThrow('forbids to send invalid token', async () => {
+        itShouldThrow('forbids to set target proportions for non registered tokens.', async () => {
             const tokensArray = [someERC20.address, someERC721.address];
             const proportionArray = [
                 new BigNumber(await fixidityLibMock.newFixedFraction(1, 2)).toString(10),
@@ -239,9 +239,9 @@ contract('MIXR governance', (accounts) => {
                     from: governor,
                 },
             );
-        }, 'The given token isn\'t listed as accepted.');
+        }, 'The given token is not registered.');
 
-        itShouldThrow('forbids to send invalid proportion', async () => {
+        itShouldThrow('forbids to set token target proportions that outside the [0,1] range.', async () => {
             const tokensArray = [someERC20.address, someOtherERC20.address];
             const proportionArray = [
                 new BigNumber(await fixidityLibMock.newFixedFraction(1, 2)).toString(10),
@@ -254,7 +254,7 @@ contract('MIXR governance', (accounts) => {
                     from: governor,
                 },
             );
-        }, 'Invalid proportion.');
+        }, 'Target proportion not in the [0,1] range.');
 
         itShouldThrow('forbids to send invalid total proportions', async () => {
             const tokensArray = [someERC20.address, someOtherERC20.address];
@@ -269,6 +269,6 @@ contract('MIXR governance', (accounts) => {
                     from: governor,
                 },
             );
-        }, 'Invalid total of proportions.');
+        }, 'The target proportions supplied must add up to 1.');
     });
 });

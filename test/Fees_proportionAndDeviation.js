@@ -49,7 +49,7 @@ contract('Fees', (accounts) => {
             someERC20 = await SampleERC20.new(governor,
                 new BigNumber(10).pow(18).multipliedBy(100).toString(10),
                 18);
-            await mixr.approveToken(someERC20.address, {
+            await mixr.registerToken(someERC20.address, {
                 from: governor,
             });
             await someERC20.transfer(user, amountToUser.toString(10), { from: governor });
@@ -60,7 +60,7 @@ contract('Fees', (accounts) => {
             someOtherERC20 = await SampleOtherERC20.new(governor,
                 new BigNumber(10).pow(18).multipliedBy(100).toString(10),
                 18);
-            await mixr.approveToken(someOtherERC20.address, {
+            await mixr.registerToken(someOtherERC20.address, {
                 from: governor,
             });
 
@@ -213,13 +213,13 @@ contract('Fees', (accounts) => {
             someERC20 = await SampleERC20.new(governor,
                 new BigNumber(10).pow(18).multipliedBy(100).toString(10),
                 18);
-            await mixr.approveToken(someERC20.address, {
+            await mixr.registerToken(someERC20.address, {
                 from: governor,
             });
             someOtherERC20 = await SampleOtherERC20.new(governor,
                 new BigNumber(10).pow(18).multipliedBy(100).toString(10),
                 18);
-            await mixr.approveToken(someOtherERC20.address, {
+            await mixr.registerToken(someOtherERC20.address, {
                 from: governor,
             });
 

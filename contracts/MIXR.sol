@@ -51,7 +51,7 @@ contract MIXR is Governance, ERC20, ERC20Detailed {
         uint256 totalTokens;
         address[] memory tokensInBasket;
 
-        (tokensInBasket, totalTokens) = getApprovedTokens();
+        (tokensInBasket, totalTokens) = getRegisteredTokens();
 
         for ( uint256 i = 0; i < totalTokens; i += 1 )
         {
@@ -87,7 +87,7 @@ contract MIXR is Governance, ERC20, ERC20Detailed {
      */
     function depositToken(address _token, uint256 _depositInTokenWei)
         public
-        isInBasketToken(_token)
+        acceptedForDeposits(_token)
     {
         // Calculate the deposit fee and the returned amount
         uint256 feeInBasketWei = Fees.transactionFee(_token, address(this), _depositInTokenWei, Fees.DEPOSIT());
@@ -128,7 +128,7 @@ contract MIXR is Governance, ERC20, ERC20Detailed {
      */
     function redeemMIXR(address _token, uint256 _redemptionInBasketWei)
         public
-        isInBasketToken(_token)
+        acceptedForRedemptions(_token)
     {
 
         // Calculate fee and redemption return

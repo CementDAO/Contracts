@@ -39,10 +39,9 @@ contract Base {
      */
     struct TokenData {
         /**
-         * @notice Whether a stablecoin has been approved for transactions with
-         * the basket.
+         * @notice Whether a stablecoin has been registered for the DAO.
          */
-        bool approved;
+        bool registered;
         /**
          * @notice The proportion of this token that we want in the basket. 
          * It uses fixed point units in a 0 to FixidityLib.fixed1() range. 
@@ -112,34 +111,50 @@ contract Base {
      * @notice Modifier to ensure a token is known to the basket.
      * @param _token The token ERC20 contract address that we are validating.
      */
-    modifier isApprovedToken(address _token) {
+    modifier isRegistered(address _token) {
         TokenData memory token = tokens[_token];
         require(
-            token.approved == true,
-            "The given token hasn't been introduced to the basket."
+            token.registered == true,
+            "The given token is not registered."
         );
         _;
     }
 
     /**
-     * @notice Modifier to ensure a token is accepted for transactions.
+     * @notice Modifier to ensure a token is accepted for deposits.
      * @param _token The token ERC20 contract address that we are validating.
      * @dev In order to make the code easier to read this method is only a 
      * group of requires
      */
-    modifier isInBasketToken(address _token) {
+    modifier acceptedForDeposits(address _token) 
+    {
         TokenData memory token = tokens[_token];
         require(
-            token.approved == true,
-            "The given token isn't listed as accepted."
+            token.registered == true,
+            "The given token is not registered."
         );
         require(
             token.targetProportion > 0,
-            "The given token can't be accepted, the target proportion is 0."
+            "The given token can't be deposited, the target proportion is 0."
         );
         require(
             token.depositFee >= minimumFee,
-            "The given token can't accepted, the base deposit fee is too low."
+            "The given token can't deposited, the base deposit fee is too low."
+        );
+        _;
+    }
+
+    /**
+     * @notice Modifier to ensure a token is accepted for redemptions.
+     * @param _token The token ERC20 contract address that we are validating.
+     * @dev In order to make the code easier to read this method is only a 
+     * group of requires
+     */
+    modifier acceptedForRedemptions(address _token) {
+        TokenData memory token = tokens[_token];
+        require(
+            token.registered == true,
+            "The given token is not registered."
         );
         require(
             token.redemptionFee >= minimumFee,
@@ -180,7 +195,7 @@ contract Base {
     function getTargetProportion(address _token) 
     public
     view
-    isApprovedToken(_token)
+    isRegistered(_token)
     returns(int256)
     {
         TokenData memory token = tokens[_token];
@@ -197,7 +212,7 @@ contract Base {
     function getDepositFee(address _token) 
     public
     view
-    isApprovedToken(_token)
+    isRegistered(_token)
     returns(uint256)
     {
         TokenData memory token = tokens[_token];
@@ -214,7 +229,7 @@ contract Base {
     function getRedemptionFee(address _token) 
     public
     view
-    isApprovedToken(_token)
+    isRegistered(_token)
     returns(uint256)
     {
         TokenData memory token = tokens[_token];
@@ -231,7 +246,7 @@ contract Base {
     function getTransferFee(address _token) 
     public
     view
-    isApprovedToken(_token)
+    isRegistered(_token)
     returns(uint256)
     {
         TokenData memory token = tokens[_token];
@@ -239,9 +254,9 @@ contract Base {
     }
 
     /**
-     * @notice Returns an address array of approved tokens, and its size
+     * @notice Returns an address array of registered tokens, and its size
      */
-    function getApprovedTokens() 
+    function getRegisteredTokens() 
         public 
         view 
         returns(address[] memory, uint256) 
@@ -251,7 +266,7 @@ contract Base {
         address[] memory activeAddresses = new address[](totalAddresses);
         for (uint256 totalIndex = 0; totalIndex < totalAddresses; totalIndex += 1) {
             TokenData memory token = tokens[tokensList[totalIndex]];
-            if (token.approved) {
+            if (token.registered) {
                 activeAddresses[activeIndex] = tokensList[totalIndex];
                 activeIndex += 1; // Unlikely to overflow
             }
