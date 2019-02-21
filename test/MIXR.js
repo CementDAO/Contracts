@@ -192,7 +192,7 @@ contract('MIXR', (accounts) => {
     const owner = accounts[0];
     const governor = accounts[1];
     const user = accounts[2];
-    const walletFees = accounts[3];
+    const stakeholders = accounts[3];
     let fixed1;
     let DEPOSIT;
     let REDEMPTION;
@@ -380,7 +380,7 @@ contract('MIXR', (accounts) => {
             /**
              * set account to receive fees
              */
-            await mixr.setAccountForFees(walletFees, { from: governor });
+            await mixr.setStakeholderAccount(stakeholders, { from: governor });
 
             /**
              * verify mixr balance is zero
@@ -528,7 +528,7 @@ contract('MIXR', (accounts) => {
             /**
              * set account to receive fees
              */
-            await mixr.setAccountForFees(walletFees, { from: governor });
+            await mixr.setStakeholderAccount(walletFees, { from: governor });
             /**
              * send tokens to mixr contract, so we can redeem
              * in order to use redeemMIXR method, we should deposit first

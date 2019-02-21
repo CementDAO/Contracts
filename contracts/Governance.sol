@@ -67,7 +67,7 @@ contract Governance is Base, Ownable {
      * @notice Set which account will hold the transaction fees prior to 
      * distribution to stakeholders.
      */
-    function setAccountForFees(address _wallet)
+    function setStakeholderAccount(address _wallet)
         public
         onlyGovernor()
     {

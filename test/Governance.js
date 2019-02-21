@@ -25,6 +25,7 @@ contract('MIXR governance', (accounts) => {
     const owner = accounts[0];
     const governor = accounts[1];
     const user = accounts[2];
+    const stakeholders = accounts[3];
 
     before(async () => {
         mixr = await MIXR.deployed();
@@ -35,60 +36,54 @@ contract('MIXR governance', (accounts) => {
         somePlainERC20 = await SamplePlainERC20.deployed();
     });
 
-    describe('onlyGovernor modifier', () => {
-        beforeEach(async () => {
-            mixr = await MIXR.new();
-        });
-        itShouldThrow(
-            'a non-governor can\'t set the account for fees.',
-            async () => {
-                await mixr.addGovernor(accounts[3], {
-                    from: user,
-                });
-            },
-            'revert',
-        );
-
-        it('a governor can set the stakeholder fee holding account.', async () => {
-        });
-    });
-
     describe('whitelist management', () => {
         beforeEach(async () => {
             mixr = await MIXR.new();
+            await mixr.addGovernor(governor, {
+                from: owner,
+            });
         });
         itShouldThrow(
             'only owner can add a governor',
             async () => {
-                await mixr.addGovernor(accounts[3], {
-                    from: user,
-                });
+                await mixr.addGovernor(
+                    user,
+                    { from: user },
+                );
             },
             'revert',
         );
 
-        it('isGovernor returns true with a governor account.', async () => {
+        it('isGovernor returns false with a non-governor account.', async () => {
+            assert.equal(
+                false,
+                await mixr.isGovernor(user),
+            );
         });
 
-        it('isGovernor returns false with a non-governor account.', async () => {
+        it('isGovernor returns true with a governor account.', async () => {
+            assert.equal(
+                true,
+                await mixr.isGovernor(governor),
+            );
         });
 
         it('allows the owner to add a governor.', async () => {
+            assert.equal(false, await mixr.isGovernor(user));
+            await mixr.addGovernor(
+                user,
+                { from: owner },
+            );
+            assert.equal(true, await mixr.isGovernor(user));
         });
 
-        it('allows the owner to remove a governor.', async () => {
-        });
-
-        it('allows the contract to add and then remove an additional governor', async () => {
-            assert.equal(false, await mixr.isGovernor(accounts[3]));
-            await mixr.addGovernor(accounts[3], {
-                from: owner,
-            });
-            assert.equal(true, await mixr.isGovernor(accounts[3]));
-            await mixr.removeGovernor(accounts[3], {
-                from: owner,
-            });
-            assert.equal(false, await mixr.isGovernor(accounts[3]));
+        it('allows the contract to remove a governor', async () => {
+            assert.equal(true, await mixr.isGovernor(governor));
+            await mixr.removeGovernor(
+                governor,
+                { from: owner },
+            );
+            assert.equal(false, await mixr.isGovernor(governor));
         });
     });
 
@@ -96,18 +91,37 @@ contract('MIXR governance', (accounts) => {
     describe('setting the stakeholder fee holding account', () => {
         beforeEach(async () => {
             mixr = await MIXR.new();
+            await mixr.addGovernor(governor, {
+                from: owner,
+            });
         });
         itShouldThrow(
             'only valid addresses are allowed as the stakeholder fee holding account.',
             async () => {
-                await mixr.addGovernor(accounts[3], {
-                    from: user,
-                });
+                await mixr.setStakeholderAccount(
+                    0,
+                    { from: governor },
+                );
             },
-            'revert',
+            'Invalid wallet address!',
+        );
+
+        itShouldThrow(
+            'only governors can set the stakeholder fee holding account.',
+            async () => {
+                await mixr.setStakeholderAccount(
+                    stakeholders,
+                    { from: user },
+                );
+            },
+            'Message sender isn\'t part of the governance whitelist.',
         );
 
         it('a governor can set the stakeholder fee holding account.', async () => {
+            await mixr.setStakeholderAccount(
+                stakeholders,
+                { from: governor },
+            );
         });
     });
 
