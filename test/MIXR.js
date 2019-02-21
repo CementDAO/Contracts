@@ -17,14 +17,14 @@ chai.use(require('chai-bignumber')()).should();
  * Method to test deposit functionality
  * @param {BigNumber} tokens amount in tokens to be redeem
  * @param {String} user user address doing redemption
- * @param {String} walletFees wallet address were fees are being sent
+ * @param {String} stakeholders wallet address were fees are being sent
  * @param {Object} someERC20 erc20 contract
  * @param {Integer} someERC20Decimals erc20 decimals
  * @param {Object} mixr mixr contract
  * @param {Integer} mixrDecimals mixr decimals
  */
 const depositTest = async (
-    tokens, user, walletFees, someERC20, someERC20Decimals, mixr, mixrDecimals) => {
+    tokens, user, stakeholders, someERC20, someERC20Decimals, mixr, mixrDecimals) => {
 
     /**
      * get previous balances
@@ -66,7 +66,7 @@ const depositTest = async (
         previousMixrBalance.plus(MIXToMint.minus(depositFee)),
     );
     // The stakeholder account should get the fees
-    new BigNumber(await mixr.balanceOf(walletFees))
+    new BigNumber(await mixr.balanceOf(stakeholders))
         .should.be.bignumber.equal(depositFee);
 
     // Since basket was empty, it should be exactly equal to the deposit
@@ -78,21 +78,21 @@ const depositTest = async (
  * Method to test redemption functionality
  * @param {BigNumber} tokens amount in tokens to be redeem
  * @param {String} user user address doing redemption
- * @param {String} walletFees wallet address were fees are being sent
+ * @param {String} stakeholders wallet address were fees are being sent
  * @param {Object} someERC20 erc20 contract
  * @param {Integer} someERC20Decimals erc20 decimals
  * @param {Object} mixr mixr contract
  * @param {Integer} mixrDecimals mixr decimals
  */
 const redemptionTest = async (
-    tokens, user, walletFees, someERC20, someERC20Decimals, mixr, mixrDecimals) => {
+    tokens, user, stakeholders, someERC20, someERC20Decimals, mixr, mixrDecimals) => {
     /**
      * variables sets
      */
     const previousERC20Balance = new BigNumber(await someERC20.balanceOf(user));
     const previousMixrBalance = new BigNumber(await mixr.balanceOf(user));
     const previousMixrERC20Balance = new BigNumber(await someERC20.balanceOf(mixr.address));
-    const previousWalletFeeBalance = new BigNumber(await mixr.balanceOf(walletFees));
+    const previousWalletFeeBalance = new BigNumber(await mixr.balanceOf(stakeholders));
     const oneToken = new BigNumber(10).pow(someERC20Decimals).multipliedBy(tokens);
     const oneMIXR = new BigNumber(10).pow(mixrDecimals).multipliedBy(tokens);
     const utilsLibMock = await UtilsLibMock.deployed();
@@ -174,7 +174,7 @@ const redemptionTest = async (
         previousMixrERC20Balance.minus(oneToken.minus(feeInTokenWei)),
     );
     // The stakeholder account should get the fees
-    new BigNumber(await mixr.balanceOf(walletFees))
+    new BigNumber(await mixr.balanceOf(stakeholders))
         .should.be.bignumber.equal(previousWalletFeeBalance.plus(redemptionFee));
 };
 
@@ -462,7 +462,7 @@ contract('MIXR', (accounts) => {
 
             it('depositToken(50)', async () => {
                 depositTest(
-                    50, user, walletFees, someERC20, someERC20Decimals, mixr, mixrDecimals,
+                    50, user, stakeholders, someERC20, someERC20Decimals, mixr, mixrDecimals,
                 );
             });
         });
@@ -528,7 +528,7 @@ contract('MIXR', (accounts) => {
             /**
              * set account to receive fees
              */
-            await mixr.setStakeholderAccount(walletFees, { from: governor });
+            await mixr.setStakeholderAccount(stakeholders, { from: governor });
             /**
              * send tokens to mixr contract, so we can redeem
              * in order to use redeemMIXR method, we should deposit first
@@ -612,13 +612,13 @@ contract('MIXR', (accounts) => {
 
             it('redeem 1 MIX by 1 token', async () => {
                 redemptionTest(
-                    1, user, walletFees, someERC20, someERC20Decimals, mixr, mixrDecimals,
+                    1, user, stakeholders, someERC20, someERC20Decimals, mixr, mixrDecimals,
                 );
             });
 
             it('redeem 50 MIX by 50 token', async () => {
                 redemptionTest(
-                    50, user, walletFees, someERC20, someERC20Decimals, mixr, mixrDecimals,
+                    50, user, stakeholders, someERC20, someERC20Decimals, mixr, mixrDecimals,
                 );
             });
         });

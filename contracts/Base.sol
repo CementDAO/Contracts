@@ -21,7 +21,7 @@ contract Base {
      * point units.
      * @dev Test scalingFactor = FixidityLib.fixed1()/2
      */
-    int256 constant public scalingFactor = 500000000000000000000000000000000000;
+    int256 constant public scalingFactor = 500000000000000000000000;
 
     /**
      * @notice Minimum that can be returned when calculating a fee, expressed in

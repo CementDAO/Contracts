@@ -11,7 +11,6 @@ import "./Fees.sol";
  * @dev MIXR is an ERC20 token which is created as a basket of tokens.
  * This means that in addition to the usual ERC20 features the MIXR token
  * can react to transfers of tokens other than itself.
- * TODO: Change all hardcoded "36" to a constant.
  */
 contract MIXR is Governance, ERC20, ERC20Detailed {
 

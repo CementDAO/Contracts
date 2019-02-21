@@ -18,7 +18,7 @@ contract FixidityLibMock {
     /**
      * @dev This is 1 in the fixed point units used in this library.
      * 10^digits()
-     * Hardcoded to 36 digits.
+     * Hardcoded to 24 digits.
      */
     function fixed1() public pure returns(int256) {
         return FixidityLib.fixed1();
@@ -27,7 +27,7 @@ contract FixidityLibMock {
     /**
      * @dev The amount of decimals lost on each multiplication operand.
      * Test mulPrecision() equals sqrt(fixed1)
-     * Hardcoded to 36 digits.
+     * Hardcoded to 24 digits.
      */
     function mulPrecision() public pure returns(int256) {
         return FixidityLib.mulPrecision();
@@ -36,7 +36,7 @@ contract FixidityLibMock {
     /**
      * @dev Maximum value that can be represented in an int256
      * 2^256 / 2 -1
-     * Hardcoded to 36 digits.
+     * Hardcoded to 24 digits.
      */
     function maxInt256() public pure returns(int256) {
         return FixidityLib.maxInt256();
@@ -45,7 +45,7 @@ contract FixidityLibMock {
     /**
      * @dev Minimum value that can be represented in an int256
      * -1 * ((2^256 / 2)-2)
-     * Hardcoded to 36 digits.
+     * Hardcoded to 24 digits.
      */
     function minInt256() public pure returns(int256) {
         return FixidityLib.minInt256();
@@ -55,7 +55,7 @@ contract FixidityLibMock {
      * @dev Maximum value that can be converted to fixed point. Optimize for
      * deployment. 
      * maxInt256() / fixed1()
-     * Hardcoded to 36 digits.
+     * Hardcoded to 24 digits.
      */
     function maxNewFixed() public pure returns(int256) {
         return FixidityLib.maxNewFixed();
@@ -65,7 +65,7 @@ contract FixidityLibMock {
      * @dev Maximum value that can be converted to fixed point. Optimize for
      * deployment. 
      * -(maxInt256()-1) / fixed1()
-     * Hardcoded to 36 digits.
+     * Hardcoded to 24 digits.
      */
     function minNewFixed() public pure returns(int256) {
         return FixidityLib.minNewFixed();
@@ -74,7 +74,7 @@ contract FixidityLibMock {
     /**
      * @dev Maximum value that can be safely used as a multiplication operator.
      * sqrt(maxNewFixed())
-     * Hardcoded to 36 digits.
+     * Hardcoded to 24 digits.
      */
     function maxFixedMul() public pure returns(int256) {
         return FixidityLib.maxFixedMul();
@@ -84,7 +84,7 @@ contract FixidityLibMock {
      * @dev Maximum value that can be safely used as a dividend.
      * divide(maxFixedDiv,newFixedFraction(1,fixed1())) = maxInt256().
      * maxInt256()/fixed1()
-     * Hardcoded to 36 digits.
+     * Hardcoded to 24 digits.
      */
     function maxFixedDiv() public pure returns(int256) {
         return FixidityLib.maxFixedDiv();
@@ -92,7 +92,7 @@ contract FixidityLibMock {
 
     /**
      * @dev Maximum value that can be safely used as a divisor.
-     * Hardcoded to 36 digits.
+     * Hardcoded to 24 digits.
      */
     function maxFixedDivisor() public pure returns(int256) {
         return FixidityLib.maxFixedDivisor();
@@ -101,7 +101,7 @@ contract FixidityLibMock {
     /**
      * @dev Maximum value that can be safely used as an addition operator.
      * maxInt256() / 2
-     * Hardcoded to 36 digits.
+     * Hardcoded to 24 digits.
      */
     function maxFixedAdd() public pure returns(int256) {
         return FixidityLib.maxFixedAdd();
@@ -110,7 +110,7 @@ contract FixidityLibMock {
     /**
      * @dev Maximum negative value that can be safely in a subtraction.
      * Test maxFixedSub() equals minInt256() / 2
-     * Hardcoded to 36 digits.
+     * Hardcoded to 24 digits.
      */
     function maxFixedSub() public pure returns(int256) {
         return FixidityLib.maxFixedSub();

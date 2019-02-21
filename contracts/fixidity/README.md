@@ -27,7 +27,7 @@ possible to perform operations with values that are beyond the limits, but
 doing so must only be done with appropriate knowledge of range of each 
 operator.
 
-FixidityLib currently assumes 36 digits as the desired size for the decimal
+FixidityLib currently assumes 24 digits as the desired size for the decimal
 part. To change this to a different value the constants need to be adjusted.
 The formulas used to calculate the constants have been provided to facilitate
 this. All other functions will work as long as the constants are consistent.
@@ -46,7 +46,7 @@ multiplication and division, along with the related constants and limits.
 
 **function digits() public pure returns(uint8)**
 Number of positions that the comma is shifted to the right.
-Default: 36
+Default: 24
 
 **function fixed1() public pure returns(int256)**
 This is 1 in the fixed point units used in this library. 

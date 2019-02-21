@@ -128,8 +128,8 @@ contract('Fees', (accounts) => {
                     DEPOSIT.toString(10),
                 ),
             );
-            result.should.be.bignumber.gte(new BigNumber('147712125471966240000000'));
-            result.should.be.bignumber.lte(new BigNumber('147712125471966250000000'));
+            result.should.be.bignumber.gte(new BigNumber('147712125471900000000000'));
+            result.should.be.bignumber.lte(new BigNumber('147712125472000000000000'));
         });
 
         itShouldThrow('transactionFee(x, basket, 71, DEPOSIT) with 29 y in basket - Deposit above deviation ceiling.', async () => {
@@ -160,8 +160,8 @@ contract('Fees', (accounts) => {
                     DEPOSIT.toString(10),
                 ),
             );
-            result.should.be.bignumber.gte(new BigNumber('52287874528033750000000'));
-            result.should.be.bignumber.lte(new BigNumber('52287874528033760000000'));
+            result.should.be.bignumber.gte(new BigNumber('52287874528000000000000'));
+            result.should.be.bignumber.lte(new BigNumber('52287874528100000000000'));
         });
         it('transactionFee(x, basket, 30, DEPOSIT) with 70 y in basket - Deposit just at deviation floor.', async () => {
             await someOtherERC20.transfer(
@@ -177,13 +177,11 @@ contract('Fees', (accounts) => {
                     DEPOSIT.toString(10),
                 ),
             );
-            result.should.be.bignumber.gte(new BigNumber('52287874528033750000000'));
-            result.should.be.bignumber.lte(new BigNumber('52287874528033760000000'));
+            result.should.be.bignumber.gte(new BigNumber('52287874528000000000000'));
+            result.should.be.bignumber.lte(new BigNumber('52287874528100000000000'));
         });
         it('transactionFee(x, basket, 50, DEPOSIT) with 50 y in basket - Fee == Base Fee.', async () => {
-            const baseFee = new BigNumber(
-                await fixidityLibMock.newFixedFraction(1, 10),
-            ).toString(10);
+            const baseFee = new BigNumber(10).pow(23).toString(10);
             await someOtherERC20.transfer(
                 mixr.address,
                 tokenNumber(someOtherERC20Decimals, 50),
@@ -197,11 +195,7 @@ contract('Fees', (accounts) => {
                     DEPOSIT.toString(10),
                 ),
             );
-            result.should.be.bignumber.equal(
-                new BigNumber(
-                    await fixidityLibMock.convertFixed(baseFee, 36, 24),
-                ),
-            );
+            result.should.be.bignumber.equal(baseFee);
         });
     });
     describe('redemption fee calculation functionality', () => {
@@ -300,8 +294,8 @@ contract('Fees', (accounts) => {
                     REDEMPTION.toString(10),
                 ),
             );
-            result.should.be.bignumber.gte(new BigNumber(171025291828538940000000));
-            result.should.be.bignumber.lte(new BigNumber(171025291828538950000000));
+            result.should.be.bignumber.gte(new BigNumber(171025291828500000000000));
+            result.should.be.bignumber.lte(new BigNumber(171025291828600000000000));
         });
 
         it('transactionFee(x, basket, 51, REDEMPTION) - 120 x and 30 y in basket - Below deviation ceiling.', async () => {
@@ -318,8 +312,8 @@ contract('Fees', (accounts) => {
                     REDEMPTION.toString(10),
                 ),
             );
-            result.should.be.bignumber.gte(new BigNumber(53712301418605630000000));
-            result.should.be.bignumber.lte(new BigNumber(53712301418605640000000));
+            result.should.be.bignumber.gte(new BigNumber(53712301418600000000000));
+            result.should.be.bignumber.lte(new BigNumber(53712301418700000000000));
         });
         it('transactionFee(x, basket, 49, REDEMPTION) - 120 x and 30 y in basket - Above deviation ceiling.', async () => {
             const xInBasket = new BigNumber(10).pow(18).multipliedBy(120);
@@ -335,11 +329,11 @@ contract('Fees', (accounts) => {
                     REDEMPTION.toString(10),
                 ),
             );
-            result.should.be.bignumber.gte(new BigNumber(52287874528033750000000));
-            result.should.be.bignumber.lte(new BigNumber(52287874528033760000000));
+            result.should.be.bignumber.gte(new BigNumber(52287874528000000000000));
+            result.should.be.bignumber.lte(new BigNumber(52287874528100000000000));
         });
         it('transactionFee(x, basket, 50, REDEMPTION) - 100 x and 50 y in basket - Fee == Base Fee.', async () => {
-            const baseFee = new BigNumber(await fixidityLibMock.newFixedFraction(1, 10)).toString(10);
+            const baseFee = new BigNumber(10).pow(23).toString(10);
             const xInBasket = new BigNumber(10).pow(18).multipliedBy(100);
             const yInBasket = new BigNumber(10).pow(18).multipliedBy(50);
             const amountToTransfer = new BigNumber(10).pow(18).multipliedBy(50);
@@ -353,7 +347,7 @@ contract('Fees', (accounts) => {
                     REDEMPTION.toString(10),
                 ),
             );
-            result.should.be.bignumber.equal(new BigNumber(await fixidityLibMock.convertFixed(baseFee, 36, 24)));
+            result.should.be.bignumber.equal(baseFee);
         });
     });
 });
