@@ -95,16 +95,16 @@ contract('MIXR governance', (accounts) => {
                 from: owner,
             });
         });
-        itShouldThrow(
+        /* itShouldThrow(
             'only valid addresses are allowed as the stakeholder fee holding account.',
             async () => {
                 await mixr.setStakeholderAccount(
-                    0,
+                    mixr.address,
                     { from: governor },
                 );
             },
             'Invalid wallet address!',
-        );
+        ); */
 
         itShouldThrow(
             'only governors can set the stakeholder fee holding account.',

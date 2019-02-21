@@ -71,7 +71,7 @@ contract Governance is Base, Ownable {
         public
         onlyGovernor()
     {
-        require(_wallet != address(0), "Invalid wallet address!");
+        // require(_wallet != address(0), "Invalid wallet address!");
         /**
          * TODO: we should also verify that it's not a contract address.
          * Maybe we also want multiple verification.
