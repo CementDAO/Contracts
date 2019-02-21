@@ -34,7 +34,7 @@ contract('Fees', (accounts) => {
         DEPOSIT = await feesMock.DEPOSIT();
         REDEMPTION = await feesMock.REDEMPTION();
 
-        minimumFee = new BigNumber('1000000000000000000000000000000');
+        minimumFee = new BigNumber('1000000000000000000');
     });
 
     describe('deposit fee calculation functionality', () => {
@@ -179,6 +179,32 @@ contract('Fees', (accounts) => {
             );
             result.should.be.bignumber.gte(new BigNumber('52287874528000000000000'));
             result.should.be.bignumber.lte(new BigNumber('52287874528100000000000'));
+        });
+        it('transactionFee(..., DEPOSIT) >= minimumFee.', async () => {
+            await someOtherERC20.transfer(
+                mixr.address,
+                tokenNumber(someOtherERC20Decimals, 70),
+                { from: user },
+            );
+            await mixr.setTransactionFee(
+                someERC20.address,
+                minimumFee,
+                DEPOSIT.toString(10),
+                {
+                    from: governor,
+                },
+            );
+            // This transaction should have a fee below the base deposit fee,
+            // but since baseFee == minimumFee the result should be the minimumFee instead.
+            const result = new BigNumber(
+                await feesMock.transactionFee(
+                    someERC20.address,
+                    mixr.address,
+                    tokenNumber(someERC20Decimals, 30),
+                    DEPOSIT.toString(10),
+                ),
+            );
+            result.should.be.bignumber.equal(minimumFee);
         });
         it('transactionFee(x, basket, 50, DEPOSIT) with 50 y in basket - Fee == Base Fee.', async () => {
             const baseFee = new BigNumber(10).pow(23).toString(10);
@@ -331,6 +357,30 @@ contract('Fees', (accounts) => {
             );
             result.should.be.bignumber.gte(new BigNumber(52287874528000000000000));
             result.should.be.bignumber.lte(new BigNumber(52287874528100000000000));
+        });
+        it('transactionFee(..., REDEMPTION) >= minimumFee.', async () => {
+            const xInBasket = new BigNumber(10).pow(18).multipliedBy(120);
+            const yInBasket = new BigNumber(10).pow(18).multipliedBy(30);
+            const amountToTransfer = new BigNumber(10).pow(18).multipliedBy(49);
+            await someERC20.transfer(mixr.address, xInBasket.toString(10), { from: governor });
+            await someOtherERC20.transfer(mixr.address, yInBasket.toString(10), { from: governor });
+            await mixr.setTransactionFee(
+                someERC20.address,
+                minimumFee,
+                REDEMPTION.toString(10),
+                {
+                    from: governor,
+                },
+            );
+            const result = new BigNumber(
+                await feesMock.transactionFee(
+                    someERC20.address,
+                    mixr.address,
+                    amountToTransfer.toString(10),
+                    REDEMPTION.toString(10),
+                ),
+            );
+            result.should.be.bignumber.equal(minimumFee);
         });
         it('transactionFee(x, basket, 50, REDEMPTION) - 100 x and 50 y in basket - Fee == Base Fee.', async () => {
             const baseFee = new BigNumber(10).pow(23).toString(10);
