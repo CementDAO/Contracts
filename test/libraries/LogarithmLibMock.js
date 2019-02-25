@@ -10,25 +10,17 @@ chai.use(require('chai-bignumber')()).should();
 contract('LogarithmLibMock', () => {
     let fixidityLibMock;
     let logarithmLibMock;
-    // eslint-disable-next-line camelcase
     let fixed1;
-    // eslint-disable-next-line camelcase
     let fixedE;
-    // eslint-disable-next-line camelcase
     let mulPrecision;
-    // eslint-disable-next-line camelcase
     let maxNewFixed;
 
     before(async () => {
         fixidityLibMock = await FixidityLibMock.deployed();
         logarithmLibMock = await LogarithmLibMock.deployed();
-        // eslint-disable-next-line camelcase
         fixed1 = new BigNumber(await fixidityLibMock.fixed1());
-        // eslint-disable-next-line camelcase
-        fixedE = new BigNumber(await fixidityLibMock.fixedE());
-        // eslint-disable-next-line camelcase
+        fixedE = new BigNumber(await logarithmLibMock.fixedE());
         mulPrecision = new BigNumber(await fixidityLibMock.mulPrecision());
-        // eslint-disable-next-line camelcase
         maxNewFixed = new BigNumber(await fixidityLibMock.maxNewFixed());
     });
 
@@ -75,29 +67,29 @@ contract('LogarithmLibMock', () => {
         const result = new BigNumber(
             await logarithmLibMock.ln(maxNewFixed.toString(10)),
         );
-        const log_max = new BigNumber(93859467695000404205515674067419529216);
+        const log_max = new BigNumber(93859467695000404205515674);
         result.should.be.bignumber.gte(log_max.multipliedBy(0.1));
         result.should.be.bignumber.lte(log_max.multipliedBy(10));
     });
-    it('ln(1)', async () => { // 2% deviation at the lower precision limit
+    it('ln(1)', async () => { // 33% deviation at the lower precision limit
         const result = new BigNumber(
             await logarithmLibMock.ln(1),
         );
-        result.should.be.bignumber.gte(fixed1.plus(fixed1.dividedBy(50)).multipliedBy(-82));
-        result.should.be.bignumber.lte(fixed1.minus(fixed1.dividedBy(50)).multipliedBy(-82));
+        result.should.be.bignumber.gte(fixed1.plus(fixed1.dividedBy(3)).multipliedBy(-82));
+        result.should.be.bignumber.lte(fixed1.minus(fixed1.dividedBy(3)).multipliedBy(-82));
     });
-    it('ln(10*fixed1)', async () => {
+    it('ln(10*fixed1)', async () => { // 10**-15 deviation at 1.0
         const result = new BigNumber(
             await logarithmLibMock.ln(fixed1.multipliedBy(10).toString(10)),
         );
-        result.should.be.bignumber.gte(new BigNumber(2302585092994045000000000000000000000));
-        result.should.be.bignumber.lte(new BigNumber(2302585092994046000000000000000000000));
+        result.should.be.bignumber.gte(new BigNumber(2302585092994045000000000));
+        result.should.be.bignumber.lte(new BigNumber(2302585092994046000000000));
     });
-    it('log(10,11*fixed1)', async () => {
+    it('log(10,11*fixed1)', async () => { // 10**-11 deviation at 11.0
         const result = new BigNumber(
             await logarithmLibMock.log_b(fixed1.multipliedBy(10).toString(10), fixed1.multipliedBy(11).toString(10)),
         );
-        result.should.be.bignumber.gte(new BigNumber(1041392685158225000000000000000000000));
-        result.should.be.bignumber.lte(new BigNumber(1041392685158226000000000000000000000));
+        result.should.be.bignumber.gte(new BigNumber(1041392685157000000000000));
+        result.should.be.bignumber.lte(new BigNumber(1041392685158000000000000));
     });
 });

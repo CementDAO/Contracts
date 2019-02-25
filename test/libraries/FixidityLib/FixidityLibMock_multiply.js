@@ -9,32 +9,18 @@ chai.use(require('chai-bignumber')()).should();
 
 contract('FixidityLibMock - multiply', () => {
     let fixidityLibMock;
-    // eslint-disable-next-line camelcase
     let fixed1;
-    // eslint-disable-next-line camelcase
-    let fixedE;
-    // eslint-disable-next-line camelcase
     let maxFixedMul;
-    // eslint-disable-next-line camelcase
     let mulPrecision;
-    // eslint-disable-next-line camelcase
     let maxFixedAdd;
-    // eslint-disable-next-line camelcase
     let maxInt256;
 
     before(async () => {
         fixidityLibMock = await FixidityLibMock.deployed();
-        // eslint-disable-next-line camelcase
         fixed1 = new BigNumber(await fixidityLibMock.fixed1());
-        // eslint-disable-next-line camelcase
-        fixedE = new BigNumber(await fixidityLibMock.fixedE());
-        // eslint-disable-next-line camelcase
         maxFixedMul = new BigNumber(await fixidityLibMock.maxFixedMul());
-        // eslint-disable-next-line camelcase
         mulPrecision = new BigNumber(await fixidityLibMock.mulPrecision());
-        // eslint-disable-next-line camelcase
         maxFixedAdd = new BigNumber(await fixidityLibMock.maxFixedAdd());
-        // eslint-disable-next-line camelcase
         maxInt256 = new BigNumber(await fixidityLibMock.maxInt256());
     });
 
@@ -286,10 +272,10 @@ contract('FixidityLibMock - multiply', () => {
             );
             result.should.be.bignumber.lte(maxInt256);
         });
-        itShouldThrow('multiply(maxFixedMul(),maxFixedMul()+1)', async () => {
+        itShouldThrow('multiply(maxFixedMul(),maxFixedMul()+x)', async () => {
             await fixidityLibMock.multiply(
                 maxFixedMul.toString(10),
-                maxFixedMul.plus(fixed1).toString(10),
+                maxFixedMul.plus(30000000000000000000000000000000000).toString(10),
             );
         }, 'revert');
 
@@ -329,9 +315,9 @@ contract('FixidityLibMock - multiply', () => {
             );
             result.should.be.bignumber.lte(maxInt256);
         });
-        itShouldThrow('multiply(maxFixedMul()+1,-maxFixedMul())', async () => {
+        itShouldThrow('multiply(maxFixedMul()+x,-maxFixedMul())', async () => {
             await fixidityLibMock.multiply(
-                maxFixedMul.plus(fixed1).toString(10),
+                maxFixedMul.plus(30000000000000000000000000000000000).toString(10),
                 maxFixedMul.multipliedBy(-1).toString(10),
             );
         }, 'revert');

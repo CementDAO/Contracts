@@ -2,8 +2,7 @@ pragma solidity ^0.5.0;
 
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
-import "./fixidity/FixidityLib.sol";
-import "./fixidity/LogarithmLib.sol";
+import "./Governance.sol";
 import "./Fees.sol";
 
 
@@ -12,9 +11,8 @@ import "./Fees.sol";
  * @dev MIXR is an ERC20 token which is created as a basket of tokens.
  * This means that in addition to the usual ERC20 features the MIXR token
  * can react to transfers of tokens other than itself.
- * TODO: Change all hardcoded "36" to a constant.
  */
-contract MIXR is Fees, ERC20, ERC20Detailed {
+contract MIXR is Governance, ERC20, ERC20Detailed {
 
     /**
      * @dev Constructor with the details of the ERC20.
@@ -23,20 +21,78 @@ contract MIXR is Fees, ERC20, ERC20Detailed {
     }
 
     /**
-     * @dev (C11) This function allows to deposit an accepted ERC20 token
-     * in exchange for some MIXR tokens.
+     * @notice Returns the total amount of tokens in the basket. Tokens 
+     * always use a kind of fixed point representation were a whole token 
+     * equals a value of something like 10**18 in the balance, with a uint8
+     * decimals member. This function finds the difference in decimals between
+     * the fixed point library and the token definition and multiplies or 
+     * divides accordingly to be able to aggregate the balances of all the
+     * tokens to the same fixed point standard. 
+     * @dev 
+     * In MIXR it should be identical to IERC20(address(this)).totalSupply()
+     * Make token x to have 18 decimals and y 20 decimals
+     * Make sure the MIX basket is constructed with 24 decimals
+     * Test basketBalance() = 0 before introducing any tokens.
+     * Test basketBalance() = (10**24) after introducing 1 token of x type
+     * Test basketBalance() = 2*(10**24) after introducing 1 token of x type
+     * Test basketBalance() = 3*(10**24) after introducing 1 token of y type
+     * Test basketBalance() = 2*(10**24) after removing 1 token of y type
+     * Remove 2 tokens of x, we have an empty basket
+     * Test basketBalance() = (10**6) after introducing 1 wei of x type
+     * Test basketBalance() = (10**6)+(10**4) after introducing 1 token of y type
+     */
+    function basketBalance()
+        public
+        view
+        returns (uint256)
+    {
+        int256 balance = 0;
+        uint256 totalTokens;
+        address[] memory registeredTokens;
+
+        (registeredTokens, totalTokens) = getRegisteredTokens();
+
+        for ( uint256 i = 0; i < totalTokens; i += 1 )
+        {
+            balance = FixidityLib.add(
+                balance, 
+                FixidityLib.newFixed(
+                    // convertTokens below returns the balance in the basket decimals
+                    UtilsLib.safeCast(
+                        UtilsLib.convertTokenAmount(
+                            getDecimals(registeredTokens[i]), 
+                            ERC20Detailed(address(this)).decimals(), 
+                            IERC20(registeredTokens[i]).balanceOf(address(this)))
+                        ), 
+                    // We create a new fixed point number from basket decimals to the
+                    // library precision to be able to use the add function
+                    ERC20Detailed(address(this)).decimals()
+                )
+            );
+        }
+        assert(balance >= 0);
+        // We convert back from library precision to basket precision and to uint
+        return uint256(FixidityLib.fromFixed(balance, ERC20Detailed(address(this)).decimals()));
+    } 
+
+    /**
+     * @notice This function allows to deposit an accepted ERC20 token in 
+     * exchange for MIX tokens. Transaction fees are deducted from the returned
+     * amount. The MIX tokens returned are minted by this function.
      * It consists of several transactions that must be authorized by
      * the user prior to calling this function (See ERC20 transferFrom spec).
+     * @param _token Address of the token to deposit.
+     * @param _depositInTokenWei Amount of token wei to deposit.
      */
     function depositToken(address _token, uint256 _depositInTokenWei)
         public
-        isAcceptedToken(_token)
+        acceptedForDeposits(_token)
     {
         // Calculate the deposit fee and the returned amount
-        uint256 feeInBasketWei = transactionFee(_token, _depositInTokenWei, DEPOSIT());
-        uint256 depositInBasketWei = convertTokensAmount(
-            _token, 
-            address(this), 
+        uint256 feeInBasketWei = Fees.transactionFee(_token, address(this), _depositInTokenWei, Fees.DEPOSIT());
+        uint256 depositInBasketWei = UtilsLib.convertTokenAmount(
+            getDecimals(_token), 
+            ERC20Detailed(address(this)).decimals(), 
             _depositInTokenWei
         );
         uint256 returnInBasketWei = depositInBasketWei.sub(feeInBasketWei);
@@ -62,30 +118,30 @@ contract MIXR is Fees, ERC20, ERC20Detailed {
     }
 
     /**
-     * @dev (C12) This function allows to deposit to the MIXR basket
-     * an amount ERC20 token in the list, and returns a MIXR token in exchange.
-     * 
-     * Alberto: I would suggest that if the redeemer wants to receive
-     * several different tokens that is managed from the frontend as
-     * several consecutive but separate transactions.
+     * @notice This function allows to redeem MIX tokens in exhange from
+     * accepted ERC20 tokens from the MIXR basket. Transaction fees are
+     * deducted from the amount returned and the MIX tokens redeemed are 
+     * burned.
+     * @param _token Address of the token to deposit.
+     * @param _redemptionInBasketWei Amount of MIX wei to redeem.
      */
     function redeemMIXR(address _token, uint256 _redemptionInBasketWei)
         public
-        isAcceptedToken(_token)
+        acceptedForRedemptions(_token)
     {
 
         // Calculate fee and redemption return
-        uint256 redemptionInTokenWei = convertTokensAmount(
-            address(this), 
-            _token, 
+        uint256 redemptionInTokenWei = UtilsLib.convertTokenAmount(
+            ERC20Detailed(address(this)).decimals(), 
+            getDecimals(_token), 
             _redemptionInBasketWei
         );
         //
-        uint256 feeInBasketWei = transactionFee(_token, redemptionInTokenWei, REDEMPTION());
+        uint256 feeInBasketWei = Fees.transactionFee(_token, address(this), redemptionInTokenWei, Fees.REDEMPTION());
         uint256 withoutFeeInBasketWei = _redemptionInBasketWei.sub(feeInBasketWei);
-        uint256 returnInTokenWei = convertTokensAmount(
-            address(this), 
-            _token, 
+        uint256 returnInTokenWei = UtilsLib.convertTokenAmount(
+            ERC20Detailed(address(this)).decimals(), 
+            getDecimals(_token), 
             withoutFeeInBasketWei
         );
 

@@ -1,6 +1,9 @@
 const MIXR = artifacts.require('./MIXR.sol');
+const FeesMock = artifacts.require('./FeesMock.sol');
 const FixidityLibMock = artifacts.require('./FixidityLibMock.sol');
+const UtilsLibMock = artifacts.require('./UtilsLibMock.sol');
 const SampleERC20 = artifacts.require('./test/SampleERC20.sol');
+const SampleOtherERC20 = artifacts.require('./test/SampleOtherERC20.sol');
 const SampleERC721 = artifacts.require('./test/SampleERC721.sol');
 
 const BigNumber = require('bignumber.js');
@@ -14,14 +17,15 @@ chai.use(require('chai-bignumber')()).should();
  * Method to test deposit functionality
  * @param {BigNumber} tokens amount in tokens to be redeem
  * @param {String} user user address doing redemption
- * @param {String} walletFees wallet address were fees are being sent
+ * @param {String} stakeholders wallet address were fees are being sent
  * @param {Object} someERC20 erc20 contract
  * @param {Integer} someERC20Decimals erc20 decimals
  * @param {Object} mixr mixr contract
  * @param {Integer} mixrDecimals mixr decimals
  */
 const depositTest = async (
-    tokens, user, walletFees, someERC20, someERC20Decimals, mixr, mixrDecimals) => {
+    tokens, user, stakeholders, someERC20, someERC20Decimals, mixr, mixrDecimals) => {
+
     /**
      * get previous balances
      */
@@ -62,7 +66,7 @@ const depositTest = async (
         previousMixrBalance.plus(MIXToMint.minus(depositFee)),
     );
     // The stakeholder account should get the fees
-    new BigNumber(await mixr.balanceOf(walletFees))
+    new BigNumber(await mixr.balanceOf(stakeholders))
         .should.be.bignumber.equal(depositFee);
 
     // Since basket was empty, it should be exactly equal to the deposit
@@ -74,45 +78,40 @@ const depositTest = async (
  * Method to test redemption functionality
  * @param {BigNumber} tokens amount in tokens to be redeem
  * @param {String} user user address doing redemption
- * @param {String} walletFees wallet address were fees are being sent
+ * @param {String} stakeholders wallet address were fees are being sent
  * @param {Object} someERC20 erc20 contract
  * @param {Integer} someERC20Decimals erc20 decimals
  * @param {Object} mixr mixr contract
  * @param {Integer} mixrDecimals mixr decimals
  */
 const redemptionTest = async (
-    tokens, user, walletFees, someERC20, someERC20Decimals, mixr, mixrDecimals) => {
+    tokens, user, stakeholders, someERC20, someERC20Decimals, mixr, mixrDecimals) => {
     /**
      * variables sets
      */
     const previousERC20Balance = new BigNumber(await someERC20.balanceOf(user));
     const previousMixrBalance = new BigNumber(await mixr.balanceOf(user));
     const previousMixrERC20Balance = new BigNumber(await someERC20.balanceOf(mixr.address));
-    const previousWalletFeeBalance = new BigNumber(await mixr.balanceOf(walletFees));
+    const previousWalletFeeBalance = new BigNumber(await mixr.balanceOf(stakeholders));
     const oneToken = new BigNumber(10).pow(someERC20Decimals).multipliedBy(tokens);
     const oneMIXR = new BigNumber(10).pow(mixrDecimals).multipliedBy(tokens);
+    const utilsLibMock = await UtilsLibMock.deployed();
 
     /**
-     * estimate fees to authorize transactions
+     * The redemption fee should be 0.1 MIX
      */
-    const feeInBasketWei = new BigNumber(
-        await mixr.transactionFee(
-            someERC20.address,
-            oneToken.toString(10),
-            await mixr.REDEMPTION(),
-        ),
-    );
+    const redemptionFee = new BigNumber(10).pow(23).toString(10);
     /**
      * approve and deposit
      */
     const amountInBasketWei = new BigNumber(
-        await mixr.convertTokensAmount(
-            someERC20.address,
-            mixr.address,
+        await utilsLibMock.convertTokenAmount(
+            someERC20Decimals,
+            mixrDecimals,
             oneToken.toString(10),
         ),
     );
-    const totalApprove = amountInBasketWei.plus(feeInBasketWei);
+    const totalApprove = amountInBasketWei.plus(redemptionFee);
     await mixr.approve(
         mixr.address,
         totalApprove.toString(10),
@@ -133,19 +132,19 @@ const redemptionTest = async (
     /**
      * asserts
      */
-    const withoutFeeInBasketWei = amountInBasketWei.minus(feeInBasketWei);
+    const withoutFeeInBasketWei = amountInBasketWei.minus(redemptionFee);
     const withoutFeeInTokenWei = new BigNumber(
-        await mixr.convertTokensAmount(
-            mixr.address,
-            someERC20.address,
+        await utilsLibMock.convertTokenAmount(
+            mixrDecimals,
+            someERC20Decimals,
             withoutFeeInBasketWei.toString(10),
         ),
     );
     const feeInTokenWei = new BigNumber(
-        await mixr.convertTokensAmount(
-            mixr.address,
-            someERC20.address,
-            feeInBasketWei.toString(10),
+        await utilsLibMock.convertTokenAmount(
+            mixrDecimals,
+            someERC20Decimals,
+            redemptionFee.toString(10),
         ),
     );
     /**
@@ -175,34 +174,150 @@ const redemptionTest = async (
         previousMixrERC20Balance.minus(oneToken.minus(feeInTokenWei)),
     );
     // The stakeholder account should get the fees
-    new BigNumber(await mixr.balanceOf(walletFees))
-        .should.be.bignumber.equal(previousWalletFeeBalance.plus(feeInBasketWei));
+    new BigNumber(await mixr.balanceOf(stakeholders))
+        .should.be.bignumber.equal(previousWalletFeeBalance.plus(redemptionFee));
 };
 
 contract('MIXR', (accounts) => {
     let mixr;
+    let feesMock;
     let fixidityLibMock;
     let someERC20;
+    let someOtherERC20;
     let someERC721;
     const defaultAmountOfTokens = 100;
-    const mixrDecimals = 24;
     const someERC20Decimals = 18;
+    const someOtherERC20Decimals = 20;
+    const mixrDecimals = 24;
     const owner = accounts[0];
     const governor = accounts[1];
     const user = accounts[2];
-    const walletFees = accounts[3];
+    const stakeholders = accounts[3];
     let fixed1;
     let DEPOSIT;
     let REDEMPTION;
 
     before(async () => {
         mixr = await MIXR.deployed();
+        feesMock = await FeesMock.deployed();
         fixidityLibMock = await FixidityLibMock.deployed();
         someERC20 = await SampleERC20.deployed();
+        someOtherERC20 = await SampleOtherERC20.deployed();
         someERC721 = await SampleERC721.deployed();
         fixed1 = new BigNumber(await fixidityLibMock.fixed1());
-        DEPOSIT = await mixr.DEPOSIT();
-        REDEMPTION = await mixr.REDEMPTION();
+        DEPOSIT = await feesMock.DEPOSIT();
+        REDEMPTION = await feesMock.REDEMPTION();
+    });
+
+    describe('basketBalance', () => {
+        beforeEach(async () => {
+            mixr = await MIXR.new();
+            await mixr.addGovernor(governor, {
+                from: owner,
+            });
+
+            someERC20 = await SampleERC20.new(
+                governor,
+                tokenNumber(someERC20Decimals, 100),
+                someERC20Decimals,
+            );
+            someOtherERC20 = await SampleOtherERC20.new(
+                governor,
+                tokenNumber(someOtherERC20Decimals, 100),
+                someOtherERC20Decimals,
+            );
+
+            /**
+             * approve tokens!
+             */
+            await mixr.registerToken(someERC20.address, {
+                from: governor,
+            });
+            await mixr.registerToken(someOtherERC20.address, {
+                from: governor,
+            });
+
+            /**
+             * give some to user for test purposes
+             */
+            await someERC20.transfer(user,
+                tokenNumber(someERC20Decimals, 90), { from: governor });
+            await someOtherERC20.transfer(user,
+                tokenNumber(someOtherERC20Decimals, 80), { from: governor });
+        });
+        it('basketBalance() = 0 before introducing any tokens', async () => {
+            const converted = new BigNumber(
+                await mixr.basketBalance(),
+            );
+            converted.should.be.bignumber.equal(0);
+        });
+        it('basketBalance() = (10**24) after introducing 1 token of x type', async () => {
+            /**
+             * Introduce one token
+             */
+            await someERC20.transfer(mixr.address,
+                tokenNumber(someERC20Decimals, 1), { from: user });
+
+            const converted = new BigNumber(
+                await mixr.basketBalance(),
+            );
+            converted.should.be.bignumber.equal(new BigNumber(10).pow(24));
+        });
+        it('Test basketBalance() = 2*(10**24) after introducing 1 token of x type', async () => {
+            /**
+             * Introduce one token twice
+             */
+            await someERC20.transfer(mixr.address,
+                tokenNumber(someERC20Decimals, 1), { from: user });
+            await someERC20.transfer(mixr.address,
+                tokenNumber(someERC20Decimals, 1), { from: user });
+
+            const converted = new BigNumber(
+                await mixr.basketBalance(),
+            );
+            converted.should.be.bignumber.equal(new BigNumber(10).pow(24).multipliedBy(2));
+        });
+        it('Test basketBalance() = 3*(10**24) after introducing 1 token of y type', async () => {
+            /**
+             * Introduce one token twice and another token once
+             */
+            await someERC20.transfer(mixr.address,
+                tokenNumber(someERC20Decimals, 1), { from: user });
+            await someERC20.transfer(mixr.address,
+                tokenNumber(someERC20Decimals, 1), { from: user });
+            await someOtherERC20.transfer(mixr.address,
+                tokenNumber(someOtherERC20Decimals, 1), { from: user });
+
+            const converted = new BigNumber(
+                await mixr.basketBalance(),
+            );
+            converted.should.be.bignumber.equal(new BigNumber(10).pow(24).multipliedBy(3));
+        });
+        it('Test basketBalance() = (10**6) after introducing 1 wei of x type', async () => {
+            /**
+             * Introduce one wei of x
+             */
+            await someERC20.transfer(mixr.address, 1, { from: user });
+
+            const converted = new BigNumber(
+                await mixr.basketBalance(),
+            );
+            converted.should.be.bignumber.equal(new BigNumber(10).pow(6));
+        });
+        it('Test basketBalance() = (10**6)+(10**4) after introducing 1 token of y type', async () => {
+            /**
+             * Introduce one wei of x and one wei of y
+             */
+            await someERC20.transfer(mixr.address, 1, { from: user });
+            await someOtherERC20.transfer(mixr.address, 1, { from: user });
+
+            const result = new BigNumber(
+                await mixr.basketBalance(),
+            );
+            result.should.be.bignumber.equal(
+                new BigNumber(10).pow(4).plus(new BigNumber(10).pow(6)),
+            );
+        });
     });
 
     // These tests rely on another test to have changed the fixtures (ERC20 approval).
@@ -224,7 +339,7 @@ contract('MIXR', (accounts) => {
             /**
              * approve tokens
              */
-            await mixr.approveToken(someERC20.address, {
+            await mixr.registerToken(someERC20.address, {
                 from: governor,
             });
             await mixr.setTokensTargetProportion(
@@ -265,7 +380,7 @@ contract('MIXR', (accounts) => {
             /**
              * set account to receive fees
              */
-            await mixr.setAccountForFees(walletFees, { from: governor });
+            await mixr.setStakeholderAccount(stakeholders, { from: governor });
 
             /**
              * verify mixr balance is zero
@@ -301,13 +416,13 @@ contract('MIXR', (accounts) => {
             );
 
             itShouldThrow(
-                'forbids depositing unknown token',
+                'forbids depositing a token that has not been registered first.',
                 async () => {
                     /**
                      * deploy new erc20 contract and try to deposit
                      * should fail because it is not accepted yet
                      */
-                    const someOtherERC20 = await SampleERC20.new(
+                    someOtherERC20 = await SampleERC20.new(
                         user,
                         tokenNumber(someERC20Decimals, 100),
                         someERC20Decimals,
@@ -320,11 +435,11 @@ contract('MIXR', (accounts) => {
                         },
                     );
                 },
-                'The given token isn\'t listed as accepted.',
+                'The given token is not registered.',
             );
 
             itShouldThrow(
-                'forbids depositing bad tokens',
+                'forbids depositing a token that has not been registered.',
                 async () => {
                     /**
                      * try to deposit an erc721 token
@@ -338,7 +453,7 @@ contract('MIXR', (accounts) => {
                         },
                     );
                 },
-                'The given token isn\'t listed as accepted.',
+                'The given token is not registered.',
             );
         });
 
@@ -347,7 +462,7 @@ contract('MIXR', (accounts) => {
 
             it('depositToken(50)', async () => {
                 depositTest(
-                    50, user, walletFees, someERC20, someERC20Decimals, mixr, mixrDecimals,
+                    50, user, stakeholders, someERC20, someERC20Decimals, mixr, mixrDecimals,
                 );
             });
         });
@@ -370,9 +485,9 @@ contract('MIXR', (accounts) => {
                 someERC20Decimals,
             );
             /**
-             * approve tokens
+             * Register tokens and set token data to allow transactions.
              */
-            await mixr.approveToken(someERC20.address, {
+            await mixr.registerToken(someERC20.address, {
                 from: governor,
             });
             await mixr.setTokensTargetProportion(
@@ -413,7 +528,7 @@ contract('MIXR', (accounts) => {
             /**
              * set account to receive fees
              */
-            await mixr.setAccountForFees(walletFees, { from: governor });
+            await mixr.setStakeholderAccount(stakeholders, { from: governor });
             /**
              * send tokens to mixr contract, so we can redeem
              * in order to use redeemMIXR method, we should deposit first
@@ -421,19 +536,9 @@ contract('MIXR', (accounts) => {
             const tokensToTransfer = new BigNumber(10)
                 .pow(someERC20Decimals).multipliedBy(defaultAmountOfTokens);
             /**
-             * estimate fees to authorize transactions
+             * approve transfers and deposit
              */
-            const feeInBasketWei = new BigNumber(
-                await mixr.transactionFee(
-                    someERC20.address,
-                    tokensToTransfer.toString(10),
-                    await mixr.DEPOSIT(),
-                ),
-            );
-            /**
-             * approve and deposit
-             */
-            await mixr.approve(mixr.address, feeInBasketWei.toString(10), {
+            await mixr.approve(mixr.address, baseFee.toString(10), {
                 from: user,
             });
             await someERC20.approve(mixr.address, tokensToTransfer.toString(10), {
@@ -469,7 +574,7 @@ contract('MIXR', (accounts) => {
             );
 
             itShouldThrow(
-                'forbids redeeming unknown token',
+                'forbids redeeming a token that hasn\'t been registered yet.',
                 async () => {
                     const someOtherERC20 = await SampleERC20.new(
                         user,
@@ -484,7 +589,7 @@ contract('MIXR', (accounts) => {
                         },
                     );
                 },
-                'The given token isn\'t listed as accepted.',
+                'The given token is not registered.',
             );
 
             itShouldThrow(
@@ -498,7 +603,7 @@ contract('MIXR', (accounts) => {
                         },
                     );
                 },
-                'The given token isn\'t listed as accepted.',
+                'The given token is not registered.',
             );
         });
 
@@ -507,13 +612,13 @@ contract('MIXR', (accounts) => {
 
             it('redeem 1 MIX by 1 token', async () => {
                 redemptionTest(
-                    1, user, walletFees, someERC20, someERC20Decimals, mixr, mixrDecimals,
+                    1, user, stakeholders, someERC20, someERC20Decimals, mixr, mixrDecimals,
                 );
             });
 
             it('redeem 50 MIX by 50 token', async () => {
                 redemptionTest(
-                    50, user, walletFees, someERC20, someERC20Decimals, mixr, mixrDecimals,
+                    50, user, stakeholders, someERC20, someERC20Decimals, mixr, mixrDecimals,
                 );
             });
         });

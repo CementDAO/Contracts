@@ -2,27 +2,42 @@ pragma solidity ^0.5.0;
 
 import "./FixidityLib.sol";
 
+/**
+ * @title LogarithmLib
+ * @author Gadi Guy, Alberto Cuesta Canada
+ * @notice This library extends FixidityLib with logarithm operations.
+ */
 library LogarithmLib {
 
     /**
-     * @dev ln(1.5), hardcoded with the comma 36 positions to the right.
+     * @notice This is e in the fixed point units used in this library.
+     * @dev 27182818284590452353602874713526624977572470936999595749669676277240766303535/fixed1()
+     * Hardcoded to 24 digits.
      */
-    function fixed_ln_1_5() public pure returns(int256) {
-        return 405465108108164381978013115464349137;
+    function fixedE() public pure returns(int256) {
+        return 2718281828459045235360287;
     }
 
     /**
-     * @dev ln(10), hardcoded with the comma 36 positions to the right.
+     * @notice ln(1.5), hardcoded with the comma 24 positions to the right.
      */
-    function fixed_ln_10() public pure returns(int256) {
-        return 2302585092994045684017991454684364208;
+    function fixedLn1_5() public pure returns(int256) {
+        return 405465108108164381978013;
     }
 
     /**
-     * @dev ln(x)
-     * README: This function has a 1/50 deviation close to ln(-1), 
+     * @notice ln(10), hardcoded with the comma 24 positions to the right.
+     */
+    function fixedLn10() public pure returns(int256) {
+        return 2302585092994045684017991;
+    }
+
+    /**
+     * @notice ln(x)
+     * This function has a 1/50 deviation close to ln(-1), 
      * 1/maxFixedMul() deviation at fixedE()**2, but diverges to 10x 
      * deviation at maxNewFixed().
+     * @dev 
      * Test ln(0) fails
      * Test ln(-fixed1()) fails
      * Test ln(fixed1()) returns 0
@@ -37,29 +52,29 @@ library LogarithmLib {
         int256 r = 0;
         while(v <= FixidityLib.fixed1() / 10) {
             v = v * 10;
-            r -= fixed_ln_10();
+            r -= fixedLn10();
         }
         while(v >= 10 * FixidityLib.fixed1()) {
             v = v / 10;
-            r += fixed_ln_10();
+            r += fixedLn10();
         }
         while(v < FixidityLib.fixed1()) {
-            v = FixidityLib.multiply(v, FixidityLib.fixedE());
+            v = FixidityLib.multiply(v, fixedE());
             r -= FixidityLib.fixed1();
         }
-        while(v > FixidityLib.fixedE()) {
-            v = FixidityLib.divide(v, FixidityLib.fixedE());
+        while(v > fixedE()) {
+            v = FixidityLib.divide(v, fixedE());
             r += FixidityLib.fixed1();
         }
         if(v == FixidityLib.fixed1()) {
             return r;
         }
-        if(v == FixidityLib.fixedE()) {
+        if(v == fixedE()) {
             return FixidityLib.fixed1() + r;
         }
 
         v = v - 3 * FixidityLib.fixed1() / 2;
-        r = r + fixed_ln_1_5();
+        r = r + fixedLn1_5();
         int256 m = FixidityLib.fixed1() * v / (v + 3 * FixidityLib.fixed1());
         r = r + 2 * m;
         int256 m_2 = m * m / FixidityLib.fixed1();
@@ -74,8 +89,9 @@ library LogarithmLib {
     }
 
     /**
-     * @dev log_b(x). The base needs to be in fixed point representation.
-     * Tests covered by ln(x) and divide(a,b)
+     * @notice log_b(x).
+     * *param int256 b Base in fixed point representation.
+     * @dev Tests covered by ln(x) and divide(a,b)
      */
     function log_b(int256 b, int256 x) public pure returns (int256) {
         return FixidityLib.divide(ln(x), ln(b));

@@ -1,19 +1,27 @@
-const MIXR = artifacts.require('./MIXR.sol');
 const FixidityLib = artifacts.require('./fixidity/FixidityLib.sol');
 const LogarithmLib = artifacts.require('./fixidity/LogarithmLib.sol');
-const Utils = artifacts.require('./Utils.sol');
+const UtilsLib = artifacts.require('./UtilsLib.sol');
+const Fees = artifacts.require('./Fees.sol');
+const MIXR = artifacts.require('./MIXR.sol');
 
 module.exports = (deployer) => {
     // deploy fixidity
     deployer.deploy(FixidityLib);
-    deployer.link(FixidityLib, MIXR);
     deployer.link(FixidityLib, LogarithmLib);
+    deployer.link(FixidityLib, UtilsLib);
+    deployer.link(FixidityLib, Fees);
+    deployer.link(FixidityLib, MIXR);
     // deploy logarithm
     deployer.deploy(LogarithmLib);
+    deployer.link(LogarithmLib, Fees);
     deployer.link(LogarithmLib, MIXR);
     // deploy utils
-    deployer.deploy(Utils);
-    deployer.link(Utils, MIXR);
+    deployer.deploy(UtilsLib);
+    deployer.link(UtilsLib, Fees);
+    deployer.link(UtilsLib, MIXR);
+    // deploy fees
+    deployer.deploy(Fees);
+    deployer.link(Fees, MIXR);
     // deploy mixr
     deployer.deploy(MIXR);
 };
