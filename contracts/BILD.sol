@@ -197,10 +197,48 @@ contract BILD is ERC20, ERC20Detailed {
         stakesByHolder[msg.sender] += stake.value;
 
         // If the aggregated stakes are high enough, update the agent ranking.
+        // TODO: Needs to take into account that the agent might already be ranked above agentR
         if (agentRanking[_agent].value > agentRanking[agentR].value)
         {
             rankAgent(_agent, agentR);
             agentR = agentRanking[agentR].next;
         }
+    }
+
+    /**
+     * @notice Allows a stakeholder to decrease or remove a BILD stake for an agent.
+     * @param _agent The agent reduce or remove the stake for.
+     * @param _stake Amount of BILD wei to remove from the stake.
+     */
+    function removeStake(address _agent, uint256 _stake)
+    public
+    {
+        // Look for a stake for the agent from the stakeholder.
+        uint256 stakeLocation = findStake(_agent, msg.sender);
+        require (
+            stakeLocation < stakesByAgent[_agent].length,
+            "No stakes were found for the agent."
+        );
+        Stake memory stake = stakesByAgent[_agent][stakeLocation];
+        
+        require (
+            _stake <= stakesByAgent[_agent][stakeLocation].value,
+            "Attempted to reduce a stake by more than its value."
+        );
+        // Reduce the stake
+        stakesByAgent[_agent][stakeLocation].value -= _stake;
+
+        // Update aggregated stake views
+        assert (agentRanking[_agent].value >= stake.value);
+        agentRanking[_agent].value -= stake.value;
+        assert (stakesByHolder[msg.sender] >= stake.value);
+        stakesByHolder[msg.sender] -= stake.value;
+
+        // If the aggregated stakes were high enough to be ranked before the stake reduction, update the agent ranking.
+        /* if (agentRanking[_agent].value + _stake.value >= agentRanking[agentR].value)
+        {
+            rankAgent(_agent, agentR);
+            agentR = agentRanking[agentR].next;
+        } */
     }
 }
