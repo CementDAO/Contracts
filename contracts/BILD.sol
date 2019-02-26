@@ -59,25 +59,52 @@ contract BILD is ERC20, ERC20Detailed {
     address agentR;
 
     /**
-     * @notice Returns an individual stake.
+     * @notice Verifies that an agent exists
+     */
+    modifier agentExists(address _agent)
+    {
+        require (
+            stakesByAgent[_agent].length != 0, // An agent without any stakes cannot exist.
+            "Agent not found."
+        );
+        _;
+    }
+
+
+    /**
+     * @notice Verifies that an agent exists in the ranking
+     */
+    modifier agentIsRanked(address _agent)
+    {
+        require (
+            agentRanking[_agent].value != 0, // An agent without any stakes cannot exist.
+            "Agent not ranked."
+        );
+        _;
+    }
+
+    /**
+     * @notice Returns the index of an stake between all stakes for an agent.
+     * An index equal to the length of the stake array means no stakes were found.
      * @param _agent The agent that the stake is for.
      * @param _stakeholder The holder that the stake is from.
+     * @dev It is not possible to return a struct, so the data layer needs to
+     * be exposed :(
      */
     function findStake(address _agent, address _stakeholder)
         public
         view
-        returns(Stake memory)
+        agentExists(_agent)
+        returns(uint256)
     {
-        require (
-            stakesByAgent[_agent] != 0, 
-            "Agent not found."
-        );
-
-        for (uint256 i = 0; i <= stakesByAgent[_agent].length; i++)
+        uint256 stakeIndex = 0;
+        while (stakeIndex <= stakesByAgent[_agent].length)
         {
-            if (stakesByAgent[_agent].stakeholder == _stakeholder)
-                return stakesByAgent[_agent];
+            if (stakesByAgent[_agent][stakeIndex].stakeholder == _stakeholder)
+                return stakeIndex;
+            stakeIndex++;
         }
+        return stakeIndex; // An index equal to the length of the stake array means no stakes were found.
     }
 
     /**
@@ -88,14 +115,16 @@ contract BILD is ERC20, ERC20Detailed {
      */
     function rankAgent(address _agent, address _initial)
         public
+        agentExists(_initial)
+        agentIsRanked(_initial)
+        agentExists(_agent)
     {
-        if (address(agentRanking[_initial]) == 0) return; // Not an address in the ranking
         address current = _initial;
         uint256 thisValue = agentRanking[_agent].value;
         uint256 lastValue = agentRanking[current].value;
         if (lastValue >= thisValue) return; // _agent value below _initial value
         while (lastValue < thisValue) {
-            if (agentRanking[current].next == 0) // Found the head
+            if (agentRanking[current].next == address(0)) // Found the head
             {
                 agentRanking[current].next = _agent;
                 return;
@@ -146,19 +175,25 @@ contract BILD is ERC20, ERC20Detailed {
         );
 
         require (
-            agentRanking[_agent] != 0 || _stake >= minimumStake, 
+            agentRanking[_agent].value != 0 || _stake >= minimumStake, 
             "Minimum stake not reached to nominate an agent."
         );
 
-        Stake memory stake = findStake(_agent, msg.sender);
-        // If that agent has no earlier stakes by this holder create one
-        if (stake == 0) stake = Stake(msg.sender, _stake);
+        // Look for a stake for the agent from the stakeholder.
+        uint256 stakeLocation = findStake(_agent, msg.sender);
+        Stake memory stake;
+        // If the agent has no earlier stakes by the stakeholder create one
+        if (stakeLocation == stakesByAgent[_agent].length) 
+            stake = Stake(msg.sender, _stake);
+        else
+            stake = stakesByAgent[_agent][stakeLocation];
         stakesByAgent[_agent].push(stake);
         
         // Update aggregated stake views
-        if (agentRanking[_agent] == 0) 
-            agentRanking[_agent] = AggregatedStakes(0, stake.value);
-        else agentRanking[_agent].value += stake.value;
+        if (agentRanking[_agent].value == 0) 
+            agentRanking[_agent] = AggregatedStakes(address(0), stake.value);
+        else 
+            agentRanking[_agent].value += stake.value;
         stakesByHolder[msg.sender] += stake.value;
 
         // If the aggregated stakes are high enough, update the agent ranking.
