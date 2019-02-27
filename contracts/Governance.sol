@@ -155,9 +155,9 @@ contract Governance is Base, Ownable {
         address[] memory registeredTokens;
         (registeredTokens, totalTokens) = getRegisteredTokens();
         
-        for(uint256 x = 0; x < registeredTokens.length; x += 1) {
+        for (uint256 x = 0; x < registeredTokens.length; x += 1) {
             bool found = false;
-            for(uint256 y = 0; y < _tokens.length; y += 1) {
+            for (uint256 y = 0; y < _tokens.length; y += 1) {
                 if (registeredTokens[x] == _tokens[y]) {
                     found = true; 
                     break;
@@ -171,7 +171,7 @@ contract Governance is Base, Ownable {
 
         // Check proportions supplied are valid.
         int256 totalProportions = 0;
-        for(uint256 x = 0; x < _proportions.length; x += 1) {
+        for (uint256 x = 0; x < _proportions.length; x += 1) {
             require(
                 _proportions[x] >= 0 && _proportions[x] <= FixidityLib.fixed1(),
                 "Target proportion not in the [0,1] range."
@@ -184,7 +184,7 @@ contract Governance is Base, Ownable {
         );
 
         // Apply changes.
-        for(uint256 x = 0; x < _proportions.length; x += 1) {
+        for (uint256 x = 0; x < _proportions.length; x += 1) {
             TokenData memory token = tokens[_tokens[x]];
             token.targetProportion = _proportions[x];
             tokens[_tokens[x]] = token;

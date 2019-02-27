@@ -8,6 +8,7 @@ import "./fixidity/LogarithmLib.sol";
 import "./UtilsLib.sol";
 import "./MIXR.sol";
 
+
 /**
  * @title Fee calculation library.
  * @author Alberto Cuesta Canada, Bernardo Vieira
@@ -22,6 +23,7 @@ library Fees {
      * @notice Accepted transaction type for the proportion, deviation and fee
      * calculation functions.
      */
+    // solium-disable-next-line mixedcase
     function REDEMPTION() public pure returns(int8) {
         return -1;
     }
@@ -30,6 +32,7 @@ library Fees {
      * @notice Accepted transaction type for the proportion, deviation and fee
      * calculation functions.
      */
+    // solium-disable-next-line mixedcase
     function TRANSFER() public pure returns(int8) {
         return 0;
     }
@@ -38,6 +41,7 @@ library Fees {
      * @notice Accepted transaction type for the proportion, deviation and fee
      * calculation functions.
      */
+    // solium-disable-next-line mixedcase
     function DEPOSIT() public pure returns(int8) {
         return 1;
     }
@@ -173,7 +177,12 @@ library Fees {
         returns (int256)
     {
         int256 result = FixidityLib.subtract(
-            proportionAfterTransaction(_token, _basket, _transactionAmount, _transactionType),
+            proportionAfterTransaction(
+                _token,
+                _basket,
+                _transactionAmount,
+                _transactionType
+            ),
             Base(_basket).getTargetProportion(_token)
         );
         assert(
@@ -202,7 +211,12 @@ library Fees {
         view
         returns (uint256) 
     {
-        int256 deviation = deviationAfterTransaction(_token, _basket, _transactionAmount, _transactionType);
+        int256 deviation = deviationAfterTransaction(
+            _token,
+            _basket,
+            _transactionAmount,
+            _transactionType
+        );
         int256 targetProportion = Base(_basket).getTargetProportion(_token);
         int256 fee;
 

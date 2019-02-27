@@ -89,7 +89,13 @@ contract MIXR is Governance, ERC20, ERC20Detailed {
         acceptedForDeposits(_token)
     {
         // Calculate the deposit fee and the returned amount
-        uint256 feeInBasketWei = Fees.transactionFee(_token, address(this), _depositInTokenWei, Fees.DEPOSIT());
+        uint256 feeInBasketWei = Fees
+            .transactionFee(
+                _token,
+                address(this),
+                _depositInTokenWei,
+                Fees.DEPOSIT()
+            );
         uint256 depositInBasketWei = UtilsLib.convertTokenAmount(
             getDecimals(_token), 
             ERC20Detailed(address(this)).decimals(), 
@@ -137,7 +143,13 @@ contract MIXR is Governance, ERC20, ERC20Detailed {
             _redemptionInBasketWei
         );
         //
-        uint256 feeInBasketWei = Fees.transactionFee(_token, address(this), redemptionInTokenWei, Fees.REDEMPTION());
+        uint256 feeInBasketWei = Fees
+            .transactionFee(
+                _token,
+                address(this),
+                redemptionInTokenWei,
+                Fees.REDEMPTION()
+            );
         uint256 withoutFeeInBasketWei = _redemptionInBasketWei.sub(feeInBasketWei);
         uint256 returnInTokenWei = UtilsLib.convertTokenAmount(
             ERC20Detailed(address(this)).decimals(), 

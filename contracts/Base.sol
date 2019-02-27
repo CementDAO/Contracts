@@ -7,6 +7,7 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./fixidity/FixidityLib.sol";
 import "./UtilsLib.sol";
 
+
 /**
  * @title Base MIXR contract. 
  * @author Alberto Cuesta Canada, Bernardo Vieira
@@ -294,6 +295,7 @@ contract Base {
                 activeIndex += 1; // Unlikely to overflow
             }
         }
-        return (activeAddresses, activeIndex); // Do we need to return activeIndex? Can't the caller use activeAddresses.length?
+        // Do we need to return activeIndex? Can't the caller use activeAddresses.length?
+        return (activeAddresses, activeIndex);
     }
 }
