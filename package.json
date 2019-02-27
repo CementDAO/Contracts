@@ -1,7 +1,11 @@
 {
     "name": "contracts",
     "version": "1.0.0",
-    "description": "",
+    "description": "The MIXR contracts",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/CementDAO/Contracts.git"
+    },
     "main": "truffle-config.js",
     "directories": {
         "test": "test"
