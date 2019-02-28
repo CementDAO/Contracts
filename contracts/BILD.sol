@@ -14,12 +14,12 @@ contract BILD is ERC20, ERC20Detailed {
      * @notice Code indicating a stakeholder has no stakes for a given agent
      * @dev Difficult to create such a large array of stakes, so probably safe
      */
-    uint256 NO_STAKES = 2**256-1;
+    uint256 public NO_STAKES = 115792089237316195423570985008687907853269984665640564039457584007913129639935;
 
     /**
      * @notice Minimum BILD wei that are accepted to nominate a new Curation Agent
      */
-    uint256 minimumStake = 10**18;
+    uint256 public minimumStake = 10**18;
 
     /**
      * @notice A single stake of BILD from one stakeholder.
@@ -34,7 +34,7 @@ contract BILD is ERC20, ERC20Detailed {
      * @dev It might be more gas effective to remove this mapping and just use
      * the agentRanking list to access the stakes.
      */
-    mapping(address => Stake[]) stakesByAgent;
+    mapping(address => Stake[]) private stakesByAgent;
 
     /**
      * @notice View of aggregated stakes by stakeholder address.
@@ -43,7 +43,7 @@ contract BILD is ERC20, ERC20Detailed {
      * seems more user friendly to put the cost of the platform on those that
      * create stakes than those that transact with MIX.
      */
-    mapping(address => uint256) stakesByHolder;
+    mapping(address => uint256) private stakesByHolder;
 
     /**
      * @notice One component of a linked list that contained the aggregated 
@@ -283,9 +283,12 @@ contract BILD is ERC20, ERC20Detailed {
      * nomination. This function requires that the aggregated stakes for the
      * agent are below the minimum stake for nomination.
      * @param _agent The stakeholder to revoke the nomination from.
+     * Execute nominateAgent(agent, minimumStake)
+     * Test revokeNomination(agent1) fails - "Too many stakes to revoke agent nomination."
      */
     function revokeNomination(address _agent)
         public
+        agentExists(_agent)
     {
         require (
             aggregateAgentStakes(_agent) < minimumStake,
@@ -383,7 +386,6 @@ contract BILD is ERC20, ERC20Detailed {
             stakeIndex != NO_STAKES,
             "No stakes were found for the agent."
         );
-        Stake memory stake = stakesByAgent[_agent][stakeIndex];
         
         require (
             _stake <= stakesByAgent[_agent][stakeIndex].value,
@@ -393,8 +395,7 @@ contract BILD is ERC20, ERC20Detailed {
         stakesByAgent[_agent][stakeIndex].value -= _stake;
 
         // Update aggregated stake views
-        assert (stakesByHolder[msg.sender] >= stake.value);
-        stakesByHolder[msg.sender] -= stake.value;
+        stakesByHolder[msg.sender] -= _stake; // Safe Math
 
         /* assert (agentRanking[_agent].value >= stake.value);
         agentRanking[_agent].value -= stake.value;
