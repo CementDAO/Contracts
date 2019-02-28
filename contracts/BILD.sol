@@ -95,17 +95,18 @@ contract BILD is ERC20, ERC20Detailed {
      * @param _agent The agent that the stake is for.
      * @param _stakeholder The holder that the stake is from.
      * @dev It is not possible to return a struct, so the data layer needs to
-     * be exposed :(
-     * Test findStake(agent1, stakeholder1) fails - "Agent not found."
+     * be exposed. This method might become private or internal for deployment.
+     * Test findStakeIndex(agent1, stakeholder1) fails - "Agent not found."
      * Execute:
      * stakeholder1: createStake(agent1, 1 token)
      * stakeholder1: createStake(agent2, 1 token)
      * stakeholder2: createStake(agent1, 1 token)
-     * Test findStake(agent1, stakeholder) returns 0.
-     * Test findStake(agent2, stakeholder) returns 0.
-     * Test findStake(agent1, stakeholder2) returns 1.
+     * Test findStakeIndex(agent1, stakeholder) returns 0.
+     * Test findStakeIndex(agent2, stakeholder) returns 0.
+     * Test findStakeIndex(agent1, stakeholder2) returns 1.
+     * Test findStakeIndex(agent1, stakeholder3) returns 2.
      */
-    function findStake(address _agent, address _stakeholder)
+    function findStakeIndex(address _agent, address _stakeholder)
         public
         view
         agentExists(_agent)
@@ -119,6 +120,27 @@ contract BILD is ERC20, ERC20Detailed {
             stakeIndex++;
         }
         return stakeIndex; // An index equal to the length of the stake array means no stakes were found.
+    }
+
+    /**
+     * @notice Returns the value in BILD wei of an stake from a stakeholder for an agent.
+     * @param _agent The agent that the stake is for.
+     * @param _stakeholder The holder that the stake is from.
+     * Test findStakeValue(agent1, stakeholder1) fails - "Agent not found."
+     * Execute:
+     * stakeholder1: createStake(agent1, 1 token)
+     * stakeholder1: createStake(agent2, 2 token)
+     * Test findStakeValue(agent1, stakeholder1) returns 1 token.
+     * Test findStakeValue(agent2, stakeholder1) returns 2 token.
+     */
+    function findStakeValue(address _agent, address _stakeholder)
+        public
+        view
+        agentExists(_agent)
+        returns(uint256)
+    {
+        uint256 stakeIndex = findStakeIndex(_agent, _stakeholder);
+        return stakesByAgent[_agent][stakeIndex].value;
     }
 
     /**
@@ -182,7 +204,7 @@ contract BILD is ERC20, ERC20Detailed {
      * @param _agent Agent to rank.
      * @param _initial Position in the ranking to start the update process.
      */
-    function rankAgent(address _agent, address _initial)
+    /* function rankAgent(address _agent, address _initial)
         public
         agentExists(_initial)
         agentIsRanked(_initial)
@@ -211,7 +233,7 @@ contract BILD is ERC20, ERC20Detailed {
                 lastValue = agentRanking[current].value;
             }
         }
-    }
+    } */
 
     /**
      * @notice Allows a stakeholder to stake BILD for an agent, or to nominate
@@ -221,8 +243,10 @@ contract BILD is ERC20, ERC20Detailed {
      * Test createStake(_agent, 1) fails with no BILD - "Attempted stake larger than BILD balance."
      * Test createStake(_agent, 2) fails with 1 BILD wei - "Attempted stake larger than BILD balance."
      * Test createStake(_agent, 1) fails with 1 BILD wei - "Minimum stake to nominate an agent not reached."
-     * Test createStake(_agent, 1 token) with 1 BILD token executes and findStake(_agent, _stakeholder) returns 0.
-     * Complete findStake tests.
+     * Test createStake(_agent, 1 token) with 1 BILD token executes and findStakeValue(_agent, _stakeholder) returns 1 token.
+     * Test createStake(_agent, 1 token) executed twice then findStakeValue(_agent, _stakeholder) returns 2 tokens.
+     * Complete findStakeIndex tests.
+     * Complete findStakeValue tests.
      * Complete aggregateAgentStakes tests.
      * Complete aggregateHolderStakes tests.
      * TODO: Test rankings after createStake.
@@ -241,18 +265,18 @@ contract BILD is ERC20, ERC20Detailed {
         );
 
         // Look for a stake for the agent from the stakeholder.
-        uint256 stakeLocation = findStake(_agent, msg.sender);
+        uint256 stakeIndex = findStakeIndex(_agent, msg.sender);
         Stake memory stake;
         // If the agent has no earlier stakes by the stakeholder create one
-        if (stakeLocation == stakesByAgent[_agent].length) 
+        if (stakeIndex == stakesByAgent[_agent].length) 
             stake = Stake(msg.sender, _stake);
         else
-            stake = stakesByAgent[_agent][stakeLocation];
+            stake = stakesByAgent[_agent][stakeIndex];
         stakesByAgent[_agent].push(stake);
         
         // Update aggregated stake views
         stakesByHolder[msg.sender] += stake.value;
-        if (agentRanking[_agent].value == 0) 
+        /* if (agentRanking[_agent].value == 0) 
             agentRanking[_agent] = AggregatedStakes(address(0), stake.value);
         else 
             agentRanking[_agent].value += stake.value;
@@ -263,7 +287,7 @@ contract BILD is ERC20, ERC20Detailed {
         {
             rankAgent(_agent, agentR);
             agentR = agentRanking[agentR].next;
-        }
+        } */
     }
 
     /**
@@ -275,32 +299,34 @@ contract BILD is ERC20, ERC20Detailed {
     public
     {
         // Look for a stake for the agent from the stakeholder.
-        uint256 stakeLocation = findStake(_agent, msg.sender);
+        uint256 stakeIndex = findStakeIndex(_agent, msg.sender);
         require (
-            stakeLocation < stakesByAgent[_agent].length,
+            stakeIndex < stakesByAgent[_agent].length,
             "No stakes were found for the agent."
         );
-        Stake memory stake = stakesByAgent[_agent][stakeLocation];
+        Stake memory stake = stakesByAgent[_agent][stakeIndex];
         
         require (
-            _stake <= stakesByAgent[_agent][stakeLocation].value,
+            _stake <= stakesByAgent[_agent][stakeIndex].value,
             "Attempted to reduce a stake by more than its value."
         );
         // Reduce the stake
-        stakesByAgent[_agent][stakeLocation].value -= _stake;
+        stakesByAgent[_agent][stakeIndex].value -= _stake;
 
         // Update aggregated stake views
         assert (stakesByHolder[msg.sender] >= stake.value);
         stakesByHolder[msg.sender] -= stake.value;
 
-        assert (agentRanking[_agent].value >= stake.value);
+        /* assert (agentRanking[_agent].value >= stake.value);
         agentRanking[_agent].value -= stake.value;
 
         // If the aggregated stakes were high enough to be ranked before the stake reduction, update the agent ranking.
-        /* if (agentRanking[_agent].value + _stake.value >= agentRanking[agentR].value)
+        if (agentRanking[_agent].value + _stake.value >= agentRanking[agentR].value)
         {
             rankAgent(_agent, agentR);
             agentR = agentRanking[agentR].next;
         } */
     }
+
+    // TODO: Fail on transactions if amountToTransfer > ERC20(address(this)).balanceOf(msg.sender) - stakesByHolder[msg.sender]
 }
