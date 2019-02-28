@@ -20,6 +20,7 @@ contract('BILD', (accounts) => {
     let twoBILDTokens;
     let manyBILDTokens;
     let minimumStake;
+    let NO_STAKES;
 
     before(async () => {
         bild = await BILD.deployed();
@@ -27,6 +28,7 @@ contract('BILD', (accounts) => {
         twoBILDTokens = tokenNumber(bildDecimals, 2);
         manyBILDTokens = tokenNumber(bildDecimals, 100);
         minimumStake = oneBILDToken;
+        NO_STAKES = new BigNumber(await bild.NO_STAKES);
     });
 
     describe('nominateAgent', () => {
@@ -179,7 +181,7 @@ contract('BILD', (accounts) => {
     * Execute:
     * stakeholder1: createStake(agent1, 1 token)
     * stakeholder2: createStake(agent1, 2 token)
-    * stakeholder1: createStake(agent2, 1 token)
+    * stakeholder1: createStake(agent2, 2 token)
     * Test findStakeIndex(agent1, stakeholder1) returns 0.
     * Test findStakeIndex(agent1, stakeholder2) returns 1.
     * Test findStakeIndex(agent2, stakeholder1) returns 0.
@@ -203,7 +205,7 @@ contract('BILD', (accounts) => {
                 { from: distributor },
             );
 
-            await bild.createStake(
+            await bild.nominateAgent(
                 agent1,
                 oneBILDToken,
                 {
@@ -219,9 +221,9 @@ contract('BILD', (accounts) => {
                 },
             );
 
-            await bild.createStake(
+            await bild.nominateAgent(
                 agent2,
-                oneBILDToken,
+                twoBILDTokens,
                 {
                     from: stakeholder1,
                 },
@@ -241,44 +243,50 @@ contract('BILD', (accounts) => {
             'Agent not found.',
         );
         it('findStakeIndex returns stake index for first agent and first stakeholder.', async () => {
-            const createdStake = await bild.findStakeIndex(
-                agent1,
-                stakeholder1,
-                {
-                    from: stakeholder1,
-                },
+            const createdStakeIndex = new BigNumber(
+                await bild.findStakeIndex(
+                    agent1,
+                    stakeholder1,
+                    {
+                        from: stakeholder1,
+                    },
+                ),
             );
-            createdStake.should.be.bignumber.equal(0);
+            createdStakeIndex.should.be.bignumber.equal(0);
         });
         it('findStakeIndex returns stake index for first agent and second stakeholder.', async () => {
-            const createdStake = await bild.findStakeIndex(
-                agent1,
-                stakeholder2,
-                {
-                    from: stakeholder2,
-                },
+            const createdStakeIndex = new BigNumber(
+                await bild.findStakeIndex(
+                    agent1,
+                    stakeholder2,
+                    {
+                        from: stakeholder2,
+                    },
+                ),
             );
-            createdStake.should.be.bignumber.equal(1);
+            createdStakeIndex.should.be.bignumber.equal(1);
         });
         it('findStakeIndex returns stake index for second agent and first stakeholder.', async () => {
-            const createdStake = await bild.findStakeIndex(
-                agent2,
-                stakeholder1,
-                {
-                    from: stakeholder1,
-                },
+            const createdStakeIndex = new BigNumber(
+                await bild.findStakeIndex(
+                    agent2,
+                    stakeholder1,
+                    {
+                        from: stakeholder1,
+                    },
+                ),
             );
-            createdStake.should.be.bignumber.equal(0);
+            createdStakeIndex.should.be.bignumber.equal(0);
         });
-        it('findStakeIndex returns stake array length for stakeholders without stakes.', async () => {
-            const createdStake = await bild.findStakeIndex(
+        it('findStakeIndex returns bild.NO_STAKES for stakeholders without stakes.', async () => {
+            const createdStakeIndex = await bild.findStakeIndex(
                 agent1,
                 stakeholder3,
                 {
                     from: stakeholder1,
                 },
             );
-            createdStake.should.be.bignumber.equal(2);
+            createdStakeIndex.should.be.bignumber.equal(NO_STAKES);
         });
         itShouldThrow(
             'findStakeValue fails if passed a non nominated agent.',
@@ -294,24 +302,28 @@ contract('BILD', (accounts) => {
             'Agent not found.',
         );
         it('findStakeValue returns stake value for first agent and first stakeholder.', async () => {
-            const createdStake = await bild.findStakeIndex(
-                agent1,
-                stakeholder1,
-                {
-                    from: stakeholder1,
-                },
+            const createdStakeValue = new BigNumber(
+                await bild.findStakeValue(
+                    agent1,
+                    stakeholder1,
+                    {
+                        from: stakeholder1,
+                    },
+                ),
             );
-            createdStake.should.be.bignumber.equal(oneBILDToken);
+            createdStakeValue.should.be.bignumber.equal(oneBILDToken);
         });
         it('findStakeValue returns stake index for second agent and first stakeholder.', async () => {
-            const createdStake = await bild.findStakeIndex(
-                agent2,
-                stakeholder1,
-                {
-                    from: stakeholder1,
-                },
+            const createdStakeValue = new BigNumber(
+                await bild.findStakeValue(
+                    agent2,
+                    stakeholder1,
+                    {
+                        from: stakeholder1,
+                    },
+                ),
             );
-            createdStake.should.be.bignumber.equal(twoBILDTokens);
+            createdStakeValue.should.be.bignumber.equal(twoBILDTokens);
         });
     });
 });

@@ -49,21 +49,21 @@ contract BILD is ERC20, ERC20Detailed {
      * @notice One component of a linked list that contained the aggregated 
      * stakes from all stakeholders for each agent.
      */
-    struct AggregatedStakes {
+    /* struct AggregatedStakes {
         address next;
         uint256 value;
-    }
+    }*/
 
     /**
      * @notice An ordered linked list, or ranking, of the Curation Agents 
      * ordered by their stake size.
      */
-    mapping(address => AggregatedStakes) agentRanking;
+    // mapping(address => AggregatedStakes) agentRanking;
 
     /**
      * @notice The address of the agent at the R position of the agentRanking.
      */
-    address agentR;
+    // address agentR;
 
     /**
      * @notice Constructor with the details of the ERC20Detailed.
@@ -94,14 +94,14 @@ contract BILD is ERC20, ERC20Detailed {
      * existing, and the garbage collection mechanism might remove it at any 
      * time.
      */
-    modifier agentIsRanked(address _agent)
+    /* modifier agentIsRanked(address _agent)
     {
         require (
             agentRanking[_agent].value != 0, // An agent without any stakes cannot exist.
             "Agent not ranked."
         );
         _;
-    }
+    } */
 
     /**
      * @notice Returns the index of an stake between all stakes for an agent.
@@ -184,7 +184,7 @@ contract BILD is ERC20, ERC20Detailed {
     {
         //Stake[] memory agentStakes = stakes[_agent];
         uint256 result = 0;
-        for (uint256 i = 0; i <= stakesByAgent[_agent].length; i += 1)
+        for (uint256 i = 0; i < stakesByAgent[_agent].length; i += 1)
             result += stakesByAgent[_agent][i].value;
         return result;
     }
