@@ -294,6 +294,17 @@ contract BILD is ERC20, ERC20Detailed {
      * @notice Allows a stakeholder to decrease or remove a BILD stake for an agent.
      * @param _agent The agent reduce or remove the stake for.
      * @param _stake Amount of BILD wei to remove from the stake.
+     * Test stakeholder1: removeStake(agent1, 1 token) fails - "No stakes were found for the agent."
+     * Execute stakeholder1: createStake(agent1, 1 token)
+     * Test stakeholder1: removeStake(agent1, 2 tokens) fails - "Attempted to reduce a stake by more than its value."
+     * Execute stakeholder1: createStake(agent1, 1 token)
+     * Test stakeholder1: removeStake(agent1, 1 token) executes then findStakeValue(agent1, stakeholder1) returns zero
+     * Execute stakeholder1: createStake(agent1, 2 tokens)
+     * Test stakeholder1: removeStake(agent1, 1 token) executes then findStakeValue(agent1, stakeholder1) returns one token
+     * Execute:
+     *     stakeholder1: createStake(agent1, 2 tokens)
+     *     stakeholder2: createStake(agent1, 2 tokens)
+     * Test stakeholder1: removeStake(agent1, 1 token) executes then findStakeValue(agent1, stakeholder2) returns two tokens
      */
     function removeStake(address _agent, uint256 _stake)
     public
