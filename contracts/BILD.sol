@@ -11,9 +11,15 @@ import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
  */
 contract BILD is ERC20, ERC20Detailed {
     /**
+     * @notice Code indicating a stakeholder has no stakes for a given agent
+     * @dev Difficult to create such a large array of stakes, so probably safe
+     */
+    uint256 NO_STAKES = 2**256-1;
+
+    /**
      * @notice Minimum BILD wei that are accepted to nominate a new Curation Agent
      */
-    uint256 minimumStake = 100000000000000000000;
+    uint256 minimumStake = 10**18;
 
     /**
      * @notice A single stake of BILD from one stakeholder.
@@ -60,6 +66,15 @@ contract BILD is ERC20, ERC20Detailed {
     address agentR;
 
     /**
+     * @notice Constructor with the details of the ERC20Detailed.
+     * BILD is constructed with 18 decimals and 10**9 tokens are minted and
+     * assigned to the distributor account.
+     */
+    constructor(address distributor) public ERC20Detailed("BILD", "BILD", 18) {
+        _mint(distributor, 10**27);
+    }
+
+    /**
      * @notice Verifies that an agent exists
      * @dev An agent without stakes is considered non existing, and the garbage
      * collection mechanism might remove it at any time.
@@ -72,7 +87,6 @@ contract BILD is ERC20, ERC20Detailed {
         );
         _;
     }
-
 
     /**
      * @notice Verifies that an agent exists in the ranking
@@ -113,13 +127,13 @@ contract BILD is ERC20, ERC20Detailed {
         returns(uint256)
     {
         uint256 stakeIndex = 0;
-        while (stakeIndex <= stakesByAgent[_agent].length)
+        while (stakeIndex < stakesByAgent[_agent].length)
         {
             if (stakesByAgent[_agent][stakeIndex].stakeholder == _stakeholder)
                 return stakeIndex;
-            stakeIndex++;
+            stakeIndex += 1;
         }
-        return stakeIndex; // An index equal to the length of the stake array means no stakes were found.
+        return NO_STAKES;
     }
 
     /**
@@ -140,12 +154,14 @@ contract BILD is ERC20, ERC20Detailed {
         returns(uint256)
     {
         uint256 stakeIndex = findStakeIndex(_agent, _stakeholder);
+        if (stakeIndex == NO_STAKES) return 0;
         return stakesByAgent[_agent][stakeIndex].value;
     }
 
     /**
      * @notice Returns the aggregation of all stakes for an agent.
      * @param _agent The agent to aggregate stakes for.
+     * @dev This is a get method, consider writing a set method as well.
      * Test aggregateAgentStakes(agent1) fails - "Agent not found."
      * Execute:
      * stakeholder1: createStake(agent1, 1 token)
@@ -168,7 +184,7 @@ contract BILD is ERC20, ERC20Detailed {
     {
         //Stake[] memory agentStakes = stakes[_agent];
         uint256 result = 0;
-        for (uint256 i = 0; i <= stakesByAgent[_agent].length; i++)
+        for (uint256 i = 0; i <= stakesByAgent[_agent].length; i += 1)
             result += stakesByAgent[_agent][i].value;
         return result;
     }
@@ -176,6 +192,7 @@ contract BILD is ERC20, ERC20Detailed {
     /**
      * @notice Returns the aggregation of all stakes for a holder.
      * @param _stakeholder The stakeholder to aggregate stakes for.
+     * @dev This is a get method, consider writing a set method as well.
      * Test aggregateHolderStakes(stakeholder1) returns 0.
      * Execute:
      * stakeholder1: createStake(agent1, 1 token)
@@ -236,13 +253,62 @@ contract BILD is ERC20, ERC20Detailed {
     } */
 
     /**
-     * @notice Allows a stakeholder to stake BILD for an agent, or to nominate
+     * @notice Allows a stakeholder to nominate an agent.
+     * @param _agent The agent to nominate or stake for.
+     * @param _stake Amount of BILD wei to stake.
+     * Test nominateAgent(_agent, minimumStake - 1) fails - "Minimum stake to nominate an agent not reached."
+     * Complete createStake tests.
+     * Test nominateAgent(_agent, oneBILDToken) fails when executed twice - "The agent is already nominated."
+     */
+    function nominateAgent(address _agent, uint256 _stake)
+    public
+    {
+        require (
+            _stake >= minimumStake,
+            "Minimum stake to nominate an agent not reached."
+        );
+        require (
+            stakesByAgent[_agent].length == 0,
+            "The agent is already nominated."
+        );
+
+        // Create an agent by giving him an empty stake from the stakeholder.
+        stakesByAgent[_agent].push(Stake(msg.sender, 0));
+        createStake(_agent, _stake);
+    }
+
+
+    /**
+     * @notice Removes all stakes for an agent, effectively revoking its 
+     * nomination. This function requires that the aggregated stakes for the
+     * agent are below the minimum stake for nomination.
+     * @param _agent The stakeholder to revoke the nomination from.
+     */
+    function revokeNomination(address _agent)
+        public
+    {
+        require (
+            aggregateAgentStakes(_agent) < minimumStake,
+            "Too many stakes to revoke agent nomination."
+        );
+
+        // We pop each stake from the agent after updating the aggregate holder stakes view 
+        while (stakesByAgent[_agent].length > 0)
+        {
+            uint256 lastStake = stakesByAgent[_agent].length - 1;
+            address lastStakeholder = stakesByAgent[_agent][lastStake].stakeholder;
+            stakesByHolder[lastStakeholder] -= stakesByAgent[_agent][lastStake].value; // Use SafeMath
+            stakesByAgent[_agent].pop();
+        }
+    }
+
+    /**
+     * @notice Allows a stakeholder to stake BILD for a nominated agent.
      * one.
      * @param _agent The agent to nominate or stake for.
      * @param _stake Amount of BILD wei to stake.
      * Test createStake(_agent, 1) fails with no BILD - "Attempted stake larger than BILD balance."
      * Test createStake(_agent, 2) fails with 1 BILD wei - "Attempted stake larger than BILD balance."
-     * Test createStake(_agent, 1) fails with 1 BILD wei - "Minimum stake to nominate an agent not reached."
      * Test createStake(_agent, 1 token) with 1 BILD token executes and findStakeValue(_agent, _stakeholder) returns 1 token.
      * Test createStake(_agent, 1 token) executed twice then findStakeValue(_agent, _stakeholder) returns 2 tokens.
      * Complete findStakeIndex tests.
@@ -253,29 +319,25 @@ contract BILD is ERC20, ERC20Detailed {
      */
     function createStake(address _agent, uint256 _stake)
     public
+    agentExists(_agent)
     {
         require (
-            _stake < ERC20(address(this)).balanceOf(msg.sender) - stakesByHolder[msg.sender],
+            _stake <= ERC20(address(this)).balanceOf(msg.sender) - stakesByHolder[msg.sender],
             "Attempted stake larger than BILD balance."
-        );
-
-        require (
-            agentRanking[_agent].value != 0 || _stake >= minimumStake, 
-            "Minimum stake to nominate an agent not reached."
         );
 
         // Look for a stake for the agent from the stakeholder.
         uint256 stakeIndex = findStakeIndex(_agent, msg.sender);
-        Stake memory stake;
         // If the agent has no earlier stakes by the stakeholder create one
-        if (stakeIndex == stakesByAgent[_agent].length) 
-            stake = Stake(msg.sender, _stake);
+        if (stakeIndex == NO_STAKES)
+            stakesByAgent[_agent].push(
+                Stake(msg.sender, _stake)
+            );
         else
-            stake = stakesByAgent[_agent][stakeIndex];
-        stakesByAgent[_agent].push(stake);
+            stakesByAgent[_agent][stakeIndex].value += _stake;
         
         // Update aggregated stake views
-        stakesByHolder[msg.sender] += stake.value;
+        stakesByHolder[msg.sender] += _stake;
         /* if (agentRanking[_agent].value == 0) 
             agentRanking[_agent] = AggregatedStakes(address(0), stake.value);
         else 
@@ -305,14 +367,20 @@ contract BILD is ERC20, ERC20Detailed {
      *     stakeholder1: createStake(agent1, 2 tokens)
      *     stakeholder2: createStake(agent1, 2 tokens)
      * Test stakeholder1: removeStake(agent1, 1 token) executes then findStakeValue(agent1, stakeholder2) returns two tokens
+     * Execute:
+     *     stakeholder1: createStake(agent1, 1 token)
+     *     check findStakeValue(agent1, stakeholder1) returns 1 token
+     *     stakeholder1: removeStake(agent1, 0.5 tokens)
+     *     Test findStakeValue(agent1, stakeholder1) fails - "Agent not found."
      */
     function removeStake(address _agent, uint256 _stake)
     public
+    agentExists(_agent)
     {
         // Look for a stake for the agent from the stakeholder.
         uint256 stakeIndex = findStakeIndex(_agent, msg.sender);
         require (
-            stakeIndex < stakesByAgent[_agent].length,
+            stakeIndex != NO_STAKES,
             "No stakes were found for the agent."
         );
         Stake memory stake = stakesByAgent[_agent][stakeIndex];
@@ -337,6 +405,10 @@ contract BILD is ERC20, ERC20Detailed {
             rankAgent(_agent, agentR);
             agentR = agentRanking[agentR].next;
         } */
+
+        // Agents cannot stay nominated with an aggregated stake under the minimum stake.
+        if (aggregateAgentStakes(_agent) < minimumStake) 
+            revokeNomination(_agent);
     }
 
     // TODO: Fail on transactions if amountToTransfer > ERC20(address(this)).balanceOf(msg.sender) - stakesByHolder[msg.sender]

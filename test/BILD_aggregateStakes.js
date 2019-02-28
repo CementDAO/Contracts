@@ -9,7 +9,7 @@ chai.use(require('chai-bignumber')()).should();
 contract('BILD', (accounts) => {
     let bild;
     const bildDecimals = 18;
-    const governor = accounts[0]
+    const governor = accounts[0];
     const stakeholder1 = accounts[1];
     const stakeholder2 = accounts[2];
     const stakeholder3 = accounts[3];

@@ -15,7 +15,7 @@ import "./Fees.sol";
 contract MIXR is Governance, ERC20, ERC20Detailed {
 
     /**
-     * @dev Constructor with the details of the ERC20.
+     * @notice Constructor with the details of the ERC20.
      */
     constructor() public ERC20Detailed("MIX", "MIX", 24) {
     }
