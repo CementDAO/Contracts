@@ -167,7 +167,7 @@ contract('BILD', (accounts) => {
             );
 
             await bild.transfer(
-                stakeholder1,
+                stakeholder2,
                 manyBILDTokens,
                 { from: governor },
             );
