@@ -2,7 +2,7 @@ pragma solidity ^0.5.0;
 
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
-
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 /**
  * @title BILD Staking contract. 
@@ -10,6 +10,8 @@ import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
  * @notice Implements staking of BILD tokens towards a Curation Agent Ranking
  */
 contract BILD is ERC20, ERC20Detailed {
+    using SafeMath for uint256;
+
     /**
      * @notice Code indicating a stakeholder has no stakes for a given agent
      * @dev Difficult to create such a large array of stakes, so probably safe
@@ -185,7 +187,9 @@ contract BILD is ERC20, ERC20Detailed {
         //Stake[] memory agentStakes = stakes[_agent];
         uint256 result = 0;
         for (uint256 i = 0; i < stakesByAgent[_agent].length; i += 1)
-            result += stakesByAgent[_agent][i].value;
+            result = result.add(
+                stakesByAgent[_agent][i].value
+            );
         return result;
     }
 
@@ -298,9 +302,11 @@ contract BILD is ERC20, ERC20Detailed {
         // We pop each stake from the agent after updating the aggregate holder stakes view 
         while (stakesByAgent[_agent].length > 0)
         {
-            uint256 lastStake = stakesByAgent[_agent].length - 1;
+            uint256 lastStake = stakesByAgent[_agent].length.sub(1);
             address lastStakeholder = stakesByAgent[_agent][lastStake].stakeholder;
-            stakesByHolder[lastStakeholder] -= stakesByAgent[_agent][lastStake].value; // Use SafeMath
+            stakesByHolder[lastStakeholder] = stakesByHolder[lastStakeholder].sub(
+                stakesByAgent[_agent][lastStake].value
+            );
             stakesByAgent[_agent].pop();
         }
     }
@@ -337,10 +343,10 @@ contract BILD is ERC20, ERC20Detailed {
                 Stake(msg.sender, _stake)
             );
         else
-            stakesByAgent[_agent][stakeIndex].value += _stake;
+            stakesByAgent[_agent][stakeIndex].value = stakesByAgent[_agent][stakeIndex].value.add(_stake);
         
         // Update aggregated stake views
-        stakesByHolder[msg.sender] += _stake;
+        stakesByHolder[msg.sender] = stakesByHolder[msg.sender].add(_stake);
         /* if (agentRanking[_agent].value == 0) 
             agentRanking[_agent] = AggregatedStakes(address(0), stake.value);
         else 
@@ -395,7 +401,7 @@ contract BILD is ERC20, ERC20Detailed {
         stakesByAgent[_agent][stakeIndex].value -= _stake;
 
         // Update aggregated stake views
-        stakesByHolder[msg.sender] -= _stake; // Safe Math
+        stakesByHolder[msg.sender] = stakesByHolder[msg.sender].sub(_stake);
 
         /* assert (agentRanking[_agent].value >= stake.value);
         agentRanking[_agent].value -= stake.value;

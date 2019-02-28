@@ -28,7 +28,7 @@ contract('BILD', (accounts) => {
         twoBILDTokens = tokenNumber(bildDecimals, 2);
         manyBILDTokens = tokenNumber(bildDecimals, 100);
         minimumStake = oneBILDToken;
-        NO_STAKES = new BigNumber(await bild.NO_STAKES);
+        NO_STAKES = new BigNumber(115792089237316195423570985008687907853269984665640564039457584007913129639935);
     });
 
     describe('nominateAgent', () => {
@@ -279,12 +279,14 @@ contract('BILD', (accounts) => {
             createdStakeIndex.should.be.bignumber.equal(0);
         });
         it('findStakeIndex returns bild.NO_STAKES for stakeholders without stakes.', async () => {
-            const createdStakeIndex = await bild.findStakeIndex(
-                agent1,
-                stakeholder3,
-                {
-                    from: stakeholder1,
-                },
+            const createdStakeIndex = new BigNumber(
+                await bild.findStakeIndex(
+                    agent1,
+                    stakeholder3,
+                    {
+                        from: stakeholder1,
+                    },
+                ),
             );
             createdStakeIndex.should.be.bignumber.equal(NO_STAKES);
         });

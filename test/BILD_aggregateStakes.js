@@ -19,16 +19,12 @@ contract('BILD', (accounts) => {
     let oneBILDToken;
     let twoBILDTokens;
     let manyBILDTokens;
-    let minimumStake;
-    let NO_STAKES;
 
     before(async () => {
         bild = await BILD.deployed();
         oneBILDToken = tokenNumber(bildDecimals, 1);
         twoBILDTokens = tokenNumber(bildDecimals, 2);
         manyBILDTokens = tokenNumber(bildDecimals, 100);
-        minimumStake = oneBILDToken;
-        NO_STAKES = new BigNumber(await bild.NO_STAKES);
     });
 
     /*
