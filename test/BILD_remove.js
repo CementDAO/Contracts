@@ -372,5 +372,25 @@ contract('BILD', (accounts) => {
             createdStake1.should.be.bignumber.equal(new BigNumber(oneBILDToken).multipliedBy(5));
             createdStake2.should.be.bignumber.equal(new BigNumber(oneBILDToken).multipliedBy(2));
         });
+        itShouldThrow(
+            'removeStake revokes nominations for agents with aggregated stakes under minimum stake.',
+            async () => {
+                await bild.removeStake(
+                    agent1,
+                    1,
+                    {
+                        from: stakeholder1,
+                    },
+                );
+                await bild.findStakeValue(
+                    agent1,
+                    stakeholder1,
+                    {
+                        from: stakeholder1,
+                    },
+                );
+            },
+            'Agent not found.',
+        );
     });
 });
