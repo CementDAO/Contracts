@@ -50,6 +50,8 @@ contract('BILD', (accounts) => {
                 await bild.nominateAgent(
                     agent1,
                     1,
+                    'agent1',
+                    'contact1',
                     {
                         from: stakeholder1,
                     },
@@ -70,6 +72,8 @@ contract('BILD', (accounts) => {
             await bild.nominateAgent(
                 agent1,
                 minimumStake,
+                'agent1',
+                'contact1',
                 {
                     from: stakeholder1,
                 },
@@ -189,6 +193,8 @@ contract('BILD', (accounts) => {
             await bild.nominateAgent(
                 agent3,
                 oneBILDToken,
+                'agent3',
+                'contact3',
                 {
                     from: stakeholder1,
                 },
@@ -246,6 +252,8 @@ contract('BILD', (accounts) => {
             await bild.nominateAgent(
                 agent1,
                 oneBILDToken,
+                'agent1',
+                'contact1',
                 {
                     from: stakeholder1,
                 },
@@ -262,6 +270,8 @@ contract('BILD', (accounts) => {
             await bild.nominateAgent(
                 agent2,
                 twoBILDTokens,
+                'agent2',
+                'contact2',
                 {
                     from: stakeholder1,
                 },

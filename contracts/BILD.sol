@@ -24,12 +24,38 @@ contract BILD is ERC20, ERC20Detailed {
     uint256 public minimumStake = 10**18;
 
     /**
+     * @notice An agent
+     * @dev It is not yet supported to store a dynamic array of structs in a 
+     * struct, therefore the agent struct cnnot contain the stakes inside.
+     */
+    struct Agent {
+        string name;
+        string contact;
+        address next;
+    }
+
+    /**
      * @notice A single stake of BILD from one stakeholder.
      */
     struct Stake {
         address stakeholder;
         uint256 value;
     }
+
+    /**
+     * @notice All the agents stored in a linked list ordered by their aggregated stakes
+     */
+    mapping(address => Agent) private agents;
+
+    /**
+     * @notice The address of the agent at the top of the list.
+     */
+    address topAgent;
+    
+    /**
+     * @notice The address of the agent at the top of the list.
+     */
+    address bottomAgent;
 
     /**
      * @notice All BILD stakes, mapped by agent address.
@@ -46,26 +72,6 @@ contract BILD is ERC20, ERC20Detailed {
      * create stakes than those that transact with MIX.
      */
     mapping(address => uint256) private stakesByHolder;
-
-    /**
-     * @notice One component of a linked list that contained the aggregated 
-     * stakes from all stakeholders for each agent.
-     */
-    /* struct AggregatedStakes {
-        address next;
-        uint256 value;
-    }*/
-
-    /**
-     * @notice An ordered linked list, or ranking, of the Curation Agents 
-     * ordered by their stake size.
-     */
-    // mapping(address => AggregatedStakes) agentRanking;
-
-    /**
-     * @notice The address of the agent at the R position of the agentRanking.
-     */
-    // address agentR;
 
     /**
      * @notice Constructor with the details of the ERC20Detailed.
@@ -89,21 +95,6 @@ contract BILD is ERC20, ERC20Detailed {
         );
         _;
     }
-
-    /**
-     * @notice Verifies that an agent exists in the ranking
-     * @dev An agent with an aggregated stake value of 0 is considered non 
-     * existing, and the garbage collection mechanism might remove it at any 
-     * time.
-     */
-    /* modifier agentIsRanked(address _agent)
-    {
-        require (
-            agentRanking[_agent].value != 0, // An agent without any stakes cannot exist.
-            "Agent not ranked."
-        );
-        _;
-    } */
 
     /**
      * @notice Returns the index of an stake between all stakes for an agent.
@@ -220,6 +211,68 @@ contract BILD is ERC20, ERC20Detailed {
     }
 
     /**
+     * @notice Moves an agent to its right place in the agents list.
+     * @param _agent The agent to find a place for.
+     */
+    function sort(address _agent)
+        public
+        agentExists(_agent)
+    {
+        if (topAgent == address(0)) topAgent = _agent;
+    }
+
+    /**
+     * @notice Find the previous agent in the agents list
+     * @param _agent The agent to find the previous agent for.
+     */
+    function previous(address _agent)
+        public
+        view
+        agentExists(_agent)
+        returns(address)
+    {
+        if (_agent == bottomAgent) 
+            return address(0);
+        
+        address current = bottomAgent;
+        while (agents[current].next != _agent)
+            current = agents[_agent].next;
+        return current;
+    }
+
+    /**
+     * @notice Compare whether two strings are the same
+     * @param _a First string.
+     * @param _b Second string.
+     * TODO: Move to UtilsLib
+     */
+    function areEqual(string memory _a, string memory _b) 
+        public
+        pure 
+        returns(bool)
+    {
+        return keccak256(bytes(_a)) == keccak256(bytes(_b));
+    }
+
+    /**
+     * @notice Determines whether an agent exists with a given name.
+     * @param _name The name to look for
+     */
+    function nameExists(string memory _name)
+        public
+        view
+        returns(bool)
+    {
+        address agent = bottomAgent;
+        while (agent != address(0))
+        {
+            if(areEqual(agents[agent].name, _name)) return true;
+            agent = agents[agent].next;
+        }
+        return false;
+    }    
+
+    /**
      * @notice Update of the agent ranking, maintaining the linked list 
      * structure.
      * @param _agent Agent to rank.
@@ -264,7 +317,12 @@ contract BILD is ERC20, ERC20Detailed {
      * Complete createStake tests.
      * Test nominateAgent(_agent, oneBILDToken) fails when executed twice - "The agent is already nominated."
      */
-    function nominateAgent(address _agent, uint256 _stake)
+    function nominateAgent(
+        address _agent, 
+        uint256 _stake, 
+        string memory _name, 
+        string memory _contact
+    )
     public
     {
         require (
@@ -275,12 +333,17 @@ contract BILD is ERC20, ERC20Detailed {
             stakesByAgent[_agent].length == 0,
             "The agent is already nominated."
         );
+        require (
+            !nameExists(_name),
+            "An agent already exists with that name."
+        );
 
         // Create an agent by giving him an empty stake from the stakeholder.
+        agents[_agent] = Agent(_name, _contact, bottomAgent);
+        bottomAgent = _agent;
         stakesByAgent[_agent].push(Stake(msg.sender, 0));
         createStake(_agent, _stake);
     }
-
 
     /**
      * @notice Removes all stakes for an agent, effectively revoking its 
@@ -309,6 +372,19 @@ contract BILD is ERC20, ERC20Detailed {
             );
             stakesByAgent[_agent].pop();
         }
+
+        // Remove agent from the list
+        if (topAgent == _agent)
+            topAgent = agents[previous(_agent)].next;
+        if (bottomAgent == _agent)
+            bottomAgent = agents[_agent].next;
+        else
+            agents[previous(_agent)].next = agents[_agent].next;
+        agents[_agent].next = address(0);
+
+        // GDPR
+        agents[_agent].name = "";
+        agents[_agent].contact = "";
     }
 
     /**
@@ -347,18 +423,9 @@ contract BILD is ERC20, ERC20Detailed {
         
         // Update aggregated stake views
         stakesByHolder[msg.sender] = stakesByHolder[msg.sender].add(_stake);
-        /* if (agentRanking[_agent].value == 0) 
-            agentRanking[_agent] = AggregatedStakes(address(0), stake.value);
-        else 
-            agentRanking[_agent].value += stake.value;
-
-        // If the aggregated stakes are high enough, update the agent ranking.
-        // TODO: Needs to take into account that the agent might already be ranked above agentR
-        if (agentRanking[_agent].value > agentRanking[agentR].value)
-        {
-            rankAgent(_agent, agentR);
-            agentR = agentRanking[agentR].next;
-        } */
+        
+        // Place the agent in the right place of the agents list
+        sort(_agent);
     }
 
     /**
@@ -412,6 +479,9 @@ contract BILD is ERC20, ERC20Detailed {
             rankAgent(_agent, agentR);
             agentR = agentRanking[agentR].next;
         } */
+
+        // Place the agent in the right place of the agents list
+        sort(_agent);
 
         // Agents cannot stay nominated with an aggregated stake under the minimum stake.
         if (aggregateAgentStakes(_agent) < minimumStake) 
