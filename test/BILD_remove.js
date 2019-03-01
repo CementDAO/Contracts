@@ -393,4 +393,148 @@ contract('BILD', (accounts) => {
             'Agent not found.',
         );
     });
+    /*
+    * Execute:
+    * stakeholder1: nominateAgent(agent1, 15 tokens)
+    * stakeholder2: nominateAgent(agent2, 25 tokens)
+    * stakeholder1: createStake(agent2, 35 tokens)
+    * stakeholder2: createStake(agent1, 45 tokens)
+    * stakeholder1: removeStake(agent1, 1 token)
+    * stakeholder1: removeStake(agent2, 2 token)
+    * stakeholder2: removeStake(agent1, 3 token)
+    * stakeholder2: removeStake(agent2, 4 token)
+    * Test findStakeValue(agent1, stakeholder1) returns 14 token.
+    * Test findStakeValue(agent1, stakeholder2) returns 43 token.
+    * Test findStakeValue(agent2, stakeholder1) returns 32 token.
+    * Test findStakeValue(agent1, stakeholder2) returns 21 token.
+    */
+    describe('findStake*', () => {
+        beforeEach(async () => {
+            bild = await BILD.new(distributor);
+
+            await bild.transfer(
+                stakeholder1,
+                manyBILDTokens,
+                { from: distributor },
+            );
+
+            await bild.transfer(
+                stakeholder2,
+                manyBILDTokens,
+                { from: distributor },
+            );
+
+            await bild.nominateAgent(
+                agent1,
+                new BigNumber(oneBILDToken).multipliedBy(15),
+                {
+                    from: stakeholder1,
+                },
+            );
+
+            await bild.nominateAgent(
+                agent2,
+                new BigNumber(oneBILDToken).multipliedBy(25),
+                {
+                    from: stakeholder2,
+                },
+            );
+
+            await bild.createStake(
+                agent2,
+                new BigNumber(oneBILDToken).multipliedBy(35),
+                {
+                    from: stakeholder1,
+                },
+            );
+            
+            await bild.createStake(
+                agent1,
+                new BigNumber(oneBILDToken).multipliedBy(45),
+                {
+                    from: stakeholder2,
+                },
+            );
+
+            await bild.removeStake(
+                agent1,
+                oneBILDToken,
+                {
+                    from: stakeholder1,
+                },
+            );
+
+            await bild.removeStake(
+                agent1,
+                new BigNumber(oneBILDToken).multipliedBy(2),
+                {
+                    from: stakeholder2,
+                },
+            );
+
+            await bild.removeStake(
+                agent2,
+                new BigNumber(oneBILDToken).multipliedBy(3),
+                {
+                    from: stakeholder1,
+                },
+            );
+
+            await bild.removeStake(
+                agent2,
+                new BigNumber(oneBILDToken).multipliedBy(4),
+                {
+                    from: stakeholder2,
+                },
+            );
+        });
+        it('aggregateHolderStakes after removeStake for first agent and first stakeholder.', async () => {
+            const createdStakeValue = new BigNumber(
+                await bild.findStakeValue(
+                    agent1,
+                    stakeholder1,
+                    {
+                        from: stakeholder1,
+                    },
+                ),
+            ); // 15 - 1
+            createdStakeValue.should.be.bignumber.equal(new BigNumber(oneBILDToken).multipliedBy(14));
+        });
+        it('aggregateHolderStakes after removeStake for first agent and second stakeholder.', async () => {
+            const createdStakeValue = new BigNumber(
+                await bild.findStakeValue(
+                    agent1,
+                    stakeholder2,
+                    {
+                        from: stakeholder2,
+                    },
+                ),
+            ); // 45 - 2
+            createdStakeValue.should.be.bignumber.equal(new BigNumber(oneBILDToken).multipliedBy(43));
+        });
+        it('aggregateHolderStakes after removeStake for second agent and first stakeholder.', async () => {
+            const createdStakeValue = new BigNumber(
+                await bild.findStakeValue(
+                    agent2,
+                    stakeholder1,
+                    {
+                        from: stakeholder1,
+                    },
+                ),
+            ); // 35 - 3
+            createdStakeValue.should.be.bignumber.equal(new BigNumber(oneBILDToken).multipliedBy(32));
+        });
+        it('aggregateHolderStakes after removeStake for second agent and second stakeholder.', async () => {
+            const createdStakeValue = new BigNumber(
+                await bild.findStakeValue(
+                    agent2,
+                    stakeholder2,
+                    {
+                        from: stakeholder2,
+                    },
+                ),
+            ); // 25 - 4
+            createdStakeValue.should.be.bignumber.equal(new BigNumber(oneBILDToken).multipliedBy(21));
+        });
+    });
 });
