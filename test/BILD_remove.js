@@ -82,28 +82,78 @@ contract('BILD', (accounts) => {
     describe('removeStake', () => {
         beforeEach(async () => {
             bild = await BILD.new(distributor);
+            await bild.transfer(
+                stakeholder1,
+                manyBILDTokens,
+                { from: distributor },
+            );
+            await bild.transfer(
+                stakeholder2,
+                manyBILDTokens,
+                { from: distributor },
+            );
+            await bild.nominateAgent(
+                agent1,
+                minimumStake,
+                {
+                    from: stakeholder1,
+                },
+            );
         });
         /*
-        * Test stakeholder1: removeStake(agent1, 1 token) fails - "No stakes were found for the agent."
-        * Execute stakeholder1: createStake(agent1, 1 token)
+        * Test stakeholder1: removeStake(agent1, 1 token) fails - "Agent not found."
+        * Execute stakeholder1: nominateAgent(agent1, 1 token)
+        * Test stakeholder2: removeStake(agent1, 1 tokens) fails - "No stakes were found for the agent."
+        * Execute stakeholder1: nominateAgent(agent1, 1 token)
         * Test stakeholder1: removeStake(agent1, 2 tokens) fails - "Attempted to reduce a stake by more than its value."
-        * Execute stakeholder1: createStake(agent1, 1 token)
-        * Test stakeholder1: removeStake(agent1, 1 token) executes then findStakeValue(agent1, stakeholder1) returns zero
-        * Execute stakeholder1: createStake(agent1, 2 tokens)
+        * Execute stakeholder1: nominateAgent(agent1, 2 tokens)
         * Test stakeholder1: removeStake(agent1, 1 token) executes then findStakeValue(agent1, stakeholder1) returns one token
         * Execute:
-        *     stakeholder1: createStake(agent1, 2 tokens)
-        *     stakeholder2: createStake(agent1, 2 tokens)
-        * Test stakeholder1: removeStake(agent1, 1 token) executes then findStakeValue(agent1, stakeholder2) returns two tokens
-         */
-        /* itShouldThrow(
+        *     stakeholder1: nominateAgent(agent1, 4 tokens)
+        *     stakeholder1: removeStake(agent1, 1 token)
+        *     stakeholder1: removeStake(agent1, 1 token)
+        * Test findStakeValue(agent1, stakeholder1) returns two tokens
+        * Execute:
+        *     stakeholder1: nominateAgent(agent1, 3 tokens)
+        *     stakeholder2: createStake(agent1, 5 tokens)
+        *     stakeholder1: removeStake(agent1, 1 token)
+        *     stakeholder2: removeStake(agent1, 1 token)
+        * Test findStakeValue(agent1, stakeholder1) returns two tokens
+        * Test findStakeValue(agent1, stakeholder2) returns four tokens
+        * Execute:
+        *     stakeholder1: nominateAgent(agent1, 3 tokens)
+        *     stakeholder1: nominateAgent(agent2, 5 tokens)
+        *     stakeholder1: removeStake(agent1, 1 token)
+        *     stakeholder1: removeStake(agent2, 1 token)
+        * Test findStakeValue(agent1, stakeholder1) returns two tokens
+        * Test findStakeValue(agent2, stakeholder1) returns four tokens
+        * Execute:
+        *     stakeholder1: nominateAgent(agent1, 1 token)
+        *     check findStakeValue(agent1, stakeholder1) returns 1 token
+        *     stakeholder1: removeStake(agent1, 1 wei)
+        *     Test findStakeValue(agent1, stakeholder1) fails - "Agent not found."
+        */
+        itShouldThrow(
+            'removeStake fails if passed a non nominated agent.',
+            async () => {
+                await bild.findStakeIndex(
+                    agent3,
+                    stakeholder1,
+                    {
+                        from: stakeholder1,
+                    },
+                );
+            },
+            'Agent not found.',
+        );
+        itShouldThrow(
             'removeStake fails for agent with no stakes.',
             async () => {
                 await bild.removeStake(
                     agent1,
                     oneBILDToken,
                     {
-                        from: stakeholder1,
+                        from: stakeholder2,
                     },
                 );
             },
@@ -112,13 +162,7 @@ contract('BILD', (accounts) => {
         itShouldThrow(
             'removeStake fails for amounts larger than existing stakes.',
             async () => {
-                await bild.transfer(
-                    stakeholder1,
-                    oneBILDToken,
-                    { from: governor },
-                );
-                
-                await bild.createStake(
+                await bild.removeStake(
                     agent1,
                     twoBILDTokens,
                     {
@@ -126,59 +170,74 @@ contract('BILD', (accounts) => {
                     },
                 );
             },
-            'Attempted stake larger than BILD balance.',
+            'Attempted to reduce a stake by more than its value.',
         );
-        itShouldThrow(
-            'createStake fails with stake under minimum stake.',
-            async () => {
-                await bild.transfer(
-                    stakeholder1,
-                    oneBILDToken,
-                    { from: governor },
-                );
+        it('removeStake with 1 BILD token executes', async () => {
+            await bild.createStake(
+                agent1,
+                oneBILDToken,
+                {
+                    from: stakeholder1,
+                },
+            );
+            
+            await bild.removeStake(
+                agent1,
+                oneBILDToken,
+                {
+                    from: stakeholder1,
+                },
+            );
 
-                await bild.createStake(
+            const createdStake = new BigNumber(
+                await bild.findStakeValue(
                     agent1,
-                    1,
+                    stakeholder1,
                     {
                         from: stakeholder1,
                     },
-                );
-            },
-            'Minimum stake to nominate an agent not reached.',
-        );
-        it('createStake with 1 BILD token executes', async () => {
-            await bild.transfer(
-                stakeholder1,
-                oneBILDToken,
-                { from: governor },
-            );
-            
-            await bild.createStake(
-                agent1,
-                oneBILDToken,
-                {
-                    from: stakeholder1,
-                },
-            );
-
-            const createdStake = await bild.findStakeValue(
-                agent1,
-                stakeholder1,
-                {
-                    from: stakeholder1,
-                },
+                ),
             );
             createdStake.should.be.bignumber.equal(oneBILDToken);
         });
-        it('stakes with the same agent and stakeholder merge.', async () => {
-            await bild.transfer(
-                stakeholder1,
-                twoBILDTokens,
-                { from: governor },
+        it('removeStake with several BILD token executes', async () => {
+            await bild.createStake(
+                agent1,
+                new BigNumber(oneBILDToken).multipliedBy(4),
+                {
+                    from: stakeholder1,
+                },
             );
             
+            await bild.removeStake(
+                agent1,
+                new BigNumber(oneBILDToken).multipliedBy(2),
+                {
+                    from: stakeholder1,
+                },
+            );
+
+            const createdStake = new BigNumber(
+                await bild.findStakeValue(
+                    agent1,
+                    stakeholder1,
+                    {
+                        from: stakeholder1,
+                    },
+                ),
+            );
+            createdStake.should.be.bignumber.equal(new BigNumber(oneBILDToken).multipliedBy(3));
+        });
+        it('removeStake works in a succession', async () => {
             await bild.createStake(
+                agent1,
+                new BigNumber(oneBILDToken).multipliedBy(4),
+                {
+                    from: stakeholder1,
+                },
+            );
+
+            await bild.removeStake(
                 agent1,
                 oneBILDToken,
                 {
@@ -186,7 +245,7 @@ contract('BILD', (accounts) => {
                 },
             );
 
-            await bild.createStake(
+            await bild.removeStake(
                 agent1,
                 oneBILDToken,
                 {
@@ -194,14 +253,124 @@ contract('BILD', (accounts) => {
                 },
             );
 
-            const createdStake = await bild.findStakeValue(
+            const createdStake = new BigNumber(
+                await bild.findStakeValue(
+                    agent1,
+                    stakeholder1,
+                    {
+                        from: stakeholder1,
+                    },
+                ),
+            );
+            createdStake.should.be.bignumber.equal(new BigNumber(oneBILDToken).multipliedBy(3));
+        });
+        it('removeStake impacts the right stakeholder', async () => {
+            await bild.createStake(
                 agent1,
-                stakeholder1,
+                new BigNumber(oneBILDToken).multipliedBy(5),
                 {
                     from: stakeholder1,
                 },
             );
-            createdStake.should.be.bignumber.equal(twoBILDTokens);
-        }); */
+
+            await bild.createStake(
+                agent1,
+                new BigNumber(oneBILDToken).multipliedBy(4),
+                {
+                    from: stakeholder2,
+                },
+            );
+
+            await bild.removeStake(
+                agent1,
+                oneBILDToken,
+                {
+                    from: stakeholder1,
+                },
+            );
+
+            await bild.removeStake(
+                agent1,
+                twoBILDTokens,
+                {
+                    from: stakeholder2,
+                },
+            );
+
+            const createdStake1 = new BigNumber(
+                await bild.findStakeValue(
+                    agent1,
+                    stakeholder1,
+                    {
+                        from: stakeholder1,
+                    },
+                ),
+            );
+            const createdStake2 = new BigNumber(
+                await bild.findStakeValue(
+                    agent1,
+                    stakeholder2,
+                    {
+                        from: stakeholder2,
+                    },
+                ),
+            );
+            createdStake1.should.be.bignumber.equal(new BigNumber(oneBILDToken).multipliedBy(5));
+            createdStake2.should.be.bignumber.equal(new BigNumber(oneBILDToken).multipliedBy(2));
+        });
+        it('removeStake impacts the right agent', async () => {
+            await bild.createStake(
+                agent1,
+                new BigNumber(oneBILDToken).multipliedBy(5),
+                {
+                    from: stakeholder1,
+                },
+            );
+
+            await bild.nominateAgent(
+                agent2,
+                new BigNumber(oneBILDToken).multipliedBy(4),
+                {
+                    from: stakeholder1,
+                },
+            );
+
+            await bild.removeStake(
+                agent1,
+                oneBILDToken,
+                {
+                    from: stakeholder1,
+                },
+            );
+
+            await bild.removeStake(
+                agent2,
+                twoBILDTokens,
+                {
+                    from: stakeholder1,
+                },
+            );
+
+            const createdStake1 = new BigNumber(
+                await bild.findStakeValue(
+                    agent1,
+                    stakeholder1,
+                    {
+                        from: stakeholder1,
+                    },
+                ),
+            );
+            const createdStake2 = new BigNumber(
+                await bild.findStakeValue(
+                    agent2,
+                    stakeholder1,
+                    {
+                        from: stakeholder1,
+                    },
+                ),
+            );
+            createdStake1.should.be.bignumber.equal(new BigNumber(oneBILDToken).multipliedBy(5));
+            createdStake2.should.be.bignumber.equal(new BigNumber(oneBILDToken).multipliedBy(2));
+        });
     });
 });
