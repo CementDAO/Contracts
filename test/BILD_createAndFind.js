@@ -80,6 +80,10 @@ contract('BILD', (accounts) => {
          * Test createStake(_agent, 2) fails with 1 BILD wei - "Attempted stake larger than BILD balance."
          * Test createStake(_agent, 1) fails with 1 BILD wei - "Minimum stake to nominate an agent not reached."
          * Test createStake(_agent, 1 token) with 1 BILD token executes and findStakeIndex(_agent, _stakeholder) returns 0.
+         * Execute:
+         *     stakeholder1: createStake(agent3, 1 token)
+         *     stakeholder2: createStake(agent3, 1 wei)
+         * Test findStakeValue(agent3, stakeholder2) returns 1 wei.
          */
         itShouldThrow(
             'createStake fails with no BILD balance',
@@ -174,6 +178,40 @@ contract('BILD', (accounts) => {
                 ),
             );
             createdStake.should.be.bignumber.equal(twoBILDTokens);
+        });
+        it('stakes under minimum stake are allowed for already nominated agents.', async () => {
+            await bild.transfer(
+                stakeholder2,
+                oneBILDToken,
+                { from: distributor },
+            );
+            
+            await bild.nominateAgent(
+                agent3,
+                oneBILDToken,
+                {
+                    from: stakeholder1,
+                },
+            );
+
+            await bild.createStake(
+                agent3,
+                1,
+                {
+                    from: stakeholder2,
+                },
+            );
+
+            const createdStake = new BigNumber(
+                await bild.findStakeValue(
+                    agent3,
+                    stakeholder2,
+                    {
+                        from: stakeholder2,
+                    },
+                ),
+            );
+            createdStake.should.be.bignumber.equal(1);
         });
     });
     /*
