@@ -31,7 +31,7 @@ contract BILD is ERC20, ERC20Detailed {
     struct Agent {
         string name;
         string contact;
-        address next;
+        address lower;
     }
 
     /**
@@ -50,12 +50,17 @@ contract BILD is ERC20, ERC20Detailed {
     /**
      * @notice The address of the agent at the top of the list.
      */
-    address topAgent;
+    address highest;
     
     /**
      * @notice The address of the agent at the top of the list.
      */
-    address bottomAgent;
+    address lowest;
+
+    /**
+     * @notice The number of agents that can be Curating Agents
+     */
+    uint256 R = 3;
 
     /**
      * @notice All BILD stakes, mapped by agent address.
@@ -211,6 +216,48 @@ contract BILD is ERC20, ERC20Detailed {
     }
 
     /**
+     * @notice Find the higher agent in the agents list
+     * @param _agent The agent to find the higher agent for.
+     */
+    function higher(address _agent)
+        public
+        view
+        agentExists(_agent)
+        returns(address)
+    {
+        if (_agent == highest) 
+            return address(0);
+        
+        address current = highest;
+        while (agents[current].lower != _agent)
+            current = agents[_agent].lower;
+        return current;
+    }
+
+    /**
+     * @notice Remove an agent from the list
+     * @param _agent The agent to remove.
+     */
+    function detach(address _agent)
+        private
+    {
+        if (lowest == _agent)
+        {
+            lowest = higher(_agent);
+            agents[higher(_agent)].lower = address(0);
+            return;
+        }
+        if (highest == _agent)
+        {
+            highest = agents[_agent].lower;
+            agents[_agent].lower = address(0);
+            return;
+        }
+        agents[higher(_agent)].lower = agents[_agent].lower;
+        agents[_agent].lower = address(0);
+    }
+
+    /**
      * @notice Moves an agent to its right place in the agents list.
      * @param _agent The agent to find a place for.
      */
@@ -218,26 +265,72 @@ contract BILD is ERC20, ERC20Detailed {
         public
         agentExists(_agent)
     {
-        if (topAgent == address(0)) topAgent = _agent;
+        // If there are no highest and no lowest then _agent is the only one in the list.
+        if (highest == address(0) && lowest == address(0))
+        {
+            lowest = _agent;
+            highest = _agent;
+            return;
+        }
+        detach(_agent);
+        uint256 _agentStakes = aggregateAgentStakes(_agent);
+        
+        // If _agent should be the highest one we just push it on top
+        if (_agentStakes > aggregateAgentStakes(highest))
+        {
+            agents[_agent].lower = highest;
+            highest = _agent;
+            return;
+        }
+        else
+        {
+            // If _agent shouldn't be highest and there is only one other agent,
+            // then _agent is its lower and the lowest.
+            if (highest == lowest)
+            {
+                agents[highest].lower = _agent;
+                lowest = _agent;
+                return;
+            }
+            // There are at least two agents and _agent is not the highest, we 
+            // traverse down until we find a lower agent, and we insert _agent
+            address current = highest;
+            while (aggregateAgentStakes(agents[current].lower) > _agentStakes)
+                current = agents[_agent].lower;
+            agents[_agent].lower = agents[current].lower;
+            agents[current].lower = _agent;
+            if (agents[_agent].lower == address(0))
+                lowest = _agent;
+        }
     }
 
     /**
-     * @notice Find the previous agent in the agents list
-     * @param _agent The agent to find the previous agent for.
+     * @notice Returns the agent _rank positions under _agent
+     * @param _agent The agent to start counting from.
+     * @param _rank The positions to count.
      */
-    function previous(address _agent)
+    function getRankedAgentFrom(address _agent, uint256 _rank)
         public
         view
-        agentExists(_agent)
         returns(address)
     {
-        if (_agent == bottomAgent) 
-            return address(0);
-        
-        address current = bottomAgent;
-        while (agents[current].next != _agent)
-            current = agents[_agent].next;
+        address current = _agent;
+        for (uint256 i = 0; i < _rank; i++){
+            current = agents[current].lower;
+        }
         return current;
+    }
+
+    /**
+     * @notice Returns the agent at _rank.
+     * @param _rank The rank of the agent returned, with 0 being the highest ranked agent.
+     */
+    function getRankedAgent(uint256 _rank)
+        public
+        view
+        returns(address)
+    {
+        return getRankedAgentFrom(highest, _rank);   
     }
 
     /**
@@ -263,51 +356,14 @@ contract BILD is ERC20, ERC20Detailed {
         view
         returns(bool)
     {
-        address agent = bottomAgent;
+        address agent = highest;
         while (agent != address(0))
         {
             if(areEqual(agents[agent].name, _name)) return true;
-            agent = agents[agent].next;
+            agent = agents[agent].lower;
         }
         return false;
     }    
-
-    /**
-     * @notice Update of the agent ranking, maintaining the linked list 
-     * structure.
-     * @param _agent Agent to rank.
-     * @param _initial Position in the ranking to start the update process.
-     */
-    /* function rankAgent(address _agent, address _initial)
-        public
-        agentExists(_initial)
-        agentIsRanked(_initial)
-        agentExists(_agent)
-    {
-        address current = _initial;
-        uint256 thisValue = agentRanking[_agent].value;
-        uint256 lastValue = agentRanking[current].value;
-        if (lastValue >= thisValue) return; // _agent value below _initial value
-        while (lastValue < thisValue) {
-            if (agentRanking[current].next == address(0)) // Found the head
-            {
-                agentRanking[current].next = _agent;
-                return;
-            }
-            uint256 nextValue = agentRanking[agentRanking[current].next].value;
-            if (nextValue >= thisValue) // Found the spot
-            {
-                agentRanking[_agent].next = agentRanking[current].next;
-                agentRanking[current].next = _agent;
-                return;
-            }
-            else // Keep traversing
-            {
-                current = agentRanking[current].next;
-                lastValue = agentRanking[current].value;
-            }
-        }
-    } */
 
     /**
      * @notice Allows a stakeholder to nominate an agent.
@@ -339,8 +395,8 @@ contract BILD is ERC20, ERC20Detailed {
         );
 
         // Create an agent by giving him an empty stake from the stakeholder.
-        agents[_agent] = Agent(_name, _contact, bottomAgent);
-        bottomAgent = _agent;
+        agents[_agent] = Agent(_name, _contact, address(0));
+        //sort(_agent);
         stakesByAgent[_agent].push(Stake(msg.sender, 0));
         createStake(_agent, _stake);
     }
@@ -374,17 +430,12 @@ contract BILD is ERC20, ERC20Detailed {
         }
 
         // Remove agent from the list
-        if (topAgent == _agent)
-            topAgent = agents[previous(_agent)].next;
-        if (bottomAgent == _agent)
-            bottomAgent = agents[_agent].next;
-        else
-            agents[previous(_agent)].next = agents[_agent].next;
-        agents[_agent].next = address(0);
+        //detach(_agent);
 
-        // GDPR
-        agents[_agent].name = "";
-        agents[_agent].contact = "";
+        // Erase agent
+        //agents[_agent].lower = address(0);
+        //agents[_agent].name = "";
+        //agents[_agent].contact = "";
     }
 
     /**
@@ -425,7 +476,7 @@ contract BILD is ERC20, ERC20Detailed {
         stakesByHolder[msg.sender] = stakesByHolder[msg.sender].add(_stake);
         
         // Place the agent in the right place of the agents list
-        sort(_agent);
+        //sort(_agent);
     }
 
     /**
@@ -470,18 +521,9 @@ contract BILD is ERC20, ERC20Detailed {
         // Update aggregated stake views
         stakesByHolder[msg.sender] = stakesByHolder[msg.sender].sub(_stake);
 
-        /* assert (agentRanking[_agent].value >= stake.value);
-        agentRanking[_agent].value -= stake.value;
-
-        // If the aggregated stakes were high enough to be ranked before the stake reduction, update the agent ranking.
-        if (agentRanking[_agent].value + _stake.value >= agentRanking[agentR].value)
-        {
-            rankAgent(_agent, agentR);
-            agentR = agentRanking[agentR].next;
-        } */
 
         // Place the agent in the right place of the agents list
-        sort(_agent);
+        //sort(_agent);
 
         // Agents cannot stay nominated with an aggregated stake under the minimum stake.
         if (aggregateAgentStakes(_agent) < minimumStake) 
