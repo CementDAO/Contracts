@@ -183,4 +183,27 @@ contract MIXR is Governance, ERC20, ERC20Detailed {
         // We always mint and burn MIX amounts
         _burn(address(this), withoutFeeInBasketWei);
     }
+
+    /**
+     * @dev The only objective of this method is to return an estimation
+     * for the transaction. It's usefull for frontend development, but might
+     * be removed in the end.
+     */
+    function estimateFee(
+        address _token, 
+        address _basket,
+        uint256 _transactionAmount, 
+        int8 _transactionType
+    )
+        public
+        view
+        returns (uint256) 
+    {
+        return Fees.transactionFee(
+            _token, 
+            _basket,
+            _transactionAmount, 
+            _transactionType
+        );
+    }
 }
