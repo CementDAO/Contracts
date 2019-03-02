@@ -18,7 +18,7 @@ contract SampleERC20 is ERC20, ERC20Detailed {
     */
     constructor(address _owner, uint256 supply, uint8 decimals)
         public
-        ERC20Detailed("SampleERC20", "NEO", decimals)
+        ERC20Detailed("SampleERC20", "SAMPLE", decimals)
     {
         _mint(_owner, supply);
     }
