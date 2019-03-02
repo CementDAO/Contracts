@@ -216,6 +216,28 @@ contract BILD is ERC20, ERC20Detailed {
     }
 
     /**
+     * @notice Return the address of the highest ranked agent.
+     */
+    function getHighest()
+        public
+        view
+        returns(address)
+    {
+        return highest;
+    }
+
+    /**
+     * @notice Return the address of the highest ranked agent.
+     */
+    function getLowest()
+        public
+        view
+        returns(address)
+    {
+        return lowest;
+    }
+
+    /**
      * @notice Find the higher agent in the agents list
      * @param _agent The agent to find the higher agent for.
      */
@@ -225,6 +247,7 @@ contract BILD is ERC20, ERC20Detailed {
         agentExists(_agent)
         returns(address)
     {
+        // TODO: Needs to make sure the agent is not detached.
         if (_agent == highest) 
             return address(0);
         
@@ -240,7 +263,10 @@ contract BILD is ERC20, ERC20Detailed {
      */
     function detach(address _agent)
         private
+        agentExists(_agent)
     {
+        if (lowest == _agent && highest == _agent)
+            return;
         if (lowest == _agent)
         {
             lowest = higher(_agent);
@@ -265,6 +291,7 @@ contract BILD is ERC20, ERC20Detailed {
         public
         agentExists(_agent)
     {
+        // TODO: Needs to assert the agent is detached.
         // If there are no highest and no lowest then _agent is the only one in the list.
         if (highest == address(0) && lowest == address(0))
         {
@@ -272,7 +299,7 @@ contract BILD is ERC20, ERC20Detailed {
             highest = _agent;
             return;
         }
-        detach(_agent);
+        // detach(_agent);
         uint256 _agentStakes = aggregateAgentStakes(_agent);
         
         // If _agent should be the highest one we just push it on top
@@ -309,13 +336,13 @@ contract BILD is ERC20, ERC20Detailed {
      * @param _agent The agent to start counting from.
      * @param _rank The positions to count.
      */
-    function getRankedAgentFrom(address _agent, uint256 _rank)
+    function agentAtRankFrom(address _agent, uint256 _rank)
         public
         view
         returns(address)
     {
         address current = _agent;
-        for (uint256 i = 0; i < _rank; i++){
+        for (uint256 i = 0; i < _rank; i += 1){
             current = agents[current].lower;
         }
         return current;
@@ -325,12 +352,12 @@ contract BILD is ERC20, ERC20Detailed {
      * @notice Returns the agent at _rank.
      * @param _rank The rank of the agent returned, with 0 being the highest ranked agent.
      */
-    function getRankedAgent(uint256 _rank)
+    function agentAtRank(uint256 _rank)
         public
         view
         returns(address)
     {
-        return getRankedAgentFrom(highest, _rank);   
+        return agentAtRankFrom(highest, _rank);   
     }
 
     /**
@@ -396,7 +423,6 @@ contract BILD is ERC20, ERC20Detailed {
 
         // Create an agent by giving him an empty stake from the stakeholder.
         agents[_agent] = Agent(_name, _contact, address(0));
-        //sort(_agent);
         stakesByAgent[_agent].push(Stake(msg.sender, 0));
         createStake(_agent, _stake);
     }
@@ -476,7 +502,8 @@ contract BILD is ERC20, ERC20Detailed {
         stakesByHolder[msg.sender] = stakesByHolder[msg.sender].add(_stake);
         
         // Place the agent in the right place of the agents list
-        //sort(_agent);
+        // TODO: Needs to detach the agent first
+        sort(_agent);
     }
 
     /**
@@ -523,6 +550,7 @@ contract BILD is ERC20, ERC20Detailed {
 
 
         // Place the agent in the right place of the agents list
+        // TODO: Needs to detach the agent first
         //sort(_agent);
 
         // Agents cannot stay nominated with an aggregated stake under the minimum stake.
