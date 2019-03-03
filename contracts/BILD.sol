@@ -284,10 +284,10 @@ contract BILD is ERC20, ERC20Detailed {
     }
 
     /**
-     * @notice Moves an agent to its right place in the agents list.
+     * @notice Inserts an agent in its right place in the agents list.
      * @param _agent The agent to find a place for.
      */
-    function sort(address _agent)
+    function insert(address _agent)
         public
         agentExists(_agent)
     {
@@ -299,7 +299,6 @@ contract BILD is ERC20, ERC20Detailed {
             highest = _agent;
             return;
         }
-        // detach(_agent);
         uint256 _agentStakes = aggregateAgentStakes(_agent);
         
         // If _agent should be the highest one we just push it on top
@@ -322,12 +321,19 @@ contract BILD is ERC20, ERC20Detailed {
             // There are at least two agents and _agent is not the highest, we 
             // traverse down until we find a lower agent, and we insert _agent
             address current = highest;
-            while (aggregateAgentStakes(agents[current].lower) > _agentStakes)
-                current = agents[_agent].lower;
-            agents[_agent].lower = agents[current].lower;
+            // While we are not at the lowest
+            while (current != lowest){
+                // Found the spot?
+                if (aggregateAgentStakes(agents[current].lower) < _agentStakes){
+                    agents[_agent].lower = agents[current].lower;
+                    agents[current].lower = _agent;
+                    return; // Current had a lower, so now _agent has a lower and cannot be the lowest.    
+                }
+                current = agents[current].lower;
+            }
+            // _agent is the new lowest then.    
             agents[current].lower = _agent;
-            if (agents[_agent].lower == address(0))
-                lowest = _agent;
+            lowest = _agent;
         }
     }
 
@@ -444,6 +450,9 @@ contract BILD is ERC20, ERC20Detailed {
             "Too many stakes to revoke agent nomination."
         );
 
+        // Remove agent from the list
+        detach(_agent);
+
         // We pop each stake from the agent after updating the aggregate holder stakes view 
         while (stakesByAgent[_agent].length > 0)
         {
@@ -455,13 +464,10 @@ contract BILD is ERC20, ERC20Detailed {
             stakesByAgent[_agent].pop();
         }
 
-        // Remove agent from the list
-        //detach(_agent);
-
         // Erase agent
-        //agents[_agent].lower = address(0);
-        //agents[_agent].name = "";
-        //agents[_agent].contact = "";
+        agents[_agent].lower = address(0);
+        agents[_agent].name = "";
+        agents[_agent].contact = "";
     }
 
     /**
@@ -502,8 +508,8 @@ contract BILD is ERC20, ERC20Detailed {
         stakesByHolder[msg.sender] = stakesByHolder[msg.sender].add(_stake);
         
         // Place the agent in the right place of the agents list
-        // TODO: Needs to detach the agent first
-        sort(_agent);
+        // detach(_agent);
+        insert(_agent);
     }
 
     /**
@@ -550,8 +556,8 @@ contract BILD is ERC20, ERC20Detailed {
 
 
         // Place the agent in the right place of the agents list
-        // TODO: Needs to detach the agent first
-        //sort(_agent);
+        detach(_agent);
+        insert(_agent);
 
         // Agents cannot stay nominated with an aggregated stake under the minimum stake.
         if (aggregateAgentStakes(_agent) < minimumStake) 
