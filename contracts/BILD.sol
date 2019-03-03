@@ -95,7 +95,7 @@ contract BILD is ERC20, ERC20Detailed {
     modifier agentExists(address _agent)
     {
         require (
-            stakesByAgent[_agent].length != 0, // An agent without any stakes cannot exist.
+            bytes(agents[_agent].name).length > 0,
             "Agent not found."
         );
         _;
@@ -252,8 +252,13 @@ contract BILD is ERC20, ERC20Detailed {
             return address(0);
         
         address current = highest;
-        while (agents[current].lower != _agent)
-            current = agents[_agent].lower;
+        while (agents[current].lower != _agent){
+            current = agents[current].lower;
+            require( // This could be an assert, or it could be checked at the start.
+                current != address(0),
+                "The agent is not ranked"
+            );
+        }
         return current;
     }
 
@@ -279,6 +284,7 @@ contract BILD is ERC20, ERC20Detailed {
             agents[_agent].lower = address(0);
             return;
         }
+        // TODO: Check the agent is ranked first
         agents[higher(_agent)].lower = agents[_agent].lower;
         agents[_agent].lower = address(0);
     }
@@ -430,44 +436,8 @@ contract BILD is ERC20, ERC20Detailed {
         // Create an agent by giving him an empty stake from the stakeholder.
         agents[_agent] = Agent(_name, _contact, address(0));
         stakesByAgent[_agent].push(Stake(msg.sender, 0));
+        // TODO: Decide on whether to insert here and detach in createStake, or have createStake check whether the agent is detached or not.
         createStake(_agent, _stake);
-    }
-
-    /**
-     * @notice Removes all stakes for an agent, effectively revoking its 
-     * nomination. This function requires that the aggregated stakes for the
-     * agent are below the minimum stake for nomination.
-     * @param _agent The stakeholder to revoke the nomination from.
-     * Execute nominateAgent(agent, minimumStake)
-     * Test revokeNomination(agent1) fails - "Too many stakes to revoke agent nomination."
-     */
-    function revokeNomination(address _agent)
-        public
-        agentExists(_agent)
-    {
-        require (
-            aggregateAgentStakes(_agent) < minimumStake,
-            "Too many stakes to revoke agent nomination."
-        );
-
-        // Remove agent from the list
-        detach(_agent);
-
-        // We pop each stake from the agent after updating the aggregate holder stakes view 
-        while (stakesByAgent[_agent].length > 0)
-        {
-            uint256 lastStake = stakesByAgent[_agent].length.sub(1);
-            address lastStakeholder = stakesByAgent[_agent][lastStake].stakeholder;
-            stakesByHolder[lastStakeholder] = stakesByHolder[lastStakeholder].sub(
-                stakesByAgent[_agent][lastStake].value
-            );
-            stakesByAgent[_agent].pop();
-        }
-
-        // Erase agent
-        agents[_agent].lower = address(0);
-        agents[_agent].name = "";
-        agents[_agent].contact = "";
     }
 
     /**
@@ -508,7 +478,8 @@ contract BILD is ERC20, ERC20Detailed {
         stakesByHolder[msg.sender] = stakesByHolder[msg.sender].add(_stake);
         
         // Place the agent in the right place of the agents list
-        // detach(_agent);
+        // TODO: Check if not detached, and detach. Currently only works when called from nominateAgent()
+        // detach(_agent); 
         insert(_agent);
     }
 
@@ -564,5 +535,42 @@ contract BILD is ERC20, ERC20Detailed {
             revokeNomination(_agent);
     }
 
+
+    /**
+     * @notice Removes all stakes for an agent, effectively revoking its 
+     * nomination. This function requires that the aggregated stakes for the
+     * agent are below the minimum stake for nomination.
+     * @param _agent The stakeholder to revoke the nomination from.
+     * Execute nominateAgent(agent, minimumStake)
+     * Test revokeNomination(agent1) fails - "Too many stakes to revoke agent nomination."
+     */
+    function revokeNomination(address _agent)
+        public
+        agentExists(_agent)
+    {
+        require (
+            aggregateAgentStakes(_agent) < minimumStake,
+            "Too many stakes to revoke agent nomination."
+        );
+
+        // We pop each stake from the agent after updating the aggregate holder stakes view 
+        while (stakesByAgent[_agent].length > 0)
+        {
+            uint256 lastStake = stakesByAgent[_agent].length.sub(1);
+            address lastStakeholder = stakesByAgent[_agent][lastStake].stakeholder;
+            stakesByHolder[lastStakeholder] = stakesByHolder[lastStakeholder].sub(
+                stakesByAgent[_agent][lastStake].value
+            );
+            stakesByAgent[_agent].pop();
+        }
+
+        // Remove agent from the list
+        detach(_agent);
+
+        // Erase agent
+        agents[_agent].lower = address(0);
+        agents[_agent].name = "";
+        agents[_agent].contact = "";
+    }
     // TODO: Fail on transactions if amountToTransfer > ERC20(address(this)).balanceOf(msg.sender) - stakesByHolder[msg.sender]
 }

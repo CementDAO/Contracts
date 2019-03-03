@@ -251,7 +251,7 @@ contract('BILD', (accounts) => {
             assert(rank1 === agent1);
             assert(rank2 === agent2);
         });
-        it('Revoking a nomination preserves list integrity.', async () => {
+        /* it('Revoking a nomination preserves list integrity.', async () => {
             await bild.removeStake(
                 agent2,
                 new BigNumber(oneBILDToken).multipliedBy(6),
@@ -267,8 +267,95 @@ contract('BILD', (accounts) => {
             assert(lowest === agent1);
             assert(rank0 === agent3);
             assert(rank1 === agent1);
-        });
+        }); */
     });
+
+    /* describe('insert on createStake', () => {
+        beforeEach(async () => {
+            bild = await BILD.new(distributor);
+            await bild.transfer(
+                stakeholder1,
+                manyBILDTokens,
+                { from: distributor },
+            );
+            await bild.nominateAgent(
+                agent1,
+                new BigNumber(oneBILDToken).multipliedBy(3),
+                'agent1',
+                'contact1',
+                {
+                    from: stakeholder1,
+                },
+            );
+            await bild.nominateAgent(
+                agent2,
+                new BigNumber(oneBILDToken).multipliedBy(6),
+                'agent2',
+                'contact2',
+                {
+                    from: stakeholder1,
+                },
+            );
+            await bild.nominateAgent(
+                agent3,
+                new BigNumber(oneBILDToken).multipliedBy(9),
+                'agent3',
+                'contact3',
+                {
+                    from: stakeholder1,
+                },
+            );
+        });
+        it('Creating a stake doesn\'t always change ranks.', async () => {
+            let highest = await bild.getHighest();
+            let lowest = await bild.getLowest();
+            let rank0 = await bild.agentAtRank(0);
+            let rank1 = await bild.agentAtRank(1);
+            let rank2 = await bild.agentAtRank(2);
+            assert(highest === agent3);
+            assert(lowest === agent1);
+            assert(rank0 === agent3);
+            assert(rank1 === agent2);
+            assert(rank2 === agent1);
+
+            await bild.createStake(
+                agent2,
+                new BigNumber(oneBILDToken).multipliedBy(1),
+                {
+                    from: stakeholder1,
+                },
+            );
+            highest = await bild.getHighest();
+            lowest = await bild.getLowest();
+            rank0 = await bild.agentAtRank(0);
+            rank1 = await bild.agentAtRank(1);
+            rank2 = await bild.agentAtRank(2);
+            assert(highest === agent3);
+            assert(lowest === agent1);
+            assert(rank0 === agent3);
+            assert(rank1 === agent2);
+            assert(rank2 === agent1);
+        });
+        it('Creating a stake increases rank.', async () => {
+            await bild.createStake(
+                agent2,
+                new BigNumber(oneBILDToken).multipliedBy(4),
+                {
+                    from: stakeholder1,
+                },
+            );
+            const highest = await bild.getHighest();
+            const lowest = await bild.getLowest();
+            const rank0 = await bild.agentAtRank(0);
+            const rank1 = await bild.agentAtRank(1);
+            const rank2 = await bild.agentAtRank(2);
+            assert(highest === agent2);
+            assert(lowest === agent1);
+            assert(rank0 === agent2);
+            assert(rank1 === agent3);
+            assert(rank2 === agent1);
+        });
+    }); */
 
     describe('nameExists', () => {
         beforeEach(async () => {
