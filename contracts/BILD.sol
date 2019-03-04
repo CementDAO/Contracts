@@ -254,9 +254,9 @@ contract BILD is ERC20, ERC20Detailed {
         address current = highest;
         while (agents[current].lower != _agent){
             current = agents[current].lower;
-            require( // This could be an assert, or it could be checked at the start.
+            require( // TODO: Make this an assert.
                 current != address(0),
-                "The agent is not ranked"
+                "The agent is not ranked."
             );
         }
         return current;
@@ -267,7 +267,7 @@ contract BILD is ERC20, ERC20Detailed {
      * @param _agent The agent to remove.
      */
     function detach(address _agent)
-        private
+        public // TODO: Public for testing, make private for deployment
         agentExists(_agent)
     {
         if (lowest == _agent && highest == _agent)
