@@ -347,6 +347,7 @@ contract BILD is ERC20, ERC20Detailed {
      * @notice Returns the agent _rank positions under _agent
      * @param _agent The agent to start counting from.
      * @param _rank The positions to count.
+     * @dev returns address(0) if trying to retrieve an agent from a rank that doesn't exist
      */
     function agentAtRankFrom(address _agent, uint256 _rank)
         public
