@@ -568,38 +568,6 @@ contract('BILD', (accounts) => {
         });
     });
 
-    describe('debug insert', () => {
-        beforeEach(async () => {
-            bild = await BILD.new(distributor);
-            await bild.transfer(
-                stakeholder1,
-                manyBILDTokens,
-                { from: distributor },
-            );
-        });
-        it('Insert 2 agents with zero stakes.', async () => {
-            await bild.nominateAgent(
-                agent1,
-                new BigNumber(oneBILDToken).multipliedBy(0),
-                'agent1',
-                'contact1',
-                {
-                    from: stakeholder1,
-                },
-            );
-            await bild.nominateAgent(
-                agent2,
-                new BigNumber(oneBILDToken).multipliedBy(0),
-                'agent2',
-                'contact2',
-                {
-                    from: stakeholder1,
-                },
-            );
-        });
-    });
-
-
     describe('insert on createStake', () => {
         beforeEach(async () => {
             bild = await BILD.new(distributor);
@@ -660,17 +628,13 @@ contract('BILD', (accounts) => {
             rank0 = await bild.agentAtRank(0);
             rank1 = await bild.agentAtRank(1);
             rank2 = await bild.agentAtRank(2);
-            const rank3 = await bild.agentAtRank(3);
             assert(highest === agent3);
             assert(lowest === agent1);
             assert(rank0 === agent3);
             assert(rank1 === agent2);
-            assert(rank2 === agent2); // <-- agents[_agent].lower == _agent
-            assert(rank3 === agent2);
-            const rank4 = await bild.agentAtRank(4);
-            assert(rank4 === agent2);
+            assert(rank2 === agent1);
         });
-        /* it('Creating a stake increases rank.', async () => {
+        it('Creating a stake increases rank.', async () => {
             await bild.createStake(
                 agent2,
                 new BigNumber(oneBILDToken).multipliedBy(4),
@@ -688,7 +652,7 @@ contract('BILD', (accounts) => {
             assert(rank0 === agent2);
             assert(rank1 === agent3);
             assert(rank2 === agent1);
-        }); */
+        });
     });
 
     describe('nameExists', () => {

@@ -443,7 +443,6 @@ contract BILD is ERC20, ERC20Detailed {
         stakesByAgent[_agent].push(Stake(msg.sender, 0));
         // TODO: Decide on whether to insert here and detach in createStake, or have createStake check whether the agent is detached or not.
         insert(_agent);
-        detach(_agent);
         createStake(_agent, _stake);
     }
 
@@ -485,8 +484,7 @@ contract BILD is ERC20, ERC20Detailed {
         stakesByHolder[msg.sender] = stakesByHolder[msg.sender].add(_stake);
         
         // Place the agent in the right place of the agents list
-        // TODO: Check if not detached, and detach. Currently only works when called from nominateAgent()
-        // detach(_agent); 
+        detach(_agent); // TODO: Move inside insert(_agent)
         insert(_agent);
     }
 
