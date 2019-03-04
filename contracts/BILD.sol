@@ -271,7 +271,11 @@ contract BILD is ERC20, ERC20Detailed {
         agentExists(_agent)
     {
         if (lowest == _agent && highest == _agent)
+        {
+            delete lowest;
+            delete highest;
             return;
+        }
         if (lowest == _agent)
         {
             lowest = higher(_agent);
@@ -421,10 +425,10 @@ contract BILD is ERC20, ERC20Detailed {
     )
     public
     {
-        require (
+        /* require (
             _stake >= minimumStake,
             "Minimum stake to nominate an agent not reached."
-        );
+        ); */
         require (
             stakesByAgent[_agent].length == 0,
             "The agent is already nominated."
@@ -438,6 +442,8 @@ contract BILD is ERC20, ERC20Detailed {
         agents[_agent] = Agent(_name, _contact, address(0));
         stakesByAgent[_agent].push(Stake(msg.sender, 0));
         // TODO: Decide on whether to insert here and detach in createStake, or have createStake check whether the agent is detached or not.
+        insert(_agent);
+        detach(_agent);
         createStake(_agent, _stake);
     }
 
