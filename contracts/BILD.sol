@@ -266,7 +266,7 @@ contract BILD is ERC20, ERC20Detailed {
      * @notice Remove an agent from the list
      * @param _agent The agent to remove.
      */
-    function detach(address _agent)
+    function detachAgent(address _agent)
         public // TODO: Public for testing, make private for deployment
         agentExists(_agent)
     {
@@ -297,7 +297,7 @@ contract BILD is ERC20, ERC20Detailed {
      * @notice Inserts an agent in its right place in the agents list.
      * @param _agent The agent to find a place for.
      */
-    function insert(address _agent)
+    function sortAgent(address _agent)
         public
         agentExists(_agent)
     {
@@ -329,7 +329,7 @@ contract BILD is ERC20, ERC20Detailed {
                 return;
             }
             // There are at least two agents and _agent is not the highestAgent, we 
-            // traverse down until we find a lowerAgent agent, and we insert _agent
+            // traverse down until we find a lowerAgent agent, and we sort _agent
             address current = highestAgent;
             // While we are not at the lowestAgent
             while (current != lowestAgent){
@@ -383,7 +383,7 @@ contract BILD is ERC20, ERC20Detailed {
      * @param _b Second string.
      * TODO: Move to UtilsLib
      */
-    function areEqual(string memory _a, string memory _b) 
+    function stringsAreEqual(string memory _a, string memory _b) 
         public
         pure 
         returns(bool)
@@ -403,7 +403,7 @@ contract BILD is ERC20, ERC20Detailed {
         address agent = highestAgent;
         while (agent != address(0))
         {
-            if(areEqual(agents[agent].name, _name)) return true;
+            if(stringsAreEqual(agents[agent].name, _name)) return true;
             agent = agents[agent].lowerAgent;
         }
         return false;
@@ -441,8 +441,8 @@ contract BILD is ERC20, ERC20Detailed {
         // Create an agent by giving him an empty stake from the stakeholder.
         agents[_agent] = Agent(_name, _contact, address(0));
         stakesByAgent[_agent].push(Stake(msg.sender, 0));
-        // TODO: Decide on whether to insert here and detach in createStake, or have createStake check whether the agent is detached or not.
-        insert(_agent);
+        // TODO: Decide on whether to sort here and detach in createStake, or have createStake check whether the agent is detached or not.
+        sortAgent(_agent);
         createStake(_agent, _stake);
     }
 
@@ -484,8 +484,8 @@ contract BILD is ERC20, ERC20Detailed {
         stakesByHolder[msg.sender] = stakesByHolder[msg.sender].add(_stake);
         
         // Place the agent in the right place of the agents list
-        detach(_agent); // TODO: Move inside insert(_agent)
-        insert(_agent);
+        detachAgent(_agent); // TODO: Move inside sortAgent(_agent)
+        sortAgent(_agent);
     }
 
     /**
@@ -532,8 +532,8 @@ contract BILD is ERC20, ERC20Detailed {
 
 
         // Place the agent in the right place of the agents list
-        detach(_agent);
-        insert(_agent);
+        detachAgent(_agent);
+        sortAgent(_agent);
 
         // Agents cannot stay nominated with an aggregated stake under the minimum stake.
         if (aggregateAgentStakes(_agent) < minimumStake) 
@@ -570,7 +570,7 @@ contract BILD is ERC20, ERC20Detailed {
         }
 
         // Remove agent from the list
-        detach(_agent);
+        detachAgent(_agent);
 
         // Erase agent
         agents[_agent].lowerAgent = address(0);

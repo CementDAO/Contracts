@@ -31,7 +31,7 @@ contract('BILD', (accounts) => {
         NO_STAKES = new BigNumber(115792089237316195423570985008687907853269984665640564039457584007913129639935);
     });
 
-    describe('insert on nominateAgent', () => {
+    describe('sortAgent on nominateAgent', () => {
         beforeEach(async () => {
             bild = await BILD.new(distributor);
             await bild.transfer(
@@ -236,7 +236,7 @@ contract('BILD', (accounts) => {
         itShouldThrow(
             'higherAgent fails with unranked agents',
             async () => {
-                await bild.detach(
+                await bild.detachAgent(
                     agent1,
                 );
                 await bild.higherAgent(
@@ -247,7 +247,7 @@ contract('BILD', (accounts) => {
         );
     });
 
-    describe('detach', () => {
+    describe('detachAgent', () => {
         beforeEach(async () => {
             bild = await BILD.new(distributor);
             await bild.transfer(
@@ -283,7 +283,7 @@ contract('BILD', (accounts) => {
                 },
             );
         });
-        it('detach highestAgent.', async () => {
+        it('detachAgent highestAgent.', async () => {
             let highestAgent = await bild.getHighestAgent();
             let lowestAgent = await bild.getLowestAgent();
             let rank0 = await bild.agentAtRank(0);
@@ -295,7 +295,7 @@ contract('BILD', (accounts) => {
             assert(rank1 === agent2);
             assert(rank2 === agent1);
 
-            await bild.detach(
+            await bild.detachAgent(
                 agent3,
             );
             highestAgent = await bild.getHighestAgent();
@@ -309,8 +309,8 @@ contract('BILD', (accounts) => {
             const agent = new BigNumber(await bild.agentAtRank(2));
             agent.should.be.bignumber.equal(0);
         });
-        it('detach 1.', async () => {
-            await bild.detach(
+        it('detachAgent 1.', async () => {
+            await bild.detachAgent(
                 agent2,
             );
             const highestAgent = await bild.getHighestAgent();
@@ -324,8 +324,8 @@ contract('BILD', (accounts) => {
             const agent = new BigNumber(await bild.agentAtRank(2));
             agent.should.be.bignumber.equal(0);
         });
-        it('detach lowestAgent.', async () => {
-            await bild.detach(
+        it('detachAgent lowestAgent.', async () => {
+            await bild.detachAgent(
                 agent1,
             );
             const highestAgent = await bild.getHighestAgent();
@@ -340,12 +340,12 @@ contract('BILD', (accounts) => {
             agent.should.be.bignumber.equal(0);
         });
         itShouldThrow(
-            'detach fails with detached agents',
+            'detachAgent fails with detached agents',
             async () => {
-                await bild.detach(
+                await bild.detachAgent(
                     agent1,
                 );
-                await bild.detach(
+                await bild.detachAgent(
                     agent1,
                 );
             },
@@ -568,7 +568,7 @@ contract('BILD', (accounts) => {
         });
     });
 
-    describe('insert on createStake', () => {
+    describe('sortAgent on createStake', () => {
         beforeEach(async () => {
             bild = await BILD.new(distributor);
             await bild.transfer(
