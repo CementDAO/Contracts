@@ -369,7 +369,8 @@ contract BILD is ERC20, ERC20Detailed {
         public
         agentExists(_agent)
     {
-        // TODO: Needs to assert the agent is detached.
+        detachAgent(_agent);
+
         // If there are no highestAgent and no lowestAgent then _agent is the only one in the list.
         if (highestAgent == NULL_ADDRESS && lowestAgent == NULL_ADDRESS)
         {
@@ -451,7 +452,6 @@ contract BILD is ERC20, ERC20Detailed {
         // Create an agent by giving him an empty stake from the stakeholder.
         agents[_agent] = Agent(_name, _contact, NULL_ADDRESS);
         stakesByAgent[_agent].push(Stake(msg.sender, 0));
-        // TODO: Decide on whether to sort here and detach in createStake, or have createStake check whether the agent is detached or not.
         insertAgent(_agent);
         createStake(_agent, _stake);
     }
@@ -494,7 +494,6 @@ contract BILD is ERC20, ERC20Detailed {
         stakesByHolder[msg.sender] = stakesByHolder[msg.sender].add(_stake);
         
         // Place the agent in the right place of the agents list
-        detachAgent(_agent); // TODO: Move inside sortAgent(_agent)
         sortAgent(_agent);
     }
 
@@ -542,7 +541,6 @@ contract BILD is ERC20, ERC20Detailed {
 
 
         // Place the agent in the right place of the agents list
-        detachAgent(_agent);
         sortAgent(_agent);
 
         // Agents cannot stay nominated with an aggregated stake under the minimum stake.
