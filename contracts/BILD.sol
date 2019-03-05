@@ -266,6 +266,22 @@ contract BILD is ERC20, ERC20Detailed {
         }
         return current;
     }
+    /**
+     * @notice Places an agent at the lowest position of the agents list.
+     * @param _agent The agent to insert.
+     */
+    function insertAgent(address _agent)
+        public
+        agentExists(_agent)
+    {
+        // TODO: Needs to assert the agent is detached.
+        // If there are no highestAgent and no lowestAgent then _agent is the only one in the list.
+        if (highestAgent == NULL_ADDRESS && lowestAgent == NULL_ADDRESS)
+            highestAgent = _agent;
+        else
+            agents[lowestAgent].lowerAgent = _agent;
+        lowestAgent = _agent;
+    }
 
     /**
      * @notice Remove an agent from the list
@@ -316,7 +332,37 @@ contract BILD is ERC20, ERC20Detailed {
     }
 
     /**
-     * @notice Inserts an agent in its right place in the agents list.
+     * @notice Returns the agent _rank positions under _agent
+     * @param _agent The agent to start counting from.
+     * @param _rank The positions to count.
+     * @dev returns NULL_ADDRESS if trying to retrieve an agent from a rank that doesn't exist
+     */
+    function agentAtRankFrom(address _agent, uint256 _rank)
+        public
+        view
+        returns(address)
+    {
+        address current = _agent;
+        for (uint256 i = 0; i < _rank; i += 1){
+            current = agents[current].lowerAgent;
+        }
+        return current;
+    }
+
+    /**
+     * @notice Returns the agent at _rank.
+     * @param _rank The rank of the agent returned, with 0 being the highest ranked agent.
+     */
+    function agentAtRank(uint256 _rank)
+        public
+        view
+        returns(address)
+    {
+        return agentAtRankFrom(highestAgent, _rank);   
+    }
+
+    /**
+     * @notice Places an agent in its right place in the agents list.
      * @param _agent The agent to find a place for.
      */
     function sortAgent(address _agent)
@@ -370,80 +416,6 @@ contract BILD is ERC20, ERC20Detailed {
     }
 
     /**
-     * @notice Returns the agent _rank positions under _agent
-     * @param _agent The agent to start counting from.
-     * @param _rank The positions to count.
-     * @dev returns NULL_ADDRESS if trying to retrieve an agent from a rank that doesn't exist
-     */
-    function agentAtRankFrom(address _agent, uint256 _rank)
-        public
-        view
-        returns(address)
-    {
-        address current = _agent;
-        for (uint256 i = 0; i < _rank; i += 1){
-            current = agents[current].lowerAgent;
-        }
-        return current;
-    }
-
-    /**
-     * @notice Returns the agent at _rank.
-     * @param _rank The rank of the agent returned, with 0 being the highest ranked agent.
-     */
-    function agentAtRank(uint256 _rank)
-        public
-        view
-        returns(address)
-    {
-        return agentAtRankFrom(highestAgent, _rank);   
-    }
-
-    /**
-     * @notice Compare whether two strings are the same
-     * @param _a First string.
-     * @param _b Second string.
-     * TODO: Move to UtilsLib
-     */
-    function stringsAreEqual(string memory _a, string memory _b) 
-        public
-        pure 
-        returns(bool)
-    {
-        return keccak256(bytes(_a)) == keccak256(bytes(_b));
-    }
-
-    /**
-     * @notice Return whether a string is empty
-     * @param _s A string
-     */
-    function stringIsEmpty(string memory _s) 
-        public
-        pure 
-        returns(bool)
-    {
-        return bytes(_s).length == 0;
-    }
-
-    /**
-     * @notice Determines whether an agent exists with a given name.
-     * @param _name The name to look for
-     */
-    function nameExists(string memory _name)
-        public
-        view
-        returns(bool)
-    {
-        address agent = highestAgent;
-        while (agent != NULL_ADDRESS)
-        {
-            if(stringsAreEqual(agents[agent].name, _name)) return true;
-            agent = agents[agent].lowerAgent;
-        }
-        return false;
-    }    
-
-    /**
      * @notice Allows a stakeholder to nominate an agent.
      * @param _agent The agent to nominate or stake for.
      * @param _stake Amount of BILD wei to stake.
@@ -480,7 +452,7 @@ contract BILD is ERC20, ERC20Detailed {
         agents[_agent] = Agent(_name, _contact, NULL_ADDRESS);
         stakesByAgent[_agent].push(Stake(msg.sender, 0));
         // TODO: Decide on whether to sort here and detach in createStake, or have createStake check whether the agent is detached or not.
-        sortAgent(_agent);
+        insertAgent(_agent);
         createStake(_agent, _stake);
     }
 
@@ -610,4 +582,48 @@ contract BILD is ERC20, ERC20Detailed {
         eraseAgent(_agent);
     }
     // TODO: Fail on transactions if amountToTransfer > ERC20(address(this)).balanceOf(msg.sender) - stakesByHolder[msg.sender]
+
+    /**
+     * @notice Compare whether two strings are the same
+     * @param _a First string.
+     * @param _b Second string.
+     * TODO: Move to UtilsLib
+     */
+    function stringsAreEqual(string memory _a, string memory _b) 
+        public
+        pure 
+        returns(bool)
+    {
+        return keccak256(bytes(_a)) == keccak256(bytes(_b));
+    }
+
+    /**
+     * @notice Return whether a string is empty
+     * @param _s A string
+     */
+    function stringIsEmpty(string memory _s) 
+        public
+        pure 
+        returns(bool)
+    {
+        return bytes(_s).length == 0;
+    }
+
+    /**
+     * @notice Determines whether an agent exists with a given name.
+     * @param _name The name to look for
+     */
+    function nameExists(string memory _name)
+        public
+        view
+        returns(bool)
+    {
+        address agent = highestAgent;
+        while (agent != NULL_ADDRESS)
+        {
+            if(stringsAreEqual(agents[agent].name, _name)) return true;
+            agent = agents[agent].lowerAgent;
+        }
+        return false;
+    }    
 }
