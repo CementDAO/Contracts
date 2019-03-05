@@ -95,7 +95,7 @@ contract BILD is ERC20, ERC20Detailed {
     modifier agentExists(address _agent)
     {
         require (
-            bytes(agents[_agent].name).length > 0,
+            !stringIsEmpty(agents[_agent].name),
             "Agent not found."
         );
         _;
@@ -392,6 +392,18 @@ contract BILD is ERC20, ERC20Detailed {
     }
 
     /**
+     * @notice Return whether a string is empty
+     * @param _s A string
+     */
+    function stringIsEmpty(string memory _s) 
+        public
+        pure 
+        returns(bool)
+    {
+        return bytes(_s).length == 0;
+    }
+
+    /**
      * @notice Determines whether an agent exists with a given name.
      * @param _name The name to look for
      */
@@ -425,6 +437,10 @@ contract BILD is ERC20, ERC20Detailed {
     )
     public
     {
+        require(
+            !stringIsEmpty(_name),
+            "An agent name must be provided."
+        );
         require (
             _stake >= minimumStake,
             "Minimum stake to nominate an agent not reached."
