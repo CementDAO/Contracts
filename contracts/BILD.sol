@@ -243,6 +243,24 @@ contract BILD is ERC20, ERC20Detailed {
     }
 
     /**
+     * @notice Find whether an agent is in the agents list
+     * @param _agent The agent to verify.
+     */
+    function agentIsInList(address _agent)
+        public
+        view
+        agentExists(_agent)
+        returns(bool)
+    {
+        address current = highestAgent;
+        while (current != NULL_ADDRESS){
+            if (current == _agent) return true;
+            current = agents[current].lowerAgent;
+        }
+        return false;
+    }
+
+    /**
      * @notice Find the higher agent in the agents list
      * @param _agent The agent to find the higher agent for.
      */
@@ -252,7 +270,10 @@ contract BILD is ERC20, ERC20Detailed {
         agentExists(_agent)
         returns(address)
     {
-        // TODO: Needs to make sure the agent is not detached.
+        require(
+            agentIsInList(_agent),
+            "The agent is not in the agents ranking."
+        );
         if (_agent == highestAgent) 
             return NULL_ADDRESS;
         
@@ -274,7 +295,10 @@ contract BILD is ERC20, ERC20Detailed {
         public
         agentExists(_agent)
     {
-        // TODO: Needs to assert the agent is detached.
+        require(
+            !agentIsInList(_agent),
+            "Can't insert an agent that is already in the agents ranking."
+        );
         // If there are no highestAgent and no lowestAgent then _agent is the only one in the list.
         if (highestAgent == NULL_ADDRESS && lowestAgent == NULL_ADDRESS)
             highestAgent = _agent;
@@ -291,6 +315,10 @@ contract BILD is ERC20, ERC20Detailed {
         public // TODO: Public for testing, make private for deployment
         agentExists(_agent)
     {
+        require(
+            agentIsInList(_agent),
+            "The agent is already detached from the ranking."
+        );
         if (lowestAgent == _agent && highestAgent == _agent)
         {
             delete lowestAgent;
@@ -309,7 +337,6 @@ contract BILD is ERC20, ERC20Detailed {
             delete agents[_agent].lowerAgent;
             return;
         }
-        // TODO: Check the agent is ranked first
         agents[higherAgent(_agent)].lowerAgent = agents[_agent].lowerAgent;
         delete agents[_agent].lowerAgent;
     }

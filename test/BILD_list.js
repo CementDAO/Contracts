@@ -243,7 +243,7 @@ contract('BILD', (accounts) => {
                     agent1,
                 );
             },
-            'The agent is not ranked.',
+            'The agent is not in the agents ranking.',
         );
     });
 
@@ -349,7 +349,7 @@ contract('BILD', (accounts) => {
                     agent1,
                 );
             },
-            'The agent is not ranked.',
+            'The agent is already detached from the ranking.',
         );
     });
 
