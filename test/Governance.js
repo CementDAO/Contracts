@@ -99,7 +99,7 @@ contract('MIXR governance', (accounts) => {
             'only valid addresses are allowed as the stakeholder fee holding account.',
             async () => {
                 await mixr.setStakeholderAccount(
-                    mixr.address,
+                    '0x00000000000000000000000000000000',
                     { from: governor },
                 );
             },

@@ -39,6 +39,27 @@ contract('BILD', (accounts) => {
          * Test nominateAgent(_agent, minimumStake - 1) fails - "Minimum stake to nominate an agent not reached."
          */
         itShouldThrow(
+            'nominateAgent fails with an empty agent name.',
+            async () => {
+                await bild.transfer(
+                    stakeholder1,
+                    minimumStake,
+                    { from: distributor },
+                );
+
+                await bild.nominateAgent(
+                    agent1,
+                    minimumStake,
+                    '',
+                    'contact1',
+                    {
+                        from: stakeholder1,
+                    },
+                );
+            },
+            'An agent name must be provided.',
+        );
+        itShouldThrow(
             'nominateAgent fails with stake under minimum stake.',
             async () => {
                 await bild.transfer(
@@ -58,6 +79,68 @@ contract('BILD', (accounts) => {
                 );
             },
             'Minimum stake to nominate an agent not reached.',
+        );
+        itShouldThrow(
+            'nominateAgent fails with an agent already nominated.',
+            async () => {
+                await bild.transfer(
+                    stakeholder1,
+                    minimumStake,
+                    { from: distributor },
+                );
+
+                await bild.nominateAgent(
+                    agent1,
+                    minimumStake,
+                    'agent1',
+                    'contact1',
+                    {
+                        from: stakeholder1,
+                    },
+                );
+
+                await bild.nominateAgent(
+                    agent1,
+                    minimumStake,
+                    'agent1',
+                    'contact1',
+                    {
+                        from: stakeholder1,
+                    },
+                );
+            },
+            'The agent is already nominated.',
+        );
+        itShouldThrow(
+            'nominateAgent fails with a non unique agent name.',
+            async () => {
+                await bild.transfer(
+                    stakeholder1,
+                    minimumStake,
+                    { from: distributor },
+                );
+
+                await bild.nominateAgent(
+                    agent1,
+                    minimumStake,
+                    'agent1',
+                    'contact1',
+                    {
+                        from: stakeholder1,
+                    },
+                );
+
+                await bild.nominateAgent(
+                    agent2,
+                    minimumStake,
+                    'agent1',
+                    'contact1',
+                    {
+                        from: stakeholder1,
+                    },
+                );
+            },
+            'An agent already exists with that name.',
         );
     });
 

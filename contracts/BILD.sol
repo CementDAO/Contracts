@@ -19,6 +19,11 @@ contract BILD is ERC20, ERC20Detailed {
     uint256 public NO_STAKES = 115792089237316195423570985008687907853269984665640564039457584007913129639935;
 
     /**
+     * @notice An initializated address.
+     */
+    address public NULL_ADDRESS = address(0);
+
+    /**
      * @notice Minimum BILD wei that are accepted to nominate a new Curation Agent
      */
     uint256 public minimumStake = 10**18;
@@ -249,13 +254,13 @@ contract BILD is ERC20, ERC20Detailed {
     {
         // TODO: Needs to make sure the agent is not detached.
         if (_agent == highestAgent) 
-            return address(0);
+            return NULL_ADDRESS;
         
         address current = highestAgent;
         while (agents[current].lowerAgent != _agent){
             current = agents[current].lowerAgent;
             require( // TODO: Make this an assert.
-                current != address(0),
+                current != NULL_ADDRESS,
                 "The agent is not ranked."
             );
         }
@@ -279,18 +284,18 @@ contract BILD is ERC20, ERC20Detailed {
         if (lowestAgent == _agent)
         {
             lowestAgent = higherAgent(_agent);
-            agents[higherAgent(_agent)].lowerAgent = address(0);
+            delete agents[higherAgent(_agent)].lowerAgent;
             return;
         }
         if (highestAgent == _agent)
         {
             highestAgent = agents[_agent].lowerAgent;
-            agents[_agent].lowerAgent = address(0);
+            delete agents[_agent].lowerAgent;
             return;
         }
         // TODO: Check the agent is ranked first
         agents[higherAgent(_agent)].lowerAgent = agents[_agent].lowerAgent;
-        agents[_agent].lowerAgent = address(0);
+        delete agents[_agent].lowerAgent;
     }
 
     /**
@@ -303,7 +308,7 @@ contract BILD is ERC20, ERC20Detailed {
     {
         // TODO: Needs to assert the agent is detached.
         // If there are no highestAgent and no lowestAgent then _agent is the only one in the list.
-        if (highestAgent == address(0) && lowestAgent == address(0))
+        if (highestAgent == NULL_ADDRESS && lowestAgent == NULL_ADDRESS)
         {
             lowestAgent = _agent;
             highestAgent = _agent;
@@ -351,7 +356,7 @@ contract BILD is ERC20, ERC20Detailed {
      * @notice Returns the agent _rank positions under _agent
      * @param _agent The agent to start counting from.
      * @param _rank The positions to count.
-     * @dev returns address(0) if trying to retrieve an agent from a rank that doesn't exist
+     * @dev returns NULL_ADDRESS if trying to retrieve an agent from a rank that doesn't exist
      */
     function agentAtRankFrom(address _agent, uint256 _rank)
         public
@@ -413,7 +418,7 @@ contract BILD is ERC20, ERC20Detailed {
         returns(bool)
     {
         address agent = highestAgent;
-        while (agent != address(0))
+        while (agent != NULL_ADDRESS)
         {
             if(stringsAreEqual(agents[agent].name, _name)) return true;
             agent = agents[agent].lowerAgent;
@@ -455,7 +460,7 @@ contract BILD is ERC20, ERC20Detailed {
         );
 
         // Create an agent by giving him an empty stake from the stakeholder.
-        agents[_agent] = Agent(_name, _contact, address(0));
+        agents[_agent] = Agent(_name, _contact, NULL_ADDRESS);
         stakesByAgent[_agent].push(Stake(msg.sender, 0));
         // TODO: Decide on whether to sort here and detach in createStake, or have createStake check whether the agent is detached or not.
         sortAgent(_agent);
@@ -589,9 +594,9 @@ contract BILD is ERC20, ERC20Detailed {
         detachAgent(_agent);
 
         // Erase agent
-        agents[_agent].lowerAgent = address(0);
-        agents[_agent].name = "";
-        agents[_agent].contact = "";
+        delete agents[_agent].lowerAgent;
+        delete agents[_agent].name;
+        delete agents[_agent].contact;
     }
     // TODO: Fail on transactions if amountToTransfer > ERC20(address(this)).balanceOf(msg.sender) - stakesByHolder[msg.sender]
 }

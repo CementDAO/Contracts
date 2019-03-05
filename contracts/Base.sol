@@ -18,6 +18,11 @@ contract Base {
     using SafeMath for uint256;
 
     /**
+     * @notice An initializated address.
+     */
+    address public NULL_ADDRESS = address(0);
+
+    /**
      * @notice Scaling factor for the calculation of fees, expressed in fixed 
      * point units.
      * @dev Test scalingFactor = FixidityLib.fixed1()/2
