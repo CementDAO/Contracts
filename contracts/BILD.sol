@@ -299,6 +299,23 @@ contract BILD is ERC20, ERC20Detailed {
     }
 
     /**
+     * @notice Erase completely an agent from the system
+     * @param _agent The agent to erase.
+     */
+    function eraseAgent(address _agent)
+        public // TODO: Public for testing, make private for deployment
+        agentExists(_agent)
+    {
+        // Remove agent from the list
+        detachAgent(_agent);
+
+        // Erase agent
+        delete agents[_agent].lowerAgent;
+        delete agents[_agent].name;
+        delete agents[_agent].contact;
+    }
+
+    /**
      * @notice Inserts an agent in its right place in the agents list.
      * @param _agent The agent to find a place for.
      */
@@ -590,13 +607,7 @@ contract BILD is ERC20, ERC20Detailed {
             stakesByAgent[_agent].pop();
         }
 
-        // Remove agent from the list
-        detachAgent(_agent);
-
-        // Erase agent
-        delete agents[_agent].lowerAgent;
-        delete agents[_agent].name;
-        delete agents[_agent].contact;
+        eraseAgent(_agent);
     }
     // TODO: Fail on transactions if amountToTransfer > ERC20(address(this)).balanceOf(msg.sender) - stakesByHolder[msg.sender]
 }
