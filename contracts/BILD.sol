@@ -31,7 +31,7 @@ contract BILD is ERC20, ERC20Detailed {
     struct Agent {
         string name;
         string contact;
-        address lower;
+        address lowerAgent;
     }
 
     /**
@@ -50,12 +50,12 @@ contract BILD is ERC20, ERC20Detailed {
     /**
      * @notice The address of the agent at the top of the list.
      */
-    address highest;
+    address highestAgent;
     
     /**
      * @notice The address of the agent at the top of the list.
      */
-    address lowest;
+    address lowestAgent;
 
     /**
      * @notice The number of agents that can be Curating Agents
@@ -218,42 +218,42 @@ contract BILD is ERC20, ERC20Detailed {
     /**
      * @notice Return the address of the highest ranked agent.
      */
-    function getHighest()
+    function getHighestAgent()
         public
         view
         returns(address)
     {
-        return highest;
+        return highestAgent;
     }
 
     /**
-     * @notice Return the address of the highest ranked agent.
+     * @notice Return the address of the lowest ranked agent.
      */
-    function getLowest()
+    function getLowestAgent()
         public
         view
         returns(address)
     {
-        return lowest;
+        return lowestAgent;
     }
 
     /**
      * @notice Find the higher agent in the agents list
      * @param _agent The agent to find the higher agent for.
      */
-    function higher(address _agent)
+    function higherAgent(address _agent)
         public
         view
         agentExists(_agent)
         returns(address)
     {
         // TODO: Needs to make sure the agent is not detached.
-        if (_agent == highest) 
+        if (_agent == highestAgent) 
             return address(0);
         
-        address current = highest;
-        while (agents[current].lower != _agent){
-            current = agents[current].lower;
+        address current = highestAgent;
+        while (agents[current].lowerAgent != _agent){
+            current = agents[current].lowerAgent;
             require( // TODO: Make this an assert.
                 current != address(0),
                 "The agent is not ranked."
@@ -270,27 +270,27 @@ contract BILD is ERC20, ERC20Detailed {
         public // TODO: Public for testing, make private for deployment
         agentExists(_agent)
     {
-        if (lowest == _agent && highest == _agent)
+        if (lowestAgent == _agent && highestAgent == _agent)
         {
-            delete lowest;
-            delete highest;
+            delete lowestAgent;
+            delete highestAgent;
             return;
         }
-        if (lowest == _agent)
+        if (lowestAgent == _agent)
         {
-            lowest = higher(_agent);
-            agents[higher(_agent)].lower = address(0);
+            lowestAgent = higherAgent(_agent);
+            agents[higherAgent(_agent)].lowerAgent = address(0);
             return;
         }
-        if (highest == _agent)
+        if (highestAgent == _agent)
         {
-            highest = agents[_agent].lower;
-            agents[_agent].lower = address(0);
+            highestAgent = agents[_agent].lowerAgent;
+            agents[_agent].lowerAgent = address(0);
             return;
         }
         // TODO: Check the agent is ranked first
-        agents[higher(_agent)].lower = agents[_agent].lower;
-        agents[_agent].lower = address(0);
+        agents[higherAgent(_agent)].lowerAgent = agents[_agent].lowerAgent;
+        agents[_agent].lowerAgent = address(0);
     }
 
     /**
@@ -302,48 +302,48 @@ contract BILD is ERC20, ERC20Detailed {
         agentExists(_agent)
     {
         // TODO: Needs to assert the agent is detached.
-        // If there are no highest and no lowest then _agent is the only one in the list.
-        if (highest == address(0) && lowest == address(0))
+        // If there are no highestAgent and no lowestAgent then _agent is the only one in the list.
+        if (highestAgent == address(0) && lowestAgent == address(0))
         {
-            lowest = _agent;
-            highest = _agent;
+            lowestAgent = _agent;
+            highestAgent = _agent;
             return;
         }
         uint256 _agentStakes = aggregateAgentStakes(_agent);
         
-        // If _agent should be the highest one we just push it on top
-        if (_agentStakes > aggregateAgentStakes(highest))
+        // If _agent should be the highestAgent one we just push it on top
+        if (_agentStakes > aggregateAgentStakes(highestAgent))
         {
-            agents[_agent].lower = highest;
-            highest = _agent;
+            agents[_agent].lowerAgent = highestAgent;
+            highestAgent = _agent;
             return;
         }
         else
         {
-            // If _agent shouldn't be highest and there is only one other agent,
-            // then _agent is its lower and the lowest.
-            if (highest == lowest)
+            // If _agent shouldn't be highestAgent and there is only one other agent,
+            // then _agent is its lowerAgent and the lowestAgent.
+            if (highestAgent == lowestAgent)
             {
-                agents[highest].lower = _agent;
-                lowest = _agent;
+                agents[highestAgent].lowerAgent = _agent;
+                lowestAgent = _agent;
                 return;
             }
-            // There are at least two agents and _agent is not the highest, we 
-            // traverse down until we find a lower agent, and we insert _agent
-            address current = highest;
-            // While we are not at the lowest
-            while (current != lowest){
+            // There are at least two agents and _agent is not the highestAgent, we 
+            // traverse down until we find a lowerAgent agent, and we insert _agent
+            address current = highestAgent;
+            // While we are not at the lowestAgent
+            while (current != lowestAgent){
                 // Found the spot?
-                if (aggregateAgentStakes(agents[current].lower) < _agentStakes){
-                    agents[_agent].lower = agents[current].lower;
-                    agents[current].lower = _agent;
-                    return; // Current had a lower, so now _agent has a lower and cannot be the lowest.    
+                if (aggregateAgentStakes(agents[current].lowerAgent) < _agentStakes){
+                    agents[_agent].lowerAgent = agents[current].lowerAgent;
+                    agents[current].lowerAgent = _agent;
+                    return; // Current had a lowerAgent, so now _agent has a lowerAgent and cannot be the lowestAgent.    
                 }
-                current = agents[current].lower;
+                current = agents[current].lowerAgent;
             }
-            // _agent is the new lowest then.    
-            agents[current].lower = _agent;
-            lowest = _agent;
+            // _agent is the new lowestAgent then.    
+            agents[current].lowerAgent = _agent;
+            lowestAgent = _agent;
         }
     }
 
@@ -360,7 +360,7 @@ contract BILD is ERC20, ERC20Detailed {
     {
         address current = _agent;
         for (uint256 i = 0; i < _rank; i += 1){
-            current = agents[current].lower;
+            current = agents[current].lowerAgent;
         }
         return current;
     }
@@ -374,7 +374,7 @@ contract BILD is ERC20, ERC20Detailed {
         view
         returns(address)
     {
-        return agentAtRankFrom(highest, _rank);   
+        return agentAtRankFrom(highestAgent, _rank);   
     }
 
     /**
@@ -400,11 +400,11 @@ contract BILD is ERC20, ERC20Detailed {
         view
         returns(bool)
     {
-        address agent = highest;
+        address agent = highestAgent;
         while (agent != address(0))
         {
             if(areEqual(agents[agent].name, _name)) return true;
-            agent = agents[agent].lower;
+            agent = agents[agent].lowerAgent;
         }
         return false;
     }    
@@ -425,10 +425,10 @@ contract BILD is ERC20, ERC20Detailed {
     )
     public
     {
-        /* require (
+        require (
             _stake >= minimumStake,
             "Minimum stake to nominate an agent not reached."
-        ); */
+        );
         require (
             stakesByAgent[_agent].length == 0,
             "The agent is already nominated."
@@ -573,7 +573,7 @@ contract BILD is ERC20, ERC20Detailed {
         detach(_agent);
 
         // Erase agent
-        agents[_agent].lower = address(0);
+        agents[_agent].lowerAgent = address(0);
         agents[_agent].name = "";
         agents[_agent].contact = "";
     }
