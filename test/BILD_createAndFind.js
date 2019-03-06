@@ -195,7 +195,7 @@ contract('BILD', (accounts) => {
                         from: distributor,
                     },
                 );
-                
+
                 await bild.createStake(
                     agent1,
                     twoBILDTokens,
@@ -212,7 +212,7 @@ contract('BILD', (accounts) => {
                 oneBILDToken,
                 { from: distributor },
             );
-            
+
             await bild.createStake(
                 agent1,
                 oneBILDToken,
@@ -238,7 +238,7 @@ contract('BILD', (accounts) => {
                 twoBILDTokens,
                 { from: distributor },
             );
-            
+
             await bild.createStake(
                 agent1,
                 oneBILDToken,
@@ -272,7 +272,7 @@ contract('BILD', (accounts) => {
                 oneBILDToken,
                 { from: distributor },
             );
-            
+
             await bild.nominateAgent(
                 agent3,
                 oneBILDToken,

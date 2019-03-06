@@ -12,7 +12,7 @@ contract('BILD', (accounts) => {
     const distributor = accounts[1];
     const stakeholder1 = accounts[2];
     const stakeholder2 = accounts[3];
-    const stakeholder3 = accounts[4];
+    // const stakeholder3 = accounts[4];
     const agent1 = accounts[5];
     const agent2 = accounts[6];
     const agent3 = accounts[7];
@@ -20,7 +20,7 @@ contract('BILD', (accounts) => {
     let twoBILDTokens;
     let manyBILDTokens;
     let minimumStake;
-    let NO_STAKES;
+    // let NO_STAKES;
 
     before(async () => {
         bild = await BILD.deployed();
@@ -28,7 +28,7 @@ contract('BILD', (accounts) => {
         twoBILDTokens = tokenNumber(bildDecimals, 2);
         manyBILDTokens = tokenNumber(bildDecimals, 100);
         minimumStake = oneBILDToken;
-        NO_STAKES = new BigNumber(115792089237316195423570985008687907853269984665640564039457584007913129639935);
+        // NO_STAKES = new BigNumber(115792089237316195423570985008687907853269984665640564039457584007913129639935);
     });
 
     describe('revokeNomination', () => {
@@ -69,7 +69,7 @@ contract('BILD', (accounts) => {
                         from: stakeholder1,
                     },
                 );
-                
+
                 await bild.revokeNomination(
                     agent1,
                     {
@@ -184,7 +184,7 @@ contract('BILD', (accounts) => {
                     from: stakeholder1,
                 },
             );
-            
+
             await bild.removeStake(
                 agent1,
                 oneBILDToken,
@@ -212,7 +212,7 @@ contract('BILD', (accounts) => {
                     from: stakeholder1,
                 },
             );
-            
+
             await bild.removeStake(
                 agent1,
                 new BigNumber(oneBILDToken).multipliedBy(2),
@@ -457,7 +457,7 @@ contract('BILD', (accounts) => {
                     from: stakeholder1,
                 },
             );
-            
+
             await bild.createStake(
                 agent1,
                 new BigNumber(oneBILDToken).multipliedBy(45),

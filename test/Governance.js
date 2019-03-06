@@ -21,7 +21,7 @@ contract('MIXR governance', (accounts) => {
     let someERC721;
     let someERC20Decimals;
     let someOtherERC20Decimals;
-    let somePlainERC20Decimals;
+    // let somePlainERC20Decimals;
     const owner = accounts[0];
     const governor = accounts[1];
     const user = accounts[2];

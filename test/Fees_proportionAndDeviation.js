@@ -160,7 +160,8 @@ contract('Fees', (accounts) => {
             result.should.be.bignumber
                 .equal(new BigNumber(fixed1));
         });
-        it('proportionAfterTransaction(x, basket, 1, REDEMPTION()) with two wei of x and three wei of y in the basket', async () => {
+        it('proportionAfterTransaction(x, basket, 1, REDEMPTION()) '
+        + 'with two wei of x and three wei of y in the basket', async () => {
             await someERC20.transfer(mixr.address, 2, {
                 from: governor,
             });

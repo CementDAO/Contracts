@@ -132,7 +132,8 @@ contract('Fees', (accounts) => {
             result.should.be.bignumber.lte(new BigNumber('147712125472000000000000'));
         });
 
-        itShouldThrow('transactionFee(x, basket, 71, DEPOSIT) with 29 y in basket - Deposit above deviation ceiling.', async () => {
+        itShouldThrow('transactionFee(x, basket, 71, DEPOSIT) '
+        + 'with 29 y in basket - Deposit above deviation ceiling.', async () => {
             await someOtherERC20.transfer(
                 mixr.address,
                 tokenNumber(someOtherERC20Decimals, 29),

@@ -25,7 +25,6 @@ chai.use(require('chai-bignumber')()).should();
  */
 const depositTest = async (
     tokens, user, stakeholders, someERC20, someERC20Decimals, mixr, mixrDecimals) => {
-
     /**
      * get previous balances
      */
@@ -576,13 +575,13 @@ contract('MIXR', (accounts) => {
             itShouldThrow(
                 'forbids redeeming a token that hasn\'t been registered yet.',
                 async () => {
-                    const someOtherERC20 = await SampleERC20.new(
+                    const newSomeOtherERC20 = await SampleERC20.new(
                         user,
                         tokenNumber(someERC20Decimals, 100),
                         someERC20Decimals,
                     );
                     await mixr.redeemMIXR(
-                        someOtherERC20.address,
+                        newSomeOtherERC20.address,
                         tokenNumber(someERC20Decimals, 1),
                         {
                             from: user,

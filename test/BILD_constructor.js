@@ -2,7 +2,6 @@ const BILD = artifacts.require('./BILD.sol');
 
 const BigNumber = require('bignumber.js');
 const chai = require('chai');
-const { itShouldThrow, tokenNumber } = require('./utils');
 // use default BigNumber
 chai.use(require('chai-bignumber')()).should();
 
