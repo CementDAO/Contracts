@@ -280,7 +280,7 @@ contract BILD is ERC20, ERC20Detailed {
         address current = highestAgent;
         while (agents[current].lowerAgent != _agent){
             current = agents[current].lowerAgent;
-            require( // TODO: Make this an assert.
+            require(
                 current != NULL_ADDRESS,
                 "The agent is not ranked."
             );
@@ -376,11 +376,11 @@ contract BILD is ERC20, ERC20Detailed {
         
         address current = _agent;
         for (uint256 i = 0; i < _rank; i += 1){
+            current = agents[current].lowerAgent;
             require(
                 current != NULL_ADDRESS,
                 "Not enough agents in the list."
             );
-            current = agents[current].lowerAgent;
         }
         return current;
     }
@@ -505,7 +505,6 @@ contract BILD is ERC20, ERC20Detailed {
      * Complete findStakeValue tests.
      * Complete aggregateAgentStakes tests.
      * Complete aggregateHolderStakes tests.
-     * TODO: Test rankings after createStake.
      */
     function createStake(address _agent, uint256 _stake)
     public
