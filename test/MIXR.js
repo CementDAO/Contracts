@@ -232,10 +232,10 @@ contract('MIXR', (accounts) => {
             /**
              * approve tokens!
              */
-            await mixr.registerToken(sampleDetailedERC20.address, {
+            await mixr.registerDetailedToken(sampleDetailedERC20.address, {
                 from: governor,
             });
-            await mixr.registerToken(sampleDetailedERC20Other.address, {
+            await mixr.registerDetailedToken(sampleDetailedERC20Other.address, {
                 from: governor,
             });
 
@@ -343,7 +343,7 @@ contract('MIXR', (accounts) => {
             /**
              * approve tokens
              */
-            await mixr.registerToken(sampleDetailedERC20.address, {
+            await mixr.registerDetailedToken(sampleDetailedERC20.address, {
                 from: governor,
             });
             await mixr.setTokensTargetProportion(
@@ -495,7 +495,7 @@ contract('MIXR', (accounts) => {
             /**
              * Register tokens and set token data to allow transactions.
              */
-            await mixr.registerToken(sampleDetailedERC20.address, {
+            await mixr.registerDetailedToken(sampleDetailedERC20.address, {
                 from: governor,
             });
             await mixr.setTokensTargetProportion(

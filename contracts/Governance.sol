@@ -82,12 +82,12 @@ contract Governance is Base, Ownable {
     /**
      * @notice This function adds an ERC20Detailed token to the registered tokens list.
      */
-    function registerToken(address _token)
+    function registerDetailedToken(address _token)
         public
         onlyGovernor()
         isCompliantToken(_token)
     {
-        registerTokenWithDecimals(
+        registerStandardToken(
             _token,
             // TODO: let's fix!
             "not", // ERC20Detailed(_token).name(),
@@ -98,7 +98,7 @@ contract Governance is Base, Ownable {
     /**
      * @notice This function adds an ERC20 token to the registered tokens list.
      */
-    function registerTokenWithDecimals(address _token, bytes32 _name, uint8 _decimals)
+    function registerStandardToken(address _token, bytes32 _name, uint8 _decimals)
         public
         onlyGovernor()
         isCompliantToken(_token)

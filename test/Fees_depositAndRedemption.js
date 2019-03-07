@@ -63,10 +63,10 @@ contract('Fees', (accounts) => {
             /**
              * approve tokens!
              */
-            await mixr.registerToken(sampleDetailedERC20.address, {
+            await mixr.registerDetailedToken(sampleDetailedERC20.address, {
                 from: governor,
             });
-            await mixr.registerToken(sampleDetailedERC20Other.address, {
+            await mixr.registerDetailedToken(sampleDetailedERC20Other.address, {
                 from: governor,
             });
 
@@ -248,7 +248,7 @@ contract('Fees', (accounts) => {
                 'SAMPLE',
                 'SMP',
             );
-            await mixr.registerToken(sampleDetailedERC20.address, {
+            await mixr.registerDetailedToken(sampleDetailedERC20.address, {
                 from: governor,
             });
             sampleDetailedERC20Other = await SampleDetailedERC20.new(
@@ -258,7 +258,7 @@ contract('Fees', (accounts) => {
                 'COMPLEX',
                 'CLP',
             );
-            await mixr.registerToken(sampleDetailedERC20Other.address, {
+            await mixr.registerDetailedToken(sampleDetailedERC20Other.address, {
                 from: governor,
             });
 

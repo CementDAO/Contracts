@@ -135,7 +135,7 @@ contract('MIXR governance', (accounts) => {
         itShouldThrow(
             'forbids non-governors to approve a valid token',
             async () => {
-                await mixr.registerToken(sampleDetailedERC20.address, {
+                await mixr.registerDetailedToken(sampleDetailedERC20.address, {
                     from: user,
                 });
             },
@@ -145,7 +145,7 @@ contract('MIXR governance', (accounts) => {
         itShouldThrow(
             'forbids approving a non-valid token',
             async () => {
-                await mixr.registerToken(someERC721.address, {
+                await mixr.registerDetailedToken(someERC721.address, {
                     from: governor,
                 });
             },
@@ -155,7 +155,7 @@ contract('MIXR governance', (accounts) => {
         itShouldThrow(
             'forbids approving a non-contract address',
             async () => {
-                await mixr.registerToken(user, {
+                await mixr.registerDetailedToken(user, {
                     from: governor,
                 });
             },
@@ -165,10 +165,10 @@ contract('MIXR governance', (accounts) => {
         itShouldThrow(
             'forbids approving an approved token',
             async () => {
-                await mixr.registerToken(sampleDetailedERC20.address, {
+                await mixr.registerDetailedToken(sampleDetailedERC20.address, {
                     from: governor,
                 });
-                await mixr.registerToken(sampleDetailedERC20.address, {
+                await mixr.registerDetailedToken(sampleDetailedERC20.address, {
                     from: governor,
                 });
             },
@@ -176,21 +176,24 @@ contract('MIXR governance', (accounts) => {
         );
 
         it('allows a governor to approve an ERC20Detailed token', async () => {
-            await mixr.registerToken(sampleDetailedERC20.address, {
+            await mixr.registerDetailedToken(sampleDetailedERC20.address, {
                 from: governor,
             });
         });
 
         it('allows a governor to approve an ERC20 token', async () => {
-            await mixr.registerTokenWithDecimals(somePlainERC20.address, 18, {
-                from: governor,
-            });
+            await mixr.registerStandardToken(
+                somePlainERC20.address,
+                web3.utils.utf8ToHex('SAMPLE'),
+                18,
+                { from: governor },
+            );
         });
 
         itShouldThrow(
             'forbids approving an ERC20 token without decimals',
             async () => {
-                await mixr.registerToken(somePlainERC20.address, {
+                await mixr.registerDetailedToken(somePlainERC20.address, {
                     from: governor,
                 });
             },
@@ -224,10 +227,10 @@ contract('MIXR governance', (accounts) => {
                 'CLP',
             );
 
-            await mixr.registerToken(sampleDetailedERC20.address, {
+            await mixr.registerDetailedToken(sampleDetailedERC20.address, {
                 from: governor,
             });
-            await mixr.registerToken(sampleDetailedERC20Other.address, {
+            await mixr.registerDetailedToken(sampleDetailedERC20Other.address, {
                 from: governor,
             });
         });
