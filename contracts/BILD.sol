@@ -338,7 +338,7 @@ contract BILD is ERC20, ERC20Detailed {
             return;
         }
         agents[higherAgent(_agent)].lowerAgent = agents[_agent].lowerAgent;
-        delete agents[_agent].lowerAgent;
+        delete agents[_agent].lowerAgent; // TODO: test this
     }
 
     /**
@@ -369,8 +369,17 @@ contract BILD is ERC20, ERC20Detailed {
         view
         returns(address)
     {
+        require(
+            agentIsInList(_agent),
+            "The agent is not in the agents ranking."
+        );
+        
         address current = _agent;
         for (uint256 i = 0; i < _rank; i += 1){
+            require(
+                current != NULL_ADDRESS,
+                "Not enough agents in the list."
+            );
             current = agents[current].lowerAgent;
         }
         return current;
