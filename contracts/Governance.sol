@@ -87,13 +87,18 @@ contract Governance is Base, Ownable {
         onlyGovernor()
         isCompliantToken(_token)
     {
-        registerTokenWithDecimals(_token, ERC20Detailed(_token).decimals());
+        registerTokenWithDecimals(
+            _token,
+            // TODO: let's fix!
+            "not", // ERC20Detailed(_token).name(),
+            ERC20Detailed(_token).decimals()
+        );
     }
 
     /**
      * @notice This function adds an ERC20 token to the registered tokens list.
      */
-    function registerTokenWithDecimals(address _token, uint8 _decimals)
+    function registerTokenWithDecimals(address _token, bytes32 _name, uint8 _decimals)
         public
         onlyGovernor()
         isCompliantToken(_token)
@@ -102,6 +107,7 @@ contract Governance is Base, Ownable {
         require(token.registered == false, "Token is already registered!");
         token.registered = true;
         token.decimals = _decimals;
+        token.name = _name;
         tokens[_token] = token;
         tokensList.push(_token);
     }

@@ -73,6 +73,10 @@ contract Base {
          * @notice The base transfer fees in MIX wei for this token.
          */
         uint256 transferFee;
+        /**
+         * @notice The token name.
+         */
+        bytes32 name;
     }
 
     /**
@@ -216,6 +220,23 @@ contract Base {
     {
         TokenData memory token = tokens[_token];
         return token.decimals;
+    }
+
+    /**
+     * @notice Returns the name of a token.
+     * @param _token The token ERC20 contract address that we are retrieving 
+     * the name. The token needs to have been registered in CementDAO.
+     * @dev The MIX token inheriting from Base implements ERC20Detailed and you
+     * can retrieve its name as mixr.name().
+     */
+    function getName(address _token) 
+    public
+    view
+    isRegistered(_token)
+    returns(bytes32)
+    {
+        TokenData memory token = tokens[_token];
+        return token.name;
     }
 
     /**
