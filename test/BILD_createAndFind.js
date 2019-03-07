@@ -28,7 +28,7 @@ contract('BILD', (accounts) => {
         twoBILDTokens = tokenNumber(bildDecimals, 2);
         manyBILDTokens = tokenNumber(bildDecimals, 100);
         minimumStake = oneBILDToken;
-        NO_STAKES = new BigNumber(115792089237316195423570985008687907853269984665640564039457584007913129639935);
+        NO_STAKES = new BigNumber('115792089237316195423570985008687907853269984665640564039457584007913129639935');
     });
 
     describe('nominateAgent', () => {
