@@ -3,6 +3,7 @@ pragma solidity ^0.5.0;
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "./UtilsLib.sol";
 
 /**
  * @title BILD Staking contract. 
@@ -100,7 +101,7 @@ contract BILD is ERC20, ERC20Detailed {
     modifier agentExists(address _agent)
     {
         require (
-            !stringIsEmpty(agents[_agent].name),
+            !UtilsLib.stringIsEmpty(agents[_agent].name),
             "Agent not found."
         );
         _;
@@ -113,15 +114,6 @@ contract BILD is ERC20, ERC20Detailed {
      * @param _stakeholder The holder that the stake is from.
      * @dev It is not possible to return a struct, so the data layer needs to
      * be exposed. This method might become private or internal for deployment.
-     * Test findStakeIndex(agent1, stakeholder1) fails - "Agent not found."
-     * Execute:
-     * stakeholder1: createStake(agent1, 1 token)
-     * stakeholder1: createStake(agent2, 1 token)
-     * stakeholder2: createStake(agent1, 1 token)
-     * Test findStakeIndex(agent1, stakeholder) returns 0.
-     * Test findStakeIndex(agent2, stakeholder) returns 0.
-     * Test findStakeIndex(agent1, stakeholder2) returns 1.
-     * Test findStakeIndex(agent1, stakeholder3) returns 2.
      */
     function findStakeIndex(address _agent, address _stakeholder)
         public
@@ -143,12 +135,6 @@ contract BILD is ERC20, ERC20Detailed {
      * @notice Returns the value in BILD wei of an stake from a stakeholder for an agent.
      * @param _agent The agent that the stake is for.
      * @param _stakeholder The holder that the stake is from.
-     * Test findStakeValue(agent1, stakeholder1) fails - "Agent not found."
-     * Execute:
-     * stakeholder1: createStake(agent1, 1 token)
-     * stakeholder1: createStake(agent2, 2 token)
-     * Test findStakeValue(agent1, stakeholder1) returns 1 token.
-     * Test findStakeValue(agent2, stakeholder1) returns 2 token.
      */
     function findStakeValue(address _agent, address _stakeholder)
         public
@@ -165,19 +151,6 @@ contract BILD is ERC20, ERC20Detailed {
      * @notice Returns the aggregation of all stakes for an agent.
      * @param _agent The agent to aggregate stakes for.
      * @dev This is a get method, consider writing a set method as well.
-     * Test aggregateAgentStakes(agent1) fails - "Agent not found."
-     * Execute:
-     * stakeholder1: createStake(agent1, 1 token)
-     * Test aggregateAgentStakes(agent1) returns 1.
-     * Execute:
-     * stakeholder1: createStake(agent1, 1 token)
-     * stakeholder1: createStake(agent1, 1 token)
-     * Test aggregateAgentStakes(agent1) returns 2.
-     * Execute:
-     * stakeholder1: createStake(agent1, 1 token)
-     * stakeholder1: createStake(agent1, 1 token)
-     * stakeholder2: createStake(agent2, 1 token)
-     * Test aggregateAgentStakes(agent2) returns 1.
      */
     function aggregateAgentStakes(address _agent)
         public
@@ -198,19 +171,6 @@ contract BILD is ERC20, ERC20Detailed {
      * @notice Returns the aggregation of all stakes for a holder.
      * @param _stakeholder The stakeholder to aggregate stakes for.
      * @dev This is a get method, consider writing a set method as well.
-     * Test aggregateHolderStakes(stakeholder1) returns 0.
-     * Execute:
-     * stakeholder1: createStake(agent1, 1 token)
-     * Test aggregateHolderStakes(stakeholder1) returns 1.
-     * Execute:
-     * stakeholder1: createStake(agent1, 1 token)
-     * stakeholder1: createStake(agent1, 1 token)
-     * Test aggregateHolderStakes(stakeholder1) returns 2.
-     * Execute:
-     * stakeholder1: createStake(agent1, 1 token)
-     * stakeholder1: createStake(agent1, 1 token)
-     * stakeholder2: createStake(agent2, 1 token)
-     * Test aggregateHolderStakes(stakeholder2) returns 1.
      */
     function aggregateHolderStakes(address _stakeholder)
         public
@@ -456,9 +416,6 @@ contract BILD is ERC20, ERC20Detailed {
      * @notice Allows a stakeholder to nominate an agent.
      * @param _agent The agent to nominate or stake for.
      * @param _stake Amount of BILD wei to stake.
-     * Test nominateAgent(_agent, minimumStake - 1) fails - "Minimum stake to nominate an agent not reached."
-     * Complete createStake tests.
-     * Test nominateAgent(_agent, oneBILDToken) fails when executed twice - "The agent is already nominated."
      */
     function nominateAgent(
         address _agent, 
@@ -469,7 +426,7 @@ contract BILD is ERC20, ERC20Detailed {
     public
     {
         require(
-            !stringIsEmpty(_name),
+            !UtilsLib.stringIsEmpty(_name),
             "An agent name must be provided."
         );
         require (
@@ -497,14 +454,6 @@ contract BILD is ERC20, ERC20Detailed {
      * one.
      * @param _agent The agent to nominate or stake for.
      * @param _stake Amount of BILD wei to stake.
-     * Test createStake(_agent, 1) fails with no BILD - "Attempted stake larger than BILD balance."
-     * Test createStake(_agent, 2) fails with 1 BILD wei - "Attempted stake larger than BILD balance."
-     * Test createStake(_agent, 1 token) with 1 BILD token executes and findStakeValue(_agent, _stakeholder) returns 1 token.
-     * Test createStake(_agent, 1 token) executed twice then findStakeValue(_agent, _stakeholder) returns 2 tokens.
-     * Complete findStakeIndex tests.
-     * Complete findStakeValue tests.
-     * Complete aggregateAgentStakes tests.
-     * Complete aggregateHolderStakes tests.
      */
     function createStake(address _agent, uint256 _stake)
     public
@@ -536,22 +485,6 @@ contract BILD is ERC20, ERC20Detailed {
      * @notice Allows a stakeholder to decrease or remove a BILD stake for an agent.
      * @param _agent The agent reduce or remove the stake for.
      * @param _stake Amount of BILD wei to remove from the stake.
-     * Test stakeholder1: removeStake(agent1, 1 token) fails - "No stakes were found for the agent."
-     * Execute stakeholder1: createStake(agent1, 1 token)
-     * Test stakeholder1: removeStake(agent1, 2 tokens) fails - "Attempted to reduce a stake by more than its value."
-     * Execute stakeholder1: createStake(agent1, 1 token)
-     * Test stakeholder1: removeStake(agent1, 1 token) executes then findStakeValue(agent1, stakeholder1) returns zero
-     * Execute stakeholder1: createStake(agent1, 2 tokens)
-     * Test stakeholder1: removeStake(agent1, 1 token) executes then findStakeValue(agent1, stakeholder1) returns one token
-     * Execute:
-     *     stakeholder1: createStake(agent1, 2 tokens)
-     *     stakeholder2: createStake(agent1, 2 tokens)
-     * Test stakeholder1: removeStake(agent1, 1 token) executes then findStakeValue(agent1, stakeholder2) returns two tokens
-     * Execute:
-     *     stakeholder1: createStake(agent1, 1 token)
-     *     check findStakeValue(agent1, stakeholder1) returns 1 token
-     *     stakeholder1: removeStake(agent1, 0.5 tokens)
-     *     Test findStakeValue(agent1, stakeholder1) fails - "Agent not found."
      */
     function removeStake(address _agent, uint256 _stake)
     public
@@ -589,8 +522,6 @@ contract BILD is ERC20, ERC20Detailed {
      * nomination. This function requires that the aggregated stakes for the
      * agent are below the minimum stake for nomination.
      * @param _agent The stakeholder to revoke the nomination from.
-     * Execute nominateAgent(agent, minimumStake)
-     * Test revokeNomination(agent1) fails - "Too many stakes to revoke agent nomination."
      */
     function revokeNomination(address _agent)
         public
@@ -617,32 +548,6 @@ contract BILD is ERC20, ERC20Detailed {
     // TODO: Fail on transactions if amountToTransfer > ERC20(address(this)).balanceOf(msg.sender) - stakesByHolder[msg.sender]
 
     /**
-     * @notice Compare whether two strings are the same
-     * @param _a First string.
-     * @param _b Second string.
-     * TODO: Move to UtilsLib
-     */
-    function stringsAreEqual(string memory _a, string memory _b) 
-        public
-        pure 
-        returns(bool)
-    {
-        return keccak256(bytes(_a)) == keccak256(bytes(_b));
-    }
-
-    /**
-     * @notice Return whether a string is empty
-     * @param _s A string
-     */
-    function stringIsEmpty(string memory _s) 
-        public
-        pure 
-        returns(bool)
-    {
-        return bytes(_s).length == 0;
-    }
-
-    /**
      * @notice Determines whether an agent exists with a given name.
      * @param _name The name to look for
      */
@@ -654,7 +559,7 @@ contract BILD is ERC20, ERC20Detailed {
         address agent = highestAgent;
         while (agent != NULL_ADDRESS)
         {
-            if(stringsAreEqual(agents[agent].name, _name)) return true;
+            if(UtilsLib.stringsAreEqual(agents[agent].name, _name)) return true;
             agent = agents[agent].lowerAgent;
         }
         return false;
