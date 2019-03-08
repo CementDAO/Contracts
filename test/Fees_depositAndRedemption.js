@@ -131,8 +131,8 @@ contract('Fees', (accounts) => {
                     DEPOSIT.toString(10),
                 ),
             );
-            result.should.be.bignumber.gte(new BigNumber('147712125471900000000000'));
-            result.should.be.bignumber.lte(new BigNumber('147712125472000000000000'));
+            result.should.be.bignumber.gte(new BigNumber('147712125471900000000000').multipliedBy(70));
+            result.should.be.bignumber.lte(new BigNumber('147712125472000000000000').multipliedBy(70));
         });
 
         itShouldThrow('transactionFee(x, basket, 71, DEPOSIT) '
@@ -164,8 +164,8 @@ contract('Fees', (accounts) => {
                     DEPOSIT.toString(10),
                 ),
             );
-            result.should.be.bignumber.gte(new BigNumber('52287874528000000000000'));
-            result.should.be.bignumber.lte(new BigNumber('52287874528100000000000'));
+            result.should.be.bignumber.gte(new BigNumber('52287874528000000000000').multipliedBy(29));
+            result.should.be.bignumber.lte(new BigNumber('52287874528100000000000').multipliedBy(29));
         });
         it('transactionFee(x, basket, 30, DEPOSIT) with 70 y in basket - Deposit just at deviation floor.', async () => {
             await sampleDetailedERC20Other.transfer(
@@ -181,8 +181,8 @@ contract('Fees', (accounts) => {
                     DEPOSIT.toString(10),
                 ),
             );
-            result.should.be.bignumber.gte(new BigNumber('52287874528000000000000'));
-            result.should.be.bignumber.lte(new BigNumber('52287874528100000000000'));
+            result.should.be.bignumber.gte(new BigNumber('52287874528000000000000').multipliedBy(30));
+            result.should.be.bignumber.lte(new BigNumber('52287874528100000000000').multipliedBy(30));
         });
         it('transactionFee(..., DEPOSIT) >= minimumFee.', async () => {
             await sampleDetailedERC20Other.transfer(
@@ -208,7 +208,7 @@ contract('Fees', (accounts) => {
                     DEPOSIT.toString(10),
                 ),
             );
-            result.should.be.bignumber.equal(minimumFee);
+            result.should.be.bignumber.equal(new BigNumber(minimumFee).multipliedBy(30));
         });
         it('transactionFee(x, basket, 50, DEPOSIT) with 50 y in basket - Fee == Base Fee.', async () => {
             const baseFee = new BigNumber(10).pow(23).toString(10);
@@ -225,7 +225,7 @@ contract('Fees', (accounts) => {
                     DEPOSIT.toString(10),
                 ),
             );
-            result.should.be.bignumber.equal(baseFee);
+            result.should.be.bignumber.equal(new BigNumber(baseFee).multipliedBy(50));
         });
     });
     describe('redemption fee calculation functionality', () => {
@@ -237,10 +237,9 @@ contract('Fees', (accounts) => {
                 from: owner,
             });
 
-            /**
-             * We will simulate that there's already some other token in the basket and we will
-             * deposit a new one.
-             */
+            
+            // We will simulate that there's already some other token in the basket and we will
+            // deposit a new one.
             sampleDetailedERC20 = await SampleDetailedERC20.new(
                 governor,
                 tokenNumber(sampleERC20Decimals, 2000),
@@ -298,10 +297,8 @@ contract('Fees', (accounts) => {
             await sampleDetailedERC20.transfer(user, amountToUser.toString(10), { from: governor });
             await sampleDetailedERC20Other.transfer(user, amountToUser.toString(10), { from: governor });
         });
-        /*
-        * See redemptionFees_simulation.py
-        */
 
+        // See redemptionFees_simulation.py
         it('transactionFee(x, basket, 111, REDEMPTION) - 120 x and 30 y in basket - Below deviation floor', async () => {
             const xInBasket = new BigNumber(10).pow(18).multipliedBy(120);
             const yInBasket = new BigNumber(10).pow(18).multipliedBy(30);
@@ -316,8 +313,8 @@ contract('Fees', (accounts) => {
                     REDEMPTION.toString(10),
                 ),
             );
-            result.should.be.bignumber.gte(new BigNumber(299997828419000000000000));
-            result.should.be.bignumber.lte(new BigNumber(299997828419010000000000));
+            result.should.be.bignumber.gte(new BigNumber(299997828419000000000000).multipliedBy(111));
+            result.should.be.bignumber.lte(new BigNumber(299997828419010000000000).multipliedBy(111));
         });
 
         it('transactionFee(x, basket, 109, REDEMPTION) - 120 x and 30 y in basket - Above deviation floor.', async () => {
@@ -334,8 +331,8 @@ contract('Fees', (accounts) => {
                     REDEMPTION.toString(10),
                 ),
             );
-            result.should.be.bignumber.gte(new BigNumber(171025291828500000000000));
-            result.should.be.bignumber.lte(new BigNumber(171025291828600000000000));
+            result.should.be.bignumber.gte(new BigNumber(171025291828500000000000).multipliedBy(109));
+            result.should.be.bignumber.lte(new BigNumber(171025291828600000000000).multipliedBy(109));
         });
 
         it('transactionFee(x, basket, 51, REDEMPTION) - 120 x and 30 y in basket - Below deviation ceiling.', async () => {
@@ -352,8 +349,8 @@ contract('Fees', (accounts) => {
                     REDEMPTION.toString(10),
                 ),
             );
-            result.should.be.bignumber.gte(new BigNumber(53712301418600000000000));
-            result.should.be.bignumber.lte(new BigNumber(53712301418700000000000));
+            result.should.be.bignumber.gte(new BigNumber(53712301418600000000000).multipliedBy(51));
+            result.should.be.bignumber.lte(new BigNumber(53712301418700000000000).multipliedBy(51));
         });
         it('transactionFee(x, basket, 49, REDEMPTION) - 120 x and 30 y in basket - Above deviation ceiling.', async () => {
             const xInBasket = new BigNumber(10).pow(18).multipliedBy(120);
@@ -369,8 +366,8 @@ contract('Fees', (accounts) => {
                     REDEMPTION.toString(10),
                 ),
             );
-            result.should.be.bignumber.gte(new BigNumber(52287874528000000000000));
-            result.should.be.bignumber.lte(new BigNumber(52287874528100000000000));
+            result.should.be.bignumber.gte(new BigNumber(52287874528000000000000).multipliedBy(49));
+            result.should.be.bignumber.lte(new BigNumber(52287874528100000000000).multipliedBy(49));
         });
         it('transactionFee(..., REDEMPTION) >= minimumFee.', async () => {
             const xInBasket = new BigNumber(10).pow(18).multipliedBy(120);
@@ -394,7 +391,7 @@ contract('Fees', (accounts) => {
                     REDEMPTION.toString(10),
                 ),
             );
-            result.should.be.bignumber.equal(minimumFee);
+            result.should.be.bignumber.equal(new BigNumber(minimumFee).multipliedBy(49));
         });
         it('transactionFee(x, basket, 50, REDEMPTION) - 100 x and 50 y in basket - Fee == Base Fee.', async () => {
             const baseFee = new BigNumber(10).pow(23).toString(10);
@@ -411,7 +408,7 @@ contract('Fees', (accounts) => {
                     REDEMPTION.toString(10),
                 ),
             );
-            result.should.be.bignumber.equal(baseFee);
+            result.should.be.bignumber.equal(new BigNumber(baseFee).multipliedBy(50));
         });
     });
 });

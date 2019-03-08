@@ -193,6 +193,77 @@ library Fees {
     }
 
     /**
+     * @notice Calculates result of fee logit formula according to the whitepaper.
+     * @param _targetProportion Target proportion of the token in the transaction.
+     * @param _deviation Calculated deviation after the transaction.
+     * @return int256 The point in the logit curve for the transaction.
+     */
+    function calculateLogit(
+        int256 _targetProportion,
+        int256 _deviation
+    )
+        public
+        pure
+        returns (int256)
+    {
+        // Calculate the fee following the formula from the inside out
+        int256 t2 = FixidityLib.divide(
+            _targetProportion,
+            FixidityLib.newFixed(2)
+        );
+        int256 deviationCurve = FixidityLib.divide(
+            FixidityLib.add(
+                _deviation,
+                t2
+            ),
+            FixidityLib.subtract(
+                t2,
+                _deviation
+            )
+        );
+        return LogarithmLib.log_b(
+            FixidityLib.newFixed(10),
+            deviationCurve
+        );
+    }
+
+    /**
+     * @notice Multiplies a transaction amount by a fee percentage.
+     * @param _token Address of the token to calculate the transaction fee for.
+     * @param _basket Address of the MIXR basket.
+     * @param _transactionAmount Amount to deposit or redeem in _token wei.
+     * @param _fee Fee in percentage form (0,inf)
+     * @return uint256 Fee amount in stablecoin wei.
+     */
+    function applyFee(
+        address _token, 
+        address _basket,
+        uint256 _transactionAmount, 
+        int256 _fee
+    )
+        public
+        view
+        returns(uint256)
+    {
+        assert(_fee >= 0);
+        int256 validatedFee = _fee;
+        if (validatedFee < UtilsLib.safeCast(Base(_basket).getMinimumFee())) 
+            validatedFee = UtilsLib.safeCast(Base(_basket).getMinimumFee());
+
+        int256 transactionAmount = FixidityLib.newFixed(
+            UtilsLib.safeCast(_transactionAmount), 
+            MIXR(_basket).getDecimals(_token)
+        );
+
+        return uint256(
+            FixidityLib.fromFixed(
+                FixidityLib.multiply(transactionAmount, validatedFee),
+                ERC20Detailed(_basket).decimals()
+            )
+        );
+    }
+
+    /**
      * @notice Calculates the deposit or redemption fee as decribed in the CementDAO.
      * whitepaper.
      * @param _token Address of the token to calculate the transaction fee for.
@@ -257,24 +328,7 @@ library Fees {
         } else revert("Transaction type not accepted.");
         
         // Calculate the fee following the formula from the inside out
-        int256 t2 = FixidityLib.divide(
-            targetProportion,
-            FixidityLib.newFixed(2)
-        );
-        int256 deviationCurve = FixidityLib.divide(
-            FixidityLib.add(
-                deviation,
-                t2
-            ),
-            FixidityLib.subtract(
-                t2,
-                deviation
-            )
-        );
-        int256 deviationLogit = LogarithmLib.log_b(
-            FixidityLib.newFixed(10),
-            deviationCurve
-        );
+        int256 logitPoint = calculateLogit(targetProportion, deviation);
 
         uint256 baseFee;
         if (_transactionType == DEPOSIT()) {
@@ -292,7 +346,7 @@ library Fees {
                 convertedBaseFee,
                 scalingFactor
             ),
-            deviationLogit
+            logitPoint
         );
         if (_transactionType == DEPOSIT()) {
             fee = FixidityLib.add(
@@ -306,16 +360,11 @@ library Fees {
             );
         } // else statement does not happen here. It would have reverted above.
 
-        assert(fee >= 0);
-        if (fee < UtilsLib.safeCast(Base(_basket).getMinimumFee())) 
-            fee = UtilsLib.safeCast(Base(_basket).getMinimumFee());
-
-        uint8 basketDecimals = ERC20Detailed(_basket).decimals();
-        return uint256(
-            FixidityLib.fromFixed(
-                fee,
-                basketDecimals
-            )
+        return applyFee(
+            _token, 
+            _basket,
+            _transactionAmount, 
+            fee
         );
     }
 }
