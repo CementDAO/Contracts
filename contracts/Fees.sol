@@ -228,6 +228,33 @@ library Fees {
     }
 
     /**
+     * @notice Calculates result of scaling the logit by the base fee and scaling factor. 
+     * All parameters are in fixed point units.
+     * @param _baseFee The deposit or redemption fee percentage.
+     * @param _scalingFactor The scaling factor.
+     * @param _logitPoint The result of calculating the logit on deviation.
+     * @return int256 The scaled logit point.
+     */
+     // TODO: _baseFee should be in fixed point units, not MIX wei
+    function scaleLogit(
+        int256 _baseFee,
+        int256 _scalingFactor,
+        int256 _logitPoint
+    )
+        public
+        pure
+        returns (int256)
+    {
+        return FixidityLib.multiply(
+            FixidityLib.multiply(
+                _baseFee,
+                _scalingFactor
+            ),
+            _logitPoint
+        );
+    }
+
+    /**
      * @notice Multiplies a transaction amount by a fee percentage.
      * @param _token Address of the token to calculate the transaction fee for.
      * @param _basket Address of the MIXR basket.
@@ -247,8 +274,8 @@ library Fees {
     {
         assert(_fee >= 0);
         int256 validatedFee = _fee;
-        if (validatedFee < UtilsLib.safeCast(Base(_basket).getMinimumFee())) 
-            validatedFee = UtilsLib.safeCast(Base(_basket).getMinimumFee());
+        if (validatedFee < Base(_basket).getMinimumFee()) 
+            validatedFee = Base(_basket).getMinimumFee();
 
         int256 transactionAmount = FixidityLib.newFixed(
             UtilsLib.safeCast(_transactionAmount), 
@@ -330,32 +357,38 @@ library Fees {
         // Calculate the fee following the formula from the inside out
         int256 logitPoint = calculateLogit(targetProportion, deviation);
 
-        uint256 baseFee;
+        int256 baseFee;
         if (_transactionType == DEPOSIT()) {
             baseFee = Base(_basket).getDepositFee(_token);
         } else if (_transactionType == REDEMPTION()) {
             baseFee = Base(_basket).getRedemptionFee(_token);
         }
-        int256 convertedBaseFee = FixidityLib.newFixed(
+        /* int256 convertedBaseFee = FixidityLib.newFixed(
             UtilsLib.safeCast(baseFee), 
             ERC20Detailed(_basket).decimals()
-        );
-        int256 scalingFactor = Base(_basket).getScalingFactor();
+        ); */
+        /* int256 scalingFactor = Base(_basket).getScalingFactor();
         int256 scaledLogit = FixidityLib.multiply(
             FixidityLib.multiply(
                 convertedBaseFee,
                 scalingFactor
             ),
             logitPoint
+        ); */
+        int256 scaledLogit = scaleLogit(
+            baseFee,
+            Base(_basket).getScalingFactor(),
+            logitPoint
         );
+
         if (_transactionType == DEPOSIT()) {
             fee = FixidityLib.add(
-                convertedBaseFee,
+                baseFee,
                 scaledLogit
             );
         } else if (_transactionType == REDEMPTION()) {
             fee = FixidityLib.subtract(
-                convertedBaseFee,
+                baseFee,
                 scaledLogit
             );
         } // else statement does not happen here. It would have reverted above.

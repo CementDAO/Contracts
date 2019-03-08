@@ -115,13 +115,13 @@ contract Governance is Base, Ownable {
     /**
      * @notice Set the base fee for deposit, redemption and transfer transactions.
      * @param _token Address for the token that we are setting the fees for.
-     * @param _fee Amount to set in MIX wei.
+     * @param _fee Amount to set in fixed point units (FixidityLib.digits()).
      * @param _transactionType One of REDEMPTION(), DEPOSIT() or TRANSFER().
      * @dev
      * Test setTransactionFee(minimumFee) works and token.transactionFee returns minimumFee
      * Test setTransactionFee(minimumFee-1) throws
      */
-    function setTransactionFee(address _token, uint256 _fee, int8 _transactionType)
+    function setTransactionFee(address _token, int256 _fee, int8 _transactionType)
         public
         onlyGovernor()
     {

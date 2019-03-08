@@ -30,10 +30,10 @@ contract Base {
     int256 constant public scalingFactor = 500000000000000000000000;
 
     /**
-     * @notice Minimum that can be returned when calculating a fee, expressed in
-     * MIX wei.
+     * @notice Minimum that can be returned when calculating a percentage fee,
+     * expressed in in fixed point units (FixidityLib.digits()).
      */
-    uint256 constant public minimumFee = 1000000000000000000;
+    int256 constant public minimumFee = 1000000000000000000;
 
     /**
      * @notice (C1) Whitelist of addresses that can do governance.
@@ -62,17 +62,17 @@ contract Base {
          */
         int256 targetProportion;
         /**
-         * @notice The base deposit fees in MIX wei for this token.
+         * @notice The base deposit percentage fees in fixed point units (FixidityLib.digits()) for this token.
          */
-        uint256 depositFee;
+        int256 depositFee;
         /**
-         * @notice The base redemption fees in MIX wei for this token.
+         * @notice The base redemption percentage fees in fixed point units (FixidityLib.digits()) for this token.
          */
-        uint256 redemptionFee;
+        int256 redemptionFee;
         /**
-         * @notice The base transfer fees in MIX wei for this token.
+         * @notice The base transfer percentage fees in fixed point units (FixidityLib.digits()) for this token.
          */
-        uint256 transferFee;
+        int256 transferFee;
         /**
          * @notice The token name.
          */
@@ -199,7 +199,7 @@ contract Base {
     function getMinimumFee() 
     public
     pure
-    returns(uint256)
+    returns(int256)
     {
         return minimumFee;
     }
@@ -265,7 +265,7 @@ contract Base {
     public
     view
     isRegistered(_token)
-    returns(uint256)
+    returns(int256)
     {
         TokenData memory token = tokens[_token];
         return token.depositFee;
@@ -281,7 +281,7 @@ contract Base {
     public
     view
     isRegistered(_token)
-    returns(uint256)
+    returns(int256)
     {
         TokenData memory token = tokens[_token];
         return token.redemptionFee;
@@ -297,7 +297,7 @@ contract Base {
     public
     view
     isRegistered(_token)
-    returns(uint256)
+    returns(int256)
     {
         TokenData memory token = tokens[_token];
         return token.transferFee;
