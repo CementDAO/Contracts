@@ -291,12 +291,12 @@ library Fees {
     }
 
     /**
-     * @notice Calculates the deposit or redemption fee as decribed in the CementDAO.
-     * whitepaper.
+     * @notice Calculates the deposit or redemption fee as decribed in the CementDAO whitepaper.
      * @param _token Address of the token to calculate the transaction fee for.
      * @param _basket Address of the MIXR basket.
      * @param _transactionAmount Amount to deposit or redeem in _token wei.
      * @param _transactionType Fees.DEPOSIT or Fees.REDEMPTION.
+     * @dev This function is not necessary but useful for a coherent syntax
      * @return uint256 The calculated fee in MIX wei.
      */
     function transactionFee(
@@ -309,89 +309,143 @@ library Fees {
         view
         returns (uint256) 
     {
+        // Floors and ceilings
+        if (_transactionType == DEPOSIT()) {
+            return depositFee(
+                _token, 
+                _basket,
+                _transactionAmount
+            );
+        } else if (_transactionType == REDEMPTION()) {
+            return redemptionFee(
+                _token, 
+                _basket,
+                _transactionAmount
+            );
+        } else revert("Transaction type not accepted.");
+    }
+
+    /**
+     * @notice Calculates the deposit fee as decribed in the CementDAO whitepaper.
+     * @param _token Address of the token to calculate the transaction fee for.
+     * @param _basket Address of the MIXR basket.
+     * @param _transactionAmount Amount to deposit or redeem in _token wei.
+     * @return uint256 The calculated fee in MIX wei.
+     */
+    function depositFee(
+        address _token, 
+        address _basket,
+        uint256 _transactionAmount
+    )
+        public
+        view
+        returns (uint256) 
+    {
         int256 deviation = deviationAfterTransaction(
             _token,
             _basket,
             _transactionAmount,
-            _transactionType
+            DEPOSIT()
         );
         int256 targetProportion = Base(_basket).getTargetProportion(_token);
+        int256 baseFee = Base(_basket).getDepositFee(_token);
         int256 fee;
 
         // Floors and ceilings
-        if (_transactionType == DEPOSIT()) {
-            // When the deviation goes above this value the deposit is rejected
-            int256 upperBound = FixidityLib.multiply(
-                FixidityLib.newFixedFraction(4,10),
-                targetProportion
-            );
-            if (deviation > upperBound)
-                revert("Token not accepted, basket has too many.");
-            
-            // Deposits have a floor on -0.4 * targetProportion for deviation 
-            int256 lowerBound = FixidityLib.multiply(
-                FixidityLib.newFixedFraction(-4,10),
-                targetProportion
-            );
-            if (deviation <= lowerBound)
-                deviation = lowerBound;
-        } else if (_transactionType == REDEMPTION()) {
-            // Redemptions have a ceiling on 0.4 * targetProportion for deviation
-            int256 upperBound = FixidityLib.multiply(
-                FixidityLib.newFixedFraction(4,10),
-                targetProportion
-            );
-            if (deviation > upperBound)
-                deviation = upperBound;
-
-            // Redemptions have a floor on -0.4999 * targetProportion for deviation
-            int256 lowerBound = FixidityLib.multiply(
-                FixidityLib.newFixedFraction(-4999,10000),
-                targetProportion
-            );
-            if (deviation < lowerBound)
-                deviation = lowerBound;
-            // Redemptions when no tokens are in the basket are managed by the redeemMIXR function
-        } else revert("Transaction type not accepted.");
+        // When the deviation goes above this value the deposit is rejected
+        int256 upperBound = FixidityLib.multiply(
+            FixidityLib.newFixedFraction(4,10),
+            targetProportion
+        );
+        if (deviation > upperBound)
+            revert("Token not accepted, basket has too many.");
+        
+        // Deposits have a floor on -0.4 * targetProportion for deviation 
+        int256 lowerBound = FixidityLib.multiply(
+            FixidityLib.newFixedFraction(-4,10),
+            targetProportion
+        );
+        if (deviation <= lowerBound)
+            deviation = lowerBound;
         
         // Calculate the fee following the formula from the inside out
         int256 logitPoint = calculateLogit(targetProportion, deviation);
-
-        int256 baseFee;
-        if (_transactionType == DEPOSIT()) {
-            baseFee = Base(_basket).getDepositFee(_token);
-        } else if (_transactionType == REDEMPTION()) {
-            baseFee = Base(_basket).getRedemptionFee(_token);
-        }
-        /* int256 convertedBaseFee = FixidityLib.newFixed(
-            UtilsLib.safeCast(baseFee), 
-            ERC20Detailed(_basket).decimals()
-        ); */
-        /* int256 scalingFactor = Base(_basket).getScalingFactor();
-        int256 scaledLogit = FixidityLib.multiply(
-            FixidityLib.multiply(
-                convertedBaseFee,
-                scalingFactor
-            ),
-            logitPoint
-        ); */
         int256 scaledLogit = scaleLogit(
             baseFee,
             Base(_basket).getScalingFactor(),
             logitPoint
         );
 
-        if (_transactionType == DEPOSIT()) {
-            fee = FixidityLib.add(
-                baseFee,
-                scaledLogit
-            );
-        } else if (_transactionType == REDEMPTION()) {
-            fee = FixidityLib.subtract(
-                baseFee,
-                scaledLogit
-            );
-        } // else statement does not happen here. It would have reverted above.
+        fee = FixidityLib.add(
+            baseFee,
+            scaledLogit
+        );
+
+        return applyFee(
+            _token, 
+            _basket,
+            _transactionAmount, 
+            fee
+        );
+    }
+
+        /**
+     * @notice Calculates the redemption fee as decribed in the CementDAO whitepaper.
+     * @param _token Address of the token to calculate the transaction fee for.
+     * @param _basket Address of the MIXR basket.
+     * @param _transactionAmount Amount to deposit or redeem in _token wei.
+     * @return uint256 The calculated fee in MIX wei.
+     */
+    function redemptionFee(
+        address _token, 
+        address _basket,
+        uint256 _transactionAmount
+    )
+        public
+        view
+        returns (uint256) 
+    {
+        int256 deviation = deviationAfterTransaction(
+            _token,
+            _basket,
+            _transactionAmount,
+            REDEMPTION()
+        );
+        int256 targetProportion = Base(_basket).getTargetProportion(_token);
+        int256 baseFee = Base(_basket).getRedemptionFee(_token);
+        int256 fee;
+
+        // Floors and ceilings
+        // Redemptions have a ceiling on 0.4 * targetProportion for deviation
+        int256 upperBound = FixidityLib.multiply(
+            FixidityLib.newFixedFraction(4,10),
+            targetProportion
+        );
+        if (deviation > upperBound)
+            deviation = upperBound;
+
+        // Redemptions have a floor on -0.4999 * targetProportion for deviation
+        int256 lowerBound = FixidityLib.multiply(
+            FixidityLib.newFixedFraction(-4999,10000),
+            targetProportion
+        );
+        if (deviation < lowerBound)
+            deviation = lowerBound;
+        // Redemptions when no tokens are in the basket are managed by the redeemMIXR function
+        
+        // Calculate the fee following the formula from the inside out
+        int256 logitPoint = calculateLogit(targetProportion, deviation);
+
+        int256 scaledLogit = scaleLogit(
+            baseFee,
+            Base(_basket).getScalingFactor(),
+            logitPoint
+        );
+
+        fee = FixidityLib.subtract(
+            baseFee,
+            scaledLogit
+        );
 
         return applyFee(
             _token, 
