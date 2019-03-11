@@ -188,7 +188,7 @@ contract('BILD', (accounts) => {
                     },
                 );
             },
-            'Attempted stake larger than BILD balance.',
+            'Not enough BILD are available.',
         );
         itShouldThrow(
             'createStake fails with stake larger than balance',
@@ -209,7 +209,7 @@ contract('BILD', (accounts) => {
                     },
                 );
             },
-            'Attempted stake larger than BILD balance.',
+            'Not enough BILD are available.',
         );
         it('createStake with 1 BILD token executes', async () => {
             await bild.transfer(

@@ -32,12 +32,61 @@ contract BILD is BILDGovernance {
      */
     modifier onlyStakeholder(address _address)
     {
-        require(
+        /* require(
             Whitelist(whitelist).isStakeholder(msg.sender) == true,
-            "This address not authorized to hold BILD tokens."
+            "This address is not authorized to hold BILD tokens."
+        ); */
+        _;
+    }
+
+    modifier hasFreeBILD(uint256 _bild)
+    {
+        require (
+            _bild <= ERC20(address(this)).balanceOf(msg.sender) - stakesByHolder[msg.sender],
+            "Not enough BILD are available."
         );
         _;
     }
+
+    /**
+     * @notice Transfer BILD to a specified address
+     * @param _to The address to transfer to.
+     * @param _value The amount to be transferred.
+     */
+    function transfer(address _to, uint256 _value) 
+        public 
+        onlyStakeholder(_to)
+        hasFreeBILD(_value)
+        returns(bool)
+    {
+        _transfer(msg.sender, _to, _value);
+        return true;
+    }
+
+    /**
+     * @dev TODO: Should I implement transferFrom or make it throw?
+     * @notice Transfer BILD from one address to another.
+     * Note that while this function emits an Approval event, this is not required as per the specification,
+     * and other compliant implementations may not emit the event.
+     * @param _from address The address which you want to send tokens from
+     * @param _to address The address which you want to transfer to
+     * @param _value uint256 the amount of tokens to be transferred
+     */
+    /* function transferFrom
+    (
+        address _from, 
+        address _to, 
+        uint256 _value
+    ) 
+        public 
+        onlyStakeholder(_to)
+        enoughBILD(_value)
+        returns(bool)
+    {
+        _transfer(_from, _to, _value);
+        _approve(_from, msg.sender, _allowed[_from][msg.sender].sub(_value));
+        return true;
+    } */
 
     /**
      * @notice Allows a stakeholder to nominate an agent.
@@ -85,12 +134,8 @@ contract BILD is BILDGovernance {
     function createStake(address _agent, uint256 _stake)
     public
     agentExists(_agent)
+    hasFreeBILD(_stake)
     {
-        require (
-            _stake <= ERC20(address(this)).balanceOf(msg.sender) - stakesByHolder[msg.sender],
-            "Attempted stake larger than BILD balance."
-        );
-
         // Look for a stake for the agent from the stakeholder.
         uint256 stakeIndex = findStakeIndex(_agent, msg.sender);
         // If the agent has no earlier stakes by the stakeholder create one
