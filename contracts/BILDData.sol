@@ -254,76 +254,6 @@ contract BILDData is ERC20, ERC20Detailed {
         }
         return current;
     }
-    /**
-     * @notice Places an agent at the lowest position of the agents list.
-     * @param _agent The agent to insert.
-     */
-    function insertAgent(address _agent)
-        public
-        agentExists(_agent)
-    {
-        require(
-            !agentIsInList(_agent),
-            "Can't insert an agent that is already in the agents ranking."
-        );
-        // If there are no highestAgent and no lowestAgent then _agent is the only one in the list.
-        if (highestAgent == NULL_ADDRESS && lowestAgent == NULL_ADDRESS)
-            highestAgent = _agent;
-        else
-            agents[lowestAgent].lowerAgent = _agent;
-        lowestAgent = _agent;
-    }
-
-    /**
-     * @notice Remove an agent from the list
-     * @param _agent The agent to remove.
-     */
-    function detachAgent(address _agent)
-        public // TODO: Public for testing, make private for deployment
-        agentExists(_agent)
-    {
-        require(
-            agentIsInList(_agent),
-            "The agent is already detached from the ranking."
-        );
-        if (lowestAgent == _agent && highestAgent == _agent)
-        {
-            delete lowestAgent;
-            delete highestAgent;
-            return;
-        }
-        if (lowestAgent == _agent)
-        {
-            lowestAgent = higherAgent(_agent);
-            delete agents[higherAgent(_agent)].lowerAgent;
-            return;
-        }
-        if (highestAgent == _agent)
-        {
-            highestAgent = agents[_agent].lowerAgent;
-            delete agents[_agent].lowerAgent;
-            return;
-        }
-        agents[higherAgent(_agent)].lowerAgent = agents[_agent].lowerAgent;
-        delete agents[_agent].lowerAgent; // TODO: test this
-    }
-
-    /**
-     * @notice Erase completely an agent from the system
-     * @param _agent The agent to erase.
-     */
-    function eraseAgent(address _agent)
-        public // TODO: Public for testing, make private for deployment
-        agentExists(_agent)
-    {
-        // Remove agent from the list
-        detachAgent(_agent);
-
-        // Erase agent
-        delete agents[_agent].lowerAgent;
-        delete agents[_agent].name;
-        delete agents[_agent].contact;
-    }
 
     /**
      * @notice Returns the agent _rank positions under _agent
@@ -365,11 +295,82 @@ contract BILDData is ERC20, ERC20Detailed {
     }
 
     /**
+     * @notice Places an agent at the lowest position of the agents list.
+     * @param _agent The agent to insert.
+     */
+    function insertAgent(address _agent)
+        internal
+        agentExists(_agent)
+    {
+        require(
+            !agentIsInList(_agent),
+            "Can't insert an agent that is already in the agents ranking."
+        );
+        // If there are no highestAgent and no lowestAgent then _agent is the only one in the list.
+        if (highestAgent == NULL_ADDRESS && lowestAgent == NULL_ADDRESS)
+            highestAgent = _agent;
+        else
+            agents[lowestAgent].lowerAgent = _agent;
+        lowestAgent = _agent;
+    }
+
+    /**
+     * @notice Remove an agent from the list
+     * @param _agent The agent to remove.
+     */
+    function detachAgent(address _agent)
+        internal
+        agentExists(_agent)
+    {
+        require(
+            agentIsInList(_agent),
+            "The agent is already detached from the ranking."
+        );
+        if (lowestAgent == _agent && highestAgent == _agent)
+        {
+            delete lowestAgent;
+            delete highestAgent;
+            return;
+        }
+        if (lowestAgent == _agent)
+        {
+            lowestAgent = higherAgent(_agent);
+            delete agents[higherAgent(_agent)].lowerAgent;
+            return;
+        }
+        if (highestAgent == _agent)
+        {
+            highestAgent = agents[_agent].lowerAgent;
+            delete agents[_agent].lowerAgent;
+            return;
+        }
+        agents[higherAgent(_agent)].lowerAgent = agents[_agent].lowerAgent;
+        delete agents[_agent].lowerAgent; // TODO: test this
+    }
+
+    /**
+     * @notice Erase completely an agent from the system
+     * @param _agent The agent to erase.
+     */
+    function eraseAgent(address _agent)
+        internal
+        agentExists(_agent)
+    {
+        // Remove agent from the list
+        detachAgent(_agent);
+
+        // Erase agent
+        delete agents[_agent].lowerAgent;
+        delete agents[_agent].name;
+        delete agents[_agent].contact;
+    }
+
+    /**
      * @notice Places an agent in its right place in the agents list.
      * @param _agent The agent to find a place for.
      */
     function sortAgent(address _agent)
-        public
+        internal
         agentExists(_agent)
     {
         detachAgent(_agent);

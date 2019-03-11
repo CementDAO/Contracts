@@ -56,7 +56,7 @@ contract BILD is BILDGovernance {
         );
 
         // Create an agent by giving him an empty stake from the stakeholder.
-        agents[_agent] = Agent(_name, _contact, NULL_ADDRESS);
+        agents[_agent] = Agent(_name, _contact, NULL_ADDRESS); // TODO: This should be done inside insertAgent
         stakesByAgent[_agent].push(Stake(msg.sender, 0));
         insertAgent(_agent);
         createStake(_agent, _stake);
