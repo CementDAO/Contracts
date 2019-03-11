@@ -5,7 +5,7 @@ const chai = require('chai');
 // use default BigNumber
 chai.use(require('chai-bignumber')()).should();
 
-contract('UtilsLib', (accounts) => {
+contract('UtilsLib', () => {
     let utilsLibMock;
     let someERC20Decimals;
     let someOtherERC20Decimals;

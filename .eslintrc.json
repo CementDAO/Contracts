@@ -4,7 +4,8 @@
         "indent": [
             "error",
             4
-        ]
+        ],
+        "max-len": [2, 126, 4]
     },
     "env": {
         "mocha": true,

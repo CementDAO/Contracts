@@ -3,6 +3,7 @@ pragma solidity ^0.5.0;
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
 import "./fixidity/FixidityLib.sol";
 
+
 library UtilsLib {
     /**
      * @notice Cast safely from uint256 (token balances) to int256 (proportions and fees)
@@ -24,11 +25,6 @@ library UtilsLib {
      * @param _originTokenDecimals Decimals of the tokens to convert from.
      * @param _destinationTokenDecimals Decimals of the token to convert to.
      * @param _amount Quantity of wei of the origin token to convert.
-     * @dev Test:
-     * Create a token x with 18 decimals and a token y with 20 decimals
-     * Test convertTokenAmount(x, y, 1) = 100
-     * Test convertTokenAmount(y, x, 100) = 1
-     * Test convertTokenAmount(y, x, 110) = 1
      */
     function convertTokenAmount(
         uint8 _originTokenDecimals, 
@@ -47,4 +43,30 @@ library UtilsLib {
         assert(convertedAmount >= 0);
         return uint256(convertedAmount);
     } 
+
+    /**
+     * @notice Compare whether two strings are the same
+     * @param _a First string.
+     * @param _b Second string.
+     * TODO: Move to UtilsLib
+     */
+    function stringsAreEqual(string memory _a, string memory _b) 
+        public
+        pure 
+        returns(bool)
+    {
+        return keccak256(bytes(_a)) == keccak256(bytes(_b));
+    }
+
+    /**
+     * @notice Return whether a string is empty
+     * @param _s A string
+     */
+    function stringIsEmpty(string memory _s) 
+        public
+        pure 
+        returns(bool)
+    {
+        return bytes(_s).length == 0;
+    }
 }

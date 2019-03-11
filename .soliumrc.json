@@ -6,7 +6,7 @@
     "indentation": ["error", 4],
     "lbrace": "off",
     "linebreak-style": ["error", "unix"],
-    "max-len": ["error", 79],
+    "max-len": ["error", 126],
     "no-constant": ["error"],
     "no-empty-blocks": "off",
     "quotes": ["error", "double"],

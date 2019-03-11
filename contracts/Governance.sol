@@ -71,7 +71,7 @@ contract Governance is Base, Ownable {
         public
         onlyGovernor()
     {
-        // require(_wallet != address(0), "Invalid wallet address!");
+        require(_wallet != NULL_ADDRESS, "Invalid wallet address!");
         /**
          * TODO: we should also verify that it's not a contract address.
          * Maybe we also want multiple verification.
@@ -82,18 +82,23 @@ contract Governance is Base, Ownable {
     /**
      * @notice This function adds an ERC20Detailed token to the registered tokens list.
      */
-    function registerToken(address _token)
+    function registerDetailedToken(address _token)
         public
         onlyGovernor()
         isCompliantToken(_token)
     {
-        registerTokenWithDecimals(_token, ERC20Detailed(_token).decimals());
+        registerStandardToken(
+            _token,
+            // TODO: let's fix!
+            "not", // ERC20Detailed(_token).name(),
+            ERC20Detailed(_token).decimals()
+        );
     }
 
     /**
      * @notice This function adds an ERC20 token to the registered tokens list.
      */
-    function registerTokenWithDecimals(address _token, uint8 _decimals)
+    function registerStandardToken(address _token, bytes32 _name, uint8 _decimals)
         public
         onlyGovernor()
         isCompliantToken(_token)
@@ -102,6 +107,7 @@ contract Governance is Base, Ownable {
         require(token.registered == false, "Token is already registered!");
         token.registered = true;
         token.decimals = _decimals;
+        token.name = _name;
         tokens[_token] = token;
         tokensList.push(_token);
     }
@@ -109,13 +115,13 @@ contract Governance is Base, Ownable {
     /**
      * @notice Set the base fee for deposit, redemption and transfer transactions.
      * @param _token Address for the token that we are setting the fees for.
-     * @param _fee Amount to set in MIX wei.
+     * @param _fee Amount to set in fixed point units (FixidityLib.digits()).
      * @param _transactionType One of REDEMPTION(), DEPOSIT() or TRANSFER().
      * @dev
      * Test setTransactionFee(minimumFee) works and token.transactionFee returns minimumFee
      * Test setTransactionFee(minimumFee-1) throws
      */
-    function setTransactionFee(address _token, uint256 _fee, int8 _transactionType)
+    function setTransactionFee(address _token, int256 _fee, int8 _transactionType)
         public
         onlyGovernor()
     {
@@ -155,9 +161,9 @@ contract Governance is Base, Ownable {
         address[] memory registeredTokens;
         (registeredTokens, totalTokens) = getRegisteredTokens();
         
-        for(uint256 x = 0; x < registeredTokens.length; x += 1) {
+        for (uint256 x = 0; x < registeredTokens.length; x += 1) {
             bool found = false;
-            for(uint256 y = 0; y < _tokens.length; y += 1) {
+            for (uint256 y = 0; y < _tokens.length; y += 1) {
                 if (registeredTokens[x] == _tokens[y]) {
                     found = true; 
                     break;
@@ -171,7 +177,7 @@ contract Governance is Base, Ownable {
 
         // Check proportions supplied are valid.
         int256 totalProportions = 0;
-        for(uint256 x = 0; x < _proportions.length; x += 1) {
+        for (uint256 x = 0; x < _proportions.length; x += 1) {
             require(
                 _proportions[x] >= 0 && _proportions[x] <= FixidityLib.fixed1(),
                 "Target proportion not in the [0,1] range."
@@ -184,7 +190,7 @@ contract Governance is Base, Ownable {
         );
 
         // Apply changes.
-        for(uint256 x = 0; x < _proportions.length; x += 1) {
+        for (uint256 x = 0; x < _proportions.length; x += 1) {
             TokenData memory token = tokens[_tokens[x]];
             token.targetProportion = _proportions[x];
             tokens[_tokens[x]] = token;

@@ -7,6 +7,7 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./fixidity/FixidityLib.sol";
 import "./UtilsLib.sol";
 
+
 /**
  * @title Base MIXR contract. 
  * @author Alberto Cuesta Canada, Bernardo Vieira
@@ -17,6 +18,11 @@ contract Base {
     using SafeMath for uint256;
 
     /**
+     * @notice An initializated address.
+     */
+    address public NULL_ADDRESS = address(0);
+
+    /**
      * @notice Scaling factor for the calculation of fees, expressed in fixed 
      * point units.
      * @dev Test scalingFactor = FixidityLib.fixed1()/2
@@ -24,10 +30,10 @@ contract Base {
     int256 constant public scalingFactor = 500000000000000000000000;
 
     /**
-     * @notice Minimum that can be returned when calculating a fee, expressed in
-     * MIX wei.
+     * @notice Minimum that can be returned when calculating a percentage fee,
+     * expressed in in fixed point units (FixidityLib.digits()).
      */
-    uint256 constant public minimumFee = 1000000000000000000;
+    int256 constant public minimumFee = 1000000000000000000;
 
     /**
      * @notice (C1) Whitelist of addresses that can do governance.
@@ -56,17 +62,21 @@ contract Base {
          */
         int256 targetProportion;
         /**
-         * @notice The base deposit fees in MIX wei for this token.
+         * @notice The base deposit percentage fees in fixed point units (FixidityLib.digits()) for this token.
          */
-        uint256 depositFee;
+        int256 depositFee;
         /**
-         * @notice The base redemption fees in MIX wei for this token.
+         * @notice The base redemption percentage fees in fixed point units (FixidityLib.digits()) for this token.
          */
-        uint256 redemptionFee;
+        int256 redemptionFee;
         /**
-         * @notice The base transfer fees in MIX wei for this token.
+         * @notice The base transfer percentage fees in fixed point units (FixidityLib.digits()) for this token.
          */
-        uint256 transferFee;
+        int256 transferFee;
+        /**
+         * @notice The token name.
+         */
+        bytes32 name;
     }
 
     /**
@@ -189,7 +199,7 @@ contract Base {
     function getMinimumFee() 
     public
     pure
-    returns(uint256)
+    returns(int256)
     {
         return minimumFee;
     }
@@ -210,6 +220,23 @@ contract Base {
     {
         TokenData memory token = tokens[_token];
         return token.decimals;
+    }
+
+    /**
+     * @notice Returns the name of a token.
+     * @param _token The token ERC20 contract address that we are retrieving 
+     * the name. The token needs to have been registered in CementDAO.
+     * @dev The MIX token inheriting from Base implements ERC20Detailed and you
+     * can retrieve its name as mixr.name().
+     */
+    function getName(address _token) 
+    public
+    view
+    isRegistered(_token)
+    returns(bytes32)
+    {
+        TokenData memory token = tokens[_token];
+        return token.name;
     }
 
     /**
@@ -238,7 +265,7 @@ contract Base {
     public
     view
     isRegistered(_token)
-    returns(uint256)
+    returns(int256)
     {
         TokenData memory token = tokens[_token];
         return token.depositFee;
@@ -254,7 +281,7 @@ contract Base {
     public
     view
     isRegistered(_token)
-    returns(uint256)
+    returns(int256)
     {
         TokenData memory token = tokens[_token];
         return token.redemptionFee;
@@ -270,7 +297,7 @@ contract Base {
     public
     view
     isRegistered(_token)
-    returns(uint256)
+    returns(int256)
     {
         TokenData memory token = tokens[_token];
         return token.transferFee;
@@ -294,6 +321,7 @@ contract Base {
                 activeIndex += 1; // Unlikely to overflow
             }
         }
-        return (activeAddresses, activeIndex); // Do we need to return activeIndex? Can't the caller use activeAddresses.length?
+        // Do we need to return activeIndex? Can't the caller use activeAddresses.length?
+        return (activeAddresses, activeIndex);
     }
 }
