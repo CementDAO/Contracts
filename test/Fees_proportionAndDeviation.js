@@ -1,4 +1,5 @@
 const MIXR = artifacts.require('./MIXR.sol');
+const Whitelist = artifacts.require('./Whitelist.sol');
 const FeesMock = artifacts.require('./FeesMock.sol');
 const FixidityLibMock = artifacts.require('./FixidityLibMock.sol');
 const SampleDetailedERC20 = artifacts.require('./test/SampleDetailedERC20.sol');
@@ -12,6 +13,7 @@ chai.use(require('chai-bignumber')()).should();
 
 contract('Fees', (accounts) => {
     let mixr;
+    let whitelist;
     let feesMock;
     let fixidityLibMock;
     let sampleDetailedERC20;
@@ -27,6 +29,7 @@ contract('Fees', (accounts) => {
 
     before(async () => {
         mixr = await MIXR.deployed();
+        whitelist = await Whitelist.deployed();
         feesMock = await FeesMock.deployed();
         fixidityLibMock = await FixidityLibMock.deployed();
         sampleDetailedERC20 = await SampleDetailedERC20.deployed();
@@ -41,8 +44,9 @@ contract('Fees', (accounts) => {
             sampleERC20Decimals = 18;
             sampleERC20DecimalsOther = 18;
             const amountToUser = tokenNumber(sampleERC20Decimals, 80);
-            mixr = await MIXR.new();
-            await mixr.addGovernor(governor, {
+            whitelist = await Whitelist.new();
+            mixr = await MIXR.new(whitelist.address);
+            await whitelist.addGovernor(governor, {
                 from: owner,
             });
 
@@ -216,8 +220,9 @@ contract('Fees', (accounts) => {
             sampleERC20Decimals = 18;
             sampleERC20DecimalsOther = 18;
             const amountToUser = tokenNumber(sampleERC20Decimals, 80);
-            mixr = await MIXR.new();
-            await mixr.addGovernor(governor, {
+            whitelist = await Whitelist.new();
+            mixr = await MIXR.new(whitelist.address);
+            await whitelist.addGovernor(governor, {
                 from: owner,
             });
 

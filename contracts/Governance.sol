@@ -1,6 +1,5 @@
 pragma solidity ^0.5.0;
 
-import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
 import "./fixidity/FixidityLib.sol";
 import "./Base.sol";
@@ -15,7 +14,7 @@ import "./UtilsLib.sol";
  * @notice Implements governance functions for a MIXR token as described in the
  * CementDAO whitepaper.
  */
-contract Governance is Base, Ownable {
+contract Governance is Base {
 
     address internal whitelist;
     /**

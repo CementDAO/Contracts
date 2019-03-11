@@ -1,4 +1,5 @@
 const MIXR = artifacts.require('./MIXR.sol');
+const Whitelist = artifacts.require('./Whitelist.sol');
 const FeesMock = artifacts.require('./FeesMock.sol');
 const FixidityLibMock = artifacts.require('./FixidityLibMock.sol');
 const SampleDetailedERC20 = artifacts.require('./test/SampleDetailedERC20.sol');
@@ -11,6 +12,7 @@ chai.use(require('chai-bignumber')()).should();
 
 contract('Fees', (accounts) => {
     let mixr;
+    let whitelist;
     let feesMock;
     let fixidityLibMock;
     let sampleDetailedERC20;
@@ -26,6 +28,7 @@ contract('Fees', (accounts) => {
 
     before(async () => {
         mixr = await MIXR.deployed();
+        whitelist = await Whitelist.deployed();
         feesMock = await FeesMock.deployed();
         fixidityLibMock = await FixidityLibMock.deployed();
         sampleDetailedERC20 = await SampleDetailedERC20.deployed();
@@ -40,8 +43,9 @@ contract('Fees', (accounts) => {
         beforeEach(async () => {
             sampleERC20Decimals = 18;
             sampleERC20DecimalsOther = 18;
-            mixr = await MIXR.new();
-            await mixr.addGovernor(governor, {
+            whitelist = await Whitelist.new();
+            mixr = await MIXR.new(whitelist.address);
+            await whitelist.addGovernor(governor, {
                 from: owner,
             });
 
@@ -60,9 +64,12 @@ contract('Fees', (accounts) => {
                 'CLP',
             );
 
-            /**
-             * approve tokens!
-             */
+            await mixr.setStakeholderAccount(
+                accounts[3],
+                { from: governor },
+            );
+
+            // approve tokens!
             await mixr.registerDetailedToken(sampleDetailedERC20.address, {
                 from: governor,
             });
@@ -113,9 +120,8 @@ contract('Fees', (accounts) => {
                 { from: governor },
             );
         });
-        /*
-        * See depositFees_simulation.py
-        */
+        
+        // See depositFees_simulation.py
 
         it('transactionFee(x, basket, 70, DEPOSIT) with 30 y in basket - Deposit at deviation ceiling', async () => {
             await sampleDetailedERC20Other.transfer(
@@ -232,11 +238,11 @@ contract('Fees', (accounts) => {
         beforeEach(async () => {
             sampleERC20Decimals = 18;
             sampleERC20DecimalsOther = 18;
-            mixr = await MIXR.new();
-            await mixr.addGovernor(governor, {
+            whitelist = await Whitelist.new();
+            mixr = await MIXR.new(whitelist.address);
+            await whitelist.addGovernor(governor, {
                 from: owner,
             });
-
             
             // We will simulate that there's already some other token in the basket and we will
             // deposit a new one.

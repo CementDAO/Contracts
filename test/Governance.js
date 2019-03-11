@@ -39,8 +39,8 @@ contract('MIXR governance', (accounts) => {
 
     describe('setting the stakeholder fee holding account', () => {
         beforeEach(async () => {
-            mixr = await MIXR.new(whitelist.address);
             whitelist = await Whitelist.new();
+            mixr = await MIXR.new(whitelist.address);
             await whitelist.addGovernor(governor, {
                 from: owner,
             });
@@ -77,8 +77,8 @@ contract('MIXR governance', (accounts) => {
 
     describe('token registering', () => {
         beforeEach(async () => {
-            mixr = await MIXR.new(whitelist.address);
             whitelist = await Whitelist.new();
+            mixr = await MIXR.new(whitelist.address);
             await whitelist.addGovernor(governor, {
                 from: owner,
             });
@@ -159,8 +159,8 @@ contract('MIXR governance', (accounts) => {
         beforeEach(async () => {
             sampleERC20Decimals = 18;
             sampleERC20DecimalsOther = 18;
-            mixr = await MIXR.new(whitelist.address);
             whitelist = await Whitelist.new();
+            mixr = await MIXR.new(whitelist.address);
             await whitelist.addGovernor(governor, {
                 from: owner,
             });

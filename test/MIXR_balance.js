@@ -1,4 +1,5 @@
 const MIXR = artifacts.require('./MIXR.sol');
+const Whitelist = artifacts.require('./Whitelist.sol');
 const FeesMock = artifacts.require('./FeesMock.sol');
 const FixidityLibMock = artifacts.require('./FixidityLibMock.sol');
 const UtilsLibMock = artifacts.require('./UtilsLibMock.sol');
@@ -13,25 +14,20 @@ chai.use(require('chai-bignumber')()).should();
 
 contract('MIXR', (accounts) => {
     let mixr;
+    let whitelist;
     let feesMock;
     let fixidityLibMock;
     let sampleDetailedERC20;
     let sampleDetailedERC20Other;
-    let someERC721;
-    const defaultAmountOfTokens = 100;
     const sampleERC20Decimals = 18;
     const sampleERC20DecimalsOther = 20;
-    const mixrDecimals = 24;
     const owner = accounts[0];
     const governor = accounts[1];
     const user = accounts[2];
-    const stakeholders = accounts[3];
-    let fixed1;
-    let DEPOSIT;
-    let REDEMPTION;
 
     before(async () => {
         mixr = await MIXR.deployed();
+        whitelist = await Whitelist.deployed();
         feesMock = await FeesMock.deployed();
         fixidityLibMock = await FixidityLibMock.deployed();
         sampleDetailedERC20 = await SampleDetailedERC20.deployed();
@@ -44,8 +40,9 @@ contract('MIXR', (accounts) => {
 
     describe('basketBalance', () => {
         beforeEach(async () => {
-            mixr = await MIXR.new();
-            await mixr.addGovernor(governor, {
+            whitelist = await Whitelist.new();
+            mixr = await MIXR.new(whitelist.address);
+            await whitelist.addGovernor(governor, {
                 from: owner,
             });
 
