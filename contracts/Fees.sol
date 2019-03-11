@@ -183,7 +183,7 @@ library Fees {
                 _transactionAmount,
                 _transactionType
             ),
-            Base(_basket).getTargetProportion(_token)
+            MIXRData(_basket).getTargetProportion(_token)
         );
         assert(
             result >= FixidityLib.fixed1()*(-1) && 
@@ -274,8 +274,8 @@ library Fees {
     {
         assert(_fee >= 0);
         int256 validatedFee = _fee;
-        if (validatedFee < Base(_basket).getMinimumFee()) 
-            validatedFee = Base(_basket).getMinimumFee();
+        if (validatedFee < MIXRData(_basket).getMinimumFee()) 
+            validatedFee = MIXRData(_basket).getMinimumFee();
 
         int256 transactionAmount = FixidityLib.newFixed(
             UtilsLib.safeCast(_transactionAmount), 
@@ -347,8 +347,8 @@ library Fees {
             _transactionAmount,
             DEPOSIT()
         );
-        int256 targetProportion = Base(_basket).getTargetProportion(_token);
-        int256 baseFee = Base(_basket).getDepositFee(_token);
+        int256 targetProportion = MIXRData(_basket).getTargetProportion(_token);
+        int256 baseFee = MIXRData(_basket).getDepositFee(_token);
         int256 fee;
 
         // Floors and ceilings
@@ -372,7 +372,7 @@ library Fees {
         int256 logitPoint = calculateLogit(targetProportion, deviation);
         int256 scaledLogit = scaleLogit(
             baseFee,
-            Base(_basket).getScalingFactor(),
+            MIXRData(_basket).getScalingFactor(),
             logitPoint
         );
 
@@ -411,8 +411,8 @@ library Fees {
             _transactionAmount,
             REDEMPTION()
         );
-        int256 targetProportion = Base(_basket).getTargetProportion(_token);
-        int256 baseFee = Base(_basket).getRedemptionFee(_token);
+        int256 targetProportion = MIXRData(_basket).getTargetProportion(_token);
+        int256 baseFee = MIXRData(_basket).getRedemptionFee(_token);
         int256 fee;
 
         // Floors and ceilings
@@ -438,7 +438,7 @@ library Fees {
 
         int256 scaledLogit = scaleLogit(
             baseFee,
-            Base(_basket).getScalingFactor(),
+            MIXRData(_basket).getScalingFactor(),
             logitPoint
         );
 

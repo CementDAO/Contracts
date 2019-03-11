@@ -2,7 +2,7 @@ pragma solidity ^0.5.0;
 
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
 import "./fixidity/FixidityLib.sol";
-import "./Base.sol";
+import "./MIXRData.sol";
 import "./Fees.sol";
 import "./Whitelist.sol";
 import "./UtilsLib.sol";
@@ -13,7 +13,7 @@ import "./UtilsLib.sol";
  * @author Bernardo Vieira.
  * @notice Implements governance functions for a MIXR token.
  */
-contract MIXRGovernance is Base {
+contract MIXRGovernance is MIXRData {
 
     address internal whitelist;
     /**

@@ -14,7 +14,7 @@ import "./UtilsLib.sol";
  * @notice Implements a basket of stablecoins as an ERC20 token, as described
  * in the CementDAO whitepaper.
  */
-contract Base {
+contract MIXRData {
     using SafeMath for uint256;
 
     /**
@@ -204,7 +204,7 @@ contract Base {
      * @param _token The token ERC20 contract address that we are retrieving a
      * target proportion for. The token needs to have been registered in 
      * CementDAO.
-     * @dev The MIX token inheriting from Base implements ERC20Detailed and you
+     * @dev The MIX token inheriting from MIXRData implements ERC20Detailed and you
      * can retrieve its decimals as mixr.decimals().
      */
     function getDecimals(address _token) 
@@ -221,7 +221,7 @@ contract Base {
      * @notice Returns the name of a token.
      * @param _token The token ERC20 contract address that we are retrieving 
      * the name. The token needs to have been registered in CementDAO.
-     * @dev The MIX token inheriting from Base implements ERC20Detailed and you
+     * @dev The MIX token inheriting from MIXRData implements ERC20Detailed and you
      * can retrieve its name as mixr.name().
      */
     function getName(address _token) 
