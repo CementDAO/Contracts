@@ -11,6 +11,6 @@ MIXR.sol implements the logic for the stablecoin-backed ERC20 functionality of M
 
 Fees.sol implements the formulas for calculating transaction fees as detailed in the CementDAO white paper.
 
-## Governance - Distributed Autonomous Organization
+## MIXRGovernance - Distributed Autonomous Organization
 
 ## Utilities

@@ -9,11 +9,11 @@ import "./UtilsLib.sol";
 
 
 /**
- * @title Governance.
+ * @title MIXRGovernance.
  * @author Bernardo Vieira.
  * @notice Implements governance functions for a MIXR token.
  */
-contract Governance is Base {
+contract MIXRGovernance is Base {
 
     address internal whitelist;
     /**

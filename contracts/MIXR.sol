@@ -2,7 +2,7 @@ pragma solidity ^0.5.0;
 
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
-import "./Governance.sol";
+import "./MIXRGovernance.sol";
 import "./Fees.sol";
 
 
@@ -12,7 +12,7 @@ import "./Fees.sol";
  * This means that in addition to the usual ERC20 features the MIXR token
  * can react to transfers of tokens other than itself.
  */
-contract MIXR is Governance, ERC20, ERC20Detailed {
+contract MIXR is MIXRGovernance, ERC20, ERC20Detailed {
 
     /**
      * @notice Constructor with the details of the ERC20.
@@ -20,7 +20,7 @@ contract MIXR is Governance, ERC20, ERC20Detailed {
     constructor(address _whitelist)
     public
     ERC20Detailed("MIX", "MIX", 24)
-    Governance(_whitelist)
+    MIXRGovernance(_whitelist)
     {
         
     }

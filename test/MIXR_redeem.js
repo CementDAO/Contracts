@@ -143,7 +143,6 @@ contract('MIXR', (accounts) => {
         feesMock = await FeesMock.deployed();
         fixidityLibMock = await FixidityLibMock.deployed();
         sampleDetailedERC20 = await SampleDetailedERC20.deployed();
-        sampleDetailedERC20Other = await SampleDetailedERC20.deployed();
         someERC721 = await SampleERC721.deployed();
         fixed1 = new BigNumber(await fixidityLibMock.fixed1());
         DEPOSIT = await feesMock.DEPOSIT();
