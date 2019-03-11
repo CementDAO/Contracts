@@ -1,4 +1,4 @@
-const BILD = artifacts.require('./BILD.sol');
+const BILDData = artifacts.require('./BILDData.sol');
 
 const BigNumber = require('bignumber.js');
 const chai = require('chai');
@@ -6,7 +6,7 @@ const { itShouldThrow, tokenNumber } = require('./utils');
 // use default BigNumber
 chai.use(require('chai-bignumber')()).should();
 
-contract('BILD', (accounts) => {
+contract('BILDData', (accounts) => {
     let bild;
     const bildDecimals = 18;
     const distributor = accounts[1];
@@ -21,7 +21,7 @@ contract('BILD', (accounts) => {
     let manyBILDTokens;
 
     before(async () => {
-        bild = await BILD.deployed();
+        bild = await BILDData.deployed();
         oneBILDToken = tokenNumber(bildDecimals, 1);
         twoBILDTokens = tokenNumber(bildDecimals, 2);
         manyBILDTokens = tokenNumber(bildDecimals, 100);
@@ -45,7 +45,7 @@ contract('BILD', (accounts) => {
 
     describe('aggregateAgentStakes', () => {
         beforeEach(async () => {
-            bild = await BILD.new(distributor);
+            bild = await BILDData.new(distributor);
 
             await bild.transfer(
                 stakeholder1,
@@ -180,7 +180,7 @@ contract('BILD', (accounts) => {
 
     describe('aggregateHolderStakes', () => {
         beforeEach(async () => {
-            bild = await BILD.new(distributor);
+            bild = await BILDData.new(distributor);
 
             await bild.transfer(
                 stakeholder1,

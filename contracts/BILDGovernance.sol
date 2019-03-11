@@ -1,7 +1,7 @@
 pragma solidity ^0.5.0;
 
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
-import "./BILD.sol";
+import "./BILDData.sol";
 import "./Whitelist.sol";
 
 /**
@@ -9,7 +9,7 @@ import "./Whitelist.sol";
  * @author Bernardo Vieira.
  * @notice Implements governance functions for a BILD token.
  */
-contract BILDGovernance is BILD {
+contract BILDGovernance is BILDData {
 
     address internal whitelist;
     /**
@@ -17,7 +17,7 @@ contract BILDGovernance is BILD {
      */
     constructor(address _distributor, address _whitelist) 
         public 
-        BILD(_distributor)
+        BILDData(_distributor)
     {
         whitelist = _whitelist;
     }

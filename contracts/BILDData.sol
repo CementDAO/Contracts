@@ -10,7 +10,7 @@ import "./UtilsLib.sol";
  * @author Alberto Cuesta Canada, Bernardo Vieira
  * @notice Implements staking of BILD tokens towards a Curation Agent Ranking
  */
-contract BILD is ERC20, ERC20Detailed {
+contract BILDData is ERC20, ERC20Detailed {
     using SafeMath for uint256;
 
     /**
