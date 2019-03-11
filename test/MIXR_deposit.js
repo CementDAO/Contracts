@@ -236,13 +236,13 @@ contract('MIXR', (accounts) => {
         );
 
         it('depositToken(50)', async () => {
-            depositTest(
+            await depositTest(
                 50, user, stakeholders, sampleDetailedERC20, sampleERC20Decimals, mixr, mixrDecimals,
             );
         });
 
         it('depositToken(1)', async () => {
-            depositTest(
+            await depositTest(
                 1, user, stakeholders, sampleDetailedERC20, sampleERC20Decimals, mixr, mixrDecimals,
             );
         });

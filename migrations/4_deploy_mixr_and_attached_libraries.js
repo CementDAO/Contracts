@@ -3,6 +3,7 @@ const LogarithmLib = artifacts.require('./fixidity/LogarithmLib.sol');
 const UtilsLib = artifacts.require('./UtilsLib.sol');
 const Fees = artifacts.require('./Fees.sol');
 const Whitelist = artifacts.require('./Whitelist.sol');
+// TODO: Split into MIXR_Data -> MIXR_Governance -> MIXR_Business
 const MIXR = artifacts.require('./MIXR.sol');
 
 module.exports = (deployer) => {

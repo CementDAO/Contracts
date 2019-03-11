@@ -282,13 +282,13 @@ contract('MIXR', (accounts) => {
         );
 
         it('redeem 1 MIX by 1 token', async () => {
-            redemptionTest(
+            await redemptionTest(
                 1, user, stakeholders, sampleDetailedERC20, sampleERC20Decimals, mixr, mixrDecimals,
             );
         });
 
         it('redeem 50 MIX by 50 token', async () => {
-            redemptionTest(
+            await redemptionTest(
                 50, user, stakeholders, sampleDetailedERC20, sampleERC20Decimals, mixr, mixrDecimals,
             );
         });
