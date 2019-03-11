@@ -13,7 +13,9 @@ contract BILDGovernance is BILDData {
 
     address internal whitelist;
     /**
-     * @notice Constructor with the details of the ERC20.
+     * @notice Constructor of the BILD Governance layer.
+     * @param _distributor The account that will receive all BILD tokens on contract creation.
+     * @param _whitelist The address for the governance and BILD holding authorized individuals.
      */
     constructor(address _distributor, address _whitelist) 
         public 

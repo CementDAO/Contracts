@@ -4,6 +4,7 @@ import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./BILDGovernance.sol";
+import "./Whitelist.sol";
 import "./UtilsLib.sol";
 
 /**
@@ -15,14 +16,27 @@ contract BILD is BILDGovernance {
     using SafeMath for uint256;
 
     /**
-     * @notice Constructor with the details of the ERC20Detailed.
-     * BILD is constructed with 18 decimals and 10**9 tokens are minted and
-     * assigned to the distributor account.
+     * @notice Constructor of the BILD Business Layer. BILD is constructed with 18 decimals 
+     * and 10**9 tokens are minted and assigned to the distributor account.
+     * @param _distributor The account that will receive all BILD tokens on contract creation.
+     * @param _whitelist The address for the governance and BILD holding authorized individuals.
      */
     constructor(address _distributor, address _whitelist) 
         public BILDGovernance(_distributor, _whitelist) 
     {
     
+    }
+
+    /**
+     * @notice Verifies that an address is whitelisted as a BILD Stakeholder.
+     */
+    modifier onlyStakeholder(address _address)
+    {
+        require(
+            Whitelist(whitelist).isStakeholder(msg.sender) == true,
+            "This address not authorized to hold BILD tokens."
+        );
+        _;
     }
 
     /**

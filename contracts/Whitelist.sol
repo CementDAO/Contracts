@@ -14,8 +14,26 @@ contract Whitelist is Ownable {
      */
     mapping(address => bool) internal governors;
 
+
     /**
-     * @notice Add new user to governors
+     * @notice Whitelist of addresses that can hold BILD tokens.
+     */
+    mapping(address => bool) internal stakeholders;
+
+    /**
+     * @notice Modifier that enforces that the transaction sender is
+     * whitelisted to perform governance.
+     */
+    modifier onlyGovernor() {
+        require(
+            isGovernor(msg.sender),
+            "Message sender isn't part of the governance whitelist."
+        );
+        _;
+    }
+
+    /**
+     * @notice Add new user to governors. Only the contract owner can use this method.
      * @param _userAddress The user address to be added.
      */
     function addGovernor(address _userAddress)
@@ -39,7 +57,7 @@ contract Whitelist is Ownable {
     }
 
     /**
-     * @notice Remove user from governors
+     * @notice Remove user from governors. Only the contract owner can use this method.
      * @param _userAddress the user address to remove
      */
     function removeGovernor(address _userAddress)
@@ -47,5 +65,40 @@ contract Whitelist is Ownable {
         onlyOwner
     {
         delete governors[_userAddress];
+    }
+
+    /**
+     * @notice Add new user to stakeholders. Only governors can use this method.
+     * @param _userAddress The user address to be added.
+     */
+    function addStakeholder(address _userAddress)
+        public
+        onlyGovernor
+    {
+        stakeholders[_userAddress] = true;
+    }
+
+    /**
+     * @notice Allows to query whether or not a given address is a stakeholder.
+     * @param _userAddress The address to be checked.
+     * @return true if the provided user is a stakeholder, false otherwise.
+     */
+    function isStakeholder(address _userAddress)
+        public
+        view
+        returns (bool)
+    {
+        return stakeholders[_userAddress];
+    }
+
+    /**
+     * @notice Remove user from stakeholders. Only governors can use this method.
+     * @param _userAddress the user address to remove
+     */
+    function removeStakeholder(address _userAddress)
+        public
+        onlyGovernor
+    {
+        delete stakeholders[_userAddress];
     }
 }
