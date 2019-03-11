@@ -6,9 +6,9 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./UtilsLib.sol";
 
 /**
- * @title BILD Staking contract. 
+ * @title BILD Data 
  * @author Alberto Cuesta Canada, Bernardo Vieira
- * @notice Implements staking of BILD tokens towards a Curation Agent Ranking
+ * @notice Implements data structures the staking of BILD tokens.
  */
 contract BILDData is ERC20, ERC20Detailed {
     using SafeMath for uint256;
@@ -17,24 +17,24 @@ contract BILDData is ERC20, ERC20Detailed {
      * @notice Code indicating a stakeholder has no stakes for a given agent
      * @dev Difficult to create such a large array of stakes, so probably safe
      */
-    uint256 public NO_STAKES = 115792089237316195423570985008687907853269984665640564039457584007913129639935;
+    uint256 internal NO_STAKES = 115792089237316195423570985008687907853269984665640564039457584007913129639935;
 
     /**
      * @notice An initializated address.
      */
-    address public NULL_ADDRESS = address(0);
+    address internal NULL_ADDRESS = address(0);
 
 
     /**
      * @notice The address of the MIXR contract.
      * @dev Used only to calculate R from MIXR.totalSupply().
      */
-    address public MIXRContract;
+    address internal MIXRContract;
 
     /**
      * @notice Minimum BILD wei that are accepted to nominate a new Curation Agent
      */
-    uint256 public minimumStake = 10**18;
+    uint256 internal minimumStake = 10**18;
 
     /**
      * @notice An agent
@@ -58,29 +58,29 @@ contract BILDData is ERC20, ERC20Detailed {
     /**
      * @notice All the agents stored in a linked list ordered by their aggregated stakes
      */
-    mapping(address => Agent) private agents;
+    mapping(address => Agent) internal agents;
 
     /**
      * @notice The address of the agent at the top of the list.
      */
-    address highestAgent;
+    address internal highestAgent;
     
     /**
      * @notice The address of the agent at the top of the list.
      */
-    address lowestAgent;
+    address internal lowestAgent;
 
     /**
      * @notice The number of agents that can be Curating Agents
      */
-    uint256 R = 3;
+    uint256 internal R = 3;
 
     /**
      * @notice All BILD stakes, mapped by agent address.
      * @dev It might be more gas effective to remove this mapping and just use
      * the agentRanking list to access the stakes.
      */
-    mapping(address => Stake[]) private stakesByAgent;
+    mapping(address => Stake[]) internal stakesByAgent;
 
     /**
      * @notice View of aggregated stakes by stakeholder address.
@@ -89,15 +89,15 @@ contract BILDData is ERC20, ERC20Detailed {
      * seems more user friendly to put the cost of the platform on those that
      * create stakes than those that transact with MIX.
      */
-    mapping(address => uint256) private stakesByHolder;
+    mapping(address => uint256) internal stakesByHolder;
 
     /**
      * @notice Constructor with the details of the ERC20Detailed.
      * BILD is constructed with 18 decimals and 10**9 tokens are minted and
      * assigned to the distributor account.
      */
-    constructor(address distributor) public ERC20Detailed("BILD", "BILD", 18) {
-        _mint(distributor, 10**27);
+    constructor(address _distributor) public ERC20Detailed("BILD", "BILD", 18) {
+        _mint(_distributor, 10**27);
     }
 
     /**
@@ -418,157 +418,4 @@ contract BILDData is ERC20, ERC20Detailed {
             lowestAgent = _agent;
         }
     }
-
-    /**
-     * @notice Allows a stakeholder to nominate an agent.
-     * @param _agent The agent to nominate or stake for.
-     * @param _stake Amount of BILD wei to stake.
-     */
-    function nominateAgent(
-        address _agent, 
-        uint256 _stake, 
-        string memory _name, 
-        string memory _contact
-    )
-    public
-    {
-        require(
-            !UtilsLib.stringIsEmpty(_name),
-            "An agent name must be provided."
-        );
-        require (
-            _stake >= minimumStake,
-            "Minimum stake to nominate an agent not reached."
-        );
-        require (
-            stakesByAgent[_agent].length == 0,
-            "The agent is already nominated."
-        );
-        require (
-            !nameExists(_name),
-            "An agent already exists with that name."
-        );
-
-        // Create an agent by giving him an empty stake from the stakeholder.
-        agents[_agent] = Agent(_name, _contact, NULL_ADDRESS);
-        stakesByAgent[_agent].push(Stake(msg.sender, 0));
-        insertAgent(_agent);
-        createStake(_agent, _stake);
-    }
-
-    /**
-     * @notice Allows a stakeholder to stake BILD for a nominated agent.
-     * one.
-     * @param _agent The agent to nominate or stake for.
-     * @param _stake Amount of BILD wei to stake.
-     */
-    function createStake(address _agent, uint256 _stake)
-    public
-    agentExists(_agent)
-    {
-        require (
-            _stake <= ERC20(address(this)).balanceOf(msg.sender) - stakesByHolder[msg.sender],
-            "Attempted stake larger than BILD balance."
-        );
-
-        // Look for a stake for the agent from the stakeholder.
-        uint256 stakeIndex = findStakeIndex(_agent, msg.sender);
-        // If the agent has no earlier stakes by the stakeholder create one
-        if (stakeIndex == NO_STAKES)
-            stakesByAgent[_agent].push(
-                Stake(msg.sender, _stake)
-            );
-        else
-            stakesByAgent[_agent][stakeIndex].value = stakesByAgent[_agent][stakeIndex].value.add(_stake);
-        
-        // Update aggregated stake views
-        stakesByHolder[msg.sender] = stakesByHolder[msg.sender].add(_stake);
-        
-        // Place the agent in the right place of the agents list
-        sortAgent(_agent);
-    }
-
-    /**
-     * @notice Allows a stakeholder to decrease or remove a BILD stake for an agent.
-     * @param _agent The agent reduce or remove the stake for.
-     * @param _stake Amount of BILD wei to remove from the stake.
-     */
-    function removeStake(address _agent, uint256 _stake)
-    public
-    agentExists(_agent)
-    {
-        // Look for a stake for the agent from the stakeholder.
-        uint256 stakeIndex = findStakeIndex(_agent, msg.sender);
-        require (
-            stakeIndex != NO_STAKES,
-            "No stakes were found for the agent."
-        );
-        
-        require (
-            _stake <= stakesByAgent[_agent][stakeIndex].value,
-            "Attempted to reduce a stake by more than its value."
-        );
-        // Reduce the stake
-        stakesByAgent[_agent][stakeIndex].value -= _stake;
-
-        // Update aggregated stake views
-        stakesByHolder[msg.sender] = stakesByHolder[msg.sender].sub(_stake);
-
-
-        // Place the agent in the right place of the agents list
-        sortAgent(_agent);
-
-        // Agents cannot stay nominated with an aggregated stake under the minimum stake.
-        if (aggregateAgentStakes(_agent) < minimumStake) 
-            revokeNomination(_agent);
-    }
-
-
-    /**
-     * @notice Removes all stakes for an agent, effectively revoking its 
-     * nomination. This function requires that the aggregated stakes for the
-     * agent are below the minimum stake for nomination.
-     * @param _agent The stakeholder to revoke the nomination from.
-     */
-    function revokeNomination(address _agent)
-        public
-        agentExists(_agent)
-    {
-        require (
-            aggregateAgentStakes(_agent) < minimumStake,
-            "Too many stakes to revoke agent nomination."
-        );
-
-        // We pop each stake from the agent after updating the aggregate holder stakes view 
-        while (stakesByAgent[_agent].length > 0)
-        {
-            uint256 lastStake = stakesByAgent[_agent].length.sub(1);
-            address lastStakeholder = stakesByAgent[_agent][lastStake].stakeholder;
-            stakesByHolder[lastStakeholder] = stakesByHolder[lastStakeholder].sub(
-                stakesByAgent[_agent][lastStake].value
-            );
-            stakesByAgent[_agent].pop();
-        }
-
-        eraseAgent(_agent);
-    }
-    // TODO: Fail on transactions if amountToTransfer > ERC20(address(this)).balanceOf(msg.sender) - stakesByHolder[msg.sender]
-
-    /**
-     * @notice Determines whether an agent exists with a given name.
-     * @param _name The name to look for
-     */
-    function nameExists(string memory _name)
-        public
-        view
-        returns(bool)
-    {
-        address agent = highestAgent;
-        while (agent != NULL_ADDRESS)
-        {
-            if(UtilsLib.stringsAreEqual(agents[agent].name, _name)) return true;
-            agent = agents[agent].lowerAgent;
-        }
-        return false;
-    }    
 }

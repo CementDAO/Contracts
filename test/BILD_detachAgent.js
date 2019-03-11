@@ -1,4 +1,5 @@
-const BILDData = artifacts.require('./BILDData.sol');
+const BILD = artifacts.require('./BILD.sol');
+const Whitelist = artifacts.require('./Whitelist.sol');
 
 const BigNumber = require('bignumber.js');
 const chai = require('chai');
@@ -6,8 +7,9 @@ const { itShouldThrow, tokenNumber } = require('./utils');
 // use default BigNumber
 chai.use(require('chai-bignumber')()).should();
 
-contract('BILDData', (accounts) => {
+contract('BILD', (accounts) => {
     let bild;
+    let whitelist;
     const bildDecimals = 18;
     const distributor = accounts[1];
     const stakeholder1 = accounts[2];
@@ -18,14 +20,16 @@ contract('BILDData', (accounts) => {
     let manyBILDTokens;
 
     before(async () => {
-        bild = await BILDData.deployed();
+        bild = await BILD.deployed();
+        whitelist = await Whitelist.deployed();
         oneBILDToken = tokenNumber(bildDecimals, 1);
         manyBILDTokens = tokenNumber(bildDecimals, 100);
     });
 
     describe('detachAgent 1', () => {
         beforeEach(async () => {
-            bild = await BILDData.new(distributor);
+            whitelist = await Whitelist.new();
+            bild = await BILD.new(distributor, whitelist.address);
             await bild.transfer(
                 stakeholder1,
                 manyBILDTokens,
@@ -74,7 +78,8 @@ contract('BILDData', (accounts) => {
 
     describe('detachAgent 2', () => {
         beforeEach(async () => {
-            bild = await BILDData.new(distributor);
+            whitelist = await Whitelist.new();
+            bild = await BILD.new(distributor, whitelist.address);
             await bild.transfer(
                 stakeholder1,
                 manyBILDTokens,
@@ -146,7 +151,8 @@ contract('BILDData', (accounts) => {
 
     describe('detachAgent 3', () => {
         beforeEach(async () => {
-            bild = await BILDData.new(distributor);
+            whitelist = await Whitelist.new();
+            bild = await BILD.new(distributor, whitelist.address);
             await bild.transfer(
                 stakeholder1,
                 manyBILDTokens,

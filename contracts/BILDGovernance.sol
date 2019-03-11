@@ -7,7 +7,7 @@ import "./Whitelist.sol";
 /**
  * @title BILD Governance.
  * @author Bernardo Vieira.
- * @notice Implements governance functions for a BILD token.
+ * @notice Implements governance functions the staking of BILD tokens.
  */
 contract BILDGovernance is BILDData {
 
