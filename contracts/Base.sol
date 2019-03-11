@@ -37,6 +37,7 @@ contract Base {
 
     /**
      * @notice (C1) Whitelist of addresses that can do governance.
+     * @dev TODO: Remove once this is moved to Whitelist.sol
      */
     mapping(address => bool) internal governors;
 
