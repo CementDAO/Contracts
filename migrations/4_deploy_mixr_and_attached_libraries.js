@@ -6,14 +6,11 @@ const Whitelist = artifacts.require('./Whitelist.sol');
 const MIXR = artifacts.require('./MIXR.sol');
 
 module.exports = (deployer) => {
-    // deploy fixidity
-    deployer.deploy(FixidityLib);
-    deployer.link(FixidityLib, LogarithmLib);
+    // link to fixidity
     deployer.link(FixidityLib, UtilsLib);
     deployer.link(FixidityLib, Fees);
     deployer.link(FixidityLib, MIXR);
-    // deploy logarithm
-    deployer.deploy(LogarithmLib);
+    // link to logarithm
     deployer.link(LogarithmLib, Fees);
     deployer.link(LogarithmLib, MIXR);
     // deploy utils
@@ -23,8 +20,6 @@ module.exports = (deployer) => {
     // deploy fees
     deployer.deploy(Fees);
     deployer.link(Fees, MIXR);
-    // deploy whitelist
-    deployer.deploy(Whitelist);
     // deploy mixr
     deployer.deploy(MIXR, Whitelist.address);
 };

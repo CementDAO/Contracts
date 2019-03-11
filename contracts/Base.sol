@@ -36,12 +36,6 @@ contract Base {
     int256 constant public minimumFee = 1000000000000000000;
 
     /**
-     * @notice (C1) Whitelist of addresses that can do governance.
-     * @dev TODO: Remove once this is moved to Whitelist.sol
-     */
-    mapping(address => bool) internal governors;
-
-    /**
      * @notice Additional token data which is required for MIXR transactions.
      */
     struct TokenData {

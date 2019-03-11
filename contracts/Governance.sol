@@ -11,8 +11,7 @@ import "./UtilsLib.sol";
 /**
  * @title Governance.
  * @author Bernardo Vieira.
- * @notice Implements governance functions for a MIXR token as described in the
- * CementDAO whitepaper.
+ * @notice Implements governance functions for a MIXR token.
  */
 contract Governance is Base {
 
