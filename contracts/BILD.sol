@@ -24,6 +24,13 @@ contract BILD is ERC20, ERC20Detailed {
      */
     address public NULL_ADDRESS = address(0);
 
+
+    /**
+     * @notice The address of the MIXR contract.
+     * @dev Used only to calculate R from MIXR.totalSupply().
+     */
+    address public MIXRContract;
+
     /**
      * @notice Minimum BILD wei that are accepted to nominate a new Curation Agent
      */

@@ -55,4 +55,27 @@ contract BILDGovernance is BILD {
     {
         return minimumStake;
     }
+
+    /**
+     * @notice Set the address of the MIXR contract.
+     * @param _mixr The address of the MIXR contract.
+     * @dev TODO: Consider doing this as onlyOwner, instead of onlyGovernor.
+     */
+    function setMIXRContract(address _mixr)
+        public
+        onlyGovernor()
+    {
+        MIXRContract = _mixr;
+    }
+
+    /**
+     * @notice Return the address of the MIXR contract.
+     */
+    function getMIXRContract()
+        public
+        view
+        returns(address)
+    {
+        return MIXRContract;
+    }
 }

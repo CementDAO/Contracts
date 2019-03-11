@@ -14,13 +14,14 @@ contract('BILD governance', (accounts) => {
     const owner = accounts[0];
     const governor = accounts[1];
     const distributor = accounts[2];
+    const MIXRContract = accounts[3];
 
     before(async () => {
         bildGovernance = await BILDGovernance.deployed();
         whitelist = await Whitelist.deployed();
     });
 
-    describe('setting the stakeholder fee holding account', () => {
+    describe('setting the minimum stake for nominating agents', () => {
         beforeEach(async () => {
             whitelist = await Whitelist.new();
             bildGovernance = await BILDGovernance.new(distributor, whitelist.address);
@@ -35,6 +36,24 @@ contract('BILD governance', (accounts) => {
             );
             const result = new BigNumber(await bildGovernance.getMinimumStake());
             result.should.be.bignumber.equal(1);
+        });
+    });
+
+    describe('setting the MIXR contract address', () => {
+        beforeEach(async () => {
+            whitelist = await Whitelist.new();
+            bildGovernance = await BILDGovernance.new(distributor, whitelist.address);
+            await whitelist.addGovernor(governor, {
+                from: owner,
+            });
+        });
+        it('a governor can set the address for the MIXR contract.', async () => {
+            await bildGovernance.setMIXRContract(
+                MIXRContract,
+                { from: governor },
+            );
+            const result = await bildGovernance.getMIXRContract();
+            assert.equal(result, MIXRContract, 'Addresses don\'t match');
         });
     });
 });
