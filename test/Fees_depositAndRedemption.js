@@ -64,9 +64,9 @@ contract('Fees', (accounts) => {
                 'CLP',
             );
 
-            await mixr.setStakeholderAccount(
+            await mixr.setBILDContract(
                 accounts[3],
-                { from: governor },
+                { from: owner },
             );
 
             // approve tokens!
