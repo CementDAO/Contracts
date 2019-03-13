@@ -29,13 +29,13 @@ contract('BILD', (accounts) => {
     before(async () => {
         bild = await BILD.deployed();
         whitelist = await Whitelist.deployed();
-        oneBILDToken = tokenNumber(bildDecimals, 1);
+        oneBILDToken = new BigNumber(tokenNumber(bildDecimals, 1));
         twoBILDTokens = tokenNumber(bildDecimals, 2);
         manyBILDTokens = tokenNumber(bildDecimals, 100);
         minimumStake = oneBILDToken;
     });
 
-    describe('calculate R', () => {
+    describe('totalStakes', () => {
         beforeEach(async () => {
             whitelist = await Whitelist.new();
             bild = await BILD.new(distributor, whitelist.address);
@@ -46,16 +46,24 @@ contract('BILD', (accounts) => {
             await whitelist.addStakeholder(stakeholder1, {
                 from: governor,
             });
+            await whitelist.addStakeholder(stakeholder2, {
+                from: governor,
+            });
 
             await bild.transfer(
                 stakeholder1,
                 manyBILDTokens,
                 { from: distributor },
             );
+            await bild.transfer(
+                stakeholder2,
+                manyBILDTokens,
+                { from: distributor },
+            );
 
-            for (var i=0; i < 9; i++){
+            for (var i=10; i < 20; i++){
                 await bild.nominateAgent(
-                    '0x2191ef87e392377ec08e7c08eb105ef5448eced' + i,
+                    '0x2191ef87e392377ec08e7c08eb105ef5448ece' + i,
                     oneBILDToken,
                     'agent' + i,
                     'contact' + i,
@@ -64,25 +72,27 @@ contract('BILD', (accounts) => {
                     },
                 );
             }
-        });
-        it('Less agents than R', async () => {
-            const R = await bild.calculateR();
-            assert.equal(R, 9); 
-        });
-        it('More agents than R', async () => {
-            for (var i=0; i < 2; i++){
-                await bild.nominateAgent(
-                    '0x2191ef87e392377ec08e7c08eb105ef5448ecee' + i,
-                    oneBILDToken,
-                    'agent1' + i,
-                    'contact1' + i,
+            for (var i=10; i < 20; i++){
+                await bild.createStake(
+                    '0x2191ef87e392377ec08e7c08eb105ef5448ece' + i,
+                    twoBILDTokens,
                     {
-                        from: stakeholder1,
+                        from: stakeholder2,
                     },
                 );
             }
-            const R = await bild.calculateR();
-            assert.equal(R, 10); 
+        });
+        it('Aggregated stakes for zero agents', async () => {
+            const stakes = new BigNumber(await bild.totalStakes(0));
+            stakes.should.be.bignumber.equal(0);
+        });
+        it('Aggregated stakes for one agent', async () => {
+            const stakes = new BigNumber(await bild.totalStakes(1));
+            stakes.should.be.bignumber.equal(oneBILDToken.multipliedBy(3));
+        });
+        it('Aggregated stakes for 10 agents', async () => {
+            const stakes = new BigNumber(await bild.totalStakes(10));
+            stakes.should.be.bignumber.equal(oneBILDToken.multipliedBy(30));
         });
     });
 });
