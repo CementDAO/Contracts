@@ -1,6 +1,7 @@
 pragma solidity ^0.5.0;
 
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
+import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "./fixidity/FixidityLib.sol";
 import "./MIXRData.sol";
 import "./Fees.sol";
@@ -13,7 +14,7 @@ import "./UtilsLib.sol";
  * @author Bernardo Vieira.
  * @notice Implements governance functions for a MIXR token.
  */
-contract MIXRGovernance is MIXRData {
+contract MIXRGovernance is MIXRData, Ownable {
 
     address internal whitelist;
     /**
@@ -36,19 +37,19 @@ contract MIXRGovernance is MIXRData {
     }
 
     /**
-     * @notice Set which account will hold the transaction fees prior to 
-     * distribution to stakeholders.
+     * @notice Set the address of the BILD contract, which will hold the 
+     * transaction fees prior to distribution to stakeholders.
      */
-    function setStakeholderAccount(address _wallet)
+    function setBILDContract(address _bild)
         public
-        onlyGovernor()
+        onlyOwner
     {
-        require(_wallet != NULL_ADDRESS, "Invalid wallet address!");
+        require(_bild != NULL_ADDRESS, "Invalid address!");
         /**
-         * TODO: we should also verify that it's not a contract address.
+         * TODO: we should also verify that it a BILD contract address.
          * Maybe we also want multiple verification.
          */
-        stakeholderAccount = _wallet;
+        BILDContract = _bild;
     }
 
     /**

@@ -122,7 +122,7 @@ contract MIXR is MIXRGovernance, ERC20, ERC20Detailed {
         IERC20(address(this)).approve(address(this), depositInBasketWei);
 
         // Send the deposit fee to the stakeholder account
-        IERC20(address(this)).transferFrom(address(this), stakeholderAccount, feeInBasketWei);
+        IERC20(address(this)).transferFrom(address(this), BILDContract, feeInBasketWei);
 
         // Return an equal nubmer of MIX minus the fee to sender
         IERC20(address(this)).transferFrom(address(this), msg.sender, returnInBasketWei);
@@ -179,7 +179,7 @@ contract MIXR is MIXRGovernance, ERC20, ERC20Detailed {
 
         // Send the fee in MIX to the stakeholder account
         IERC20(address(this)).approve(address(this), feeInBasketWei);
-        IERC20(address(this)).transferFrom(address(this), stakeholderAccount, feeInBasketWei);
+        IERC20(address(this)).transferFrom(address(this), BILDContract, feeInBasketWei);
 
         // Return the token equivalent to the redeemed MIX minus the fee back to the sender
         IERC20(_token).approve(address(this), returnInTokenWei);

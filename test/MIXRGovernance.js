@@ -37,18 +37,15 @@ contract('MIXR governance', (accounts) => {
         somePlainERC20 = await SamplePlainERC20.deployed();
     });
 
-    describe('setting the stakeholder fee holding account', () => {
+    describe('setting the BILD Contract address', () => {
         beforeEach(async () => {
             whitelist = await Whitelist.new();
             mixr = await MIXR.new(whitelist.address);
-            await whitelist.addGovernor(governor, {
-                from: owner,
-            });
         });
         /* itShouldThrow(
-            'only valid addresses are allowed as the stakeholder fee holding account.',
+            'only valid addresses are allowed as the BILD Contract address.',
             async () => {
-                await mixr.setStakeholderAccount(
+                await mixr.setBILDContract(
                     '0x00000000000000000000000000000000',
                     { from: governor },
                 );
@@ -57,20 +54,20 @@ contract('MIXR governance', (accounts) => {
         ); */
 
         itShouldThrow(
-            'only governors can set the stakeholder fee holding account.',
+            'regular users can\'t set the BILD Contract address.',
             async () => {
-                await mixr.setStakeholderAccount(
+                await mixr.setBILDContract(
                     stakeholders,
                     { from: user },
                 );
             },
-            'Message sender isn\'t part of the governance whitelist.',
+            'revert',
         );
 
-        it('a governor can set the stakeholder fee holding account.', async () => {
-            await mixr.setStakeholderAccount(
+        it('the contract owner can set the BILD Contract address.', async () => {
+            await mixr.setBILDContract(
                 stakeholders,
-                { from: governor },
+                { from: owner },
             );
         });
     });

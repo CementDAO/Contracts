@@ -165,7 +165,7 @@ contract('MIXR', (accounts) => {
             /**
              * set account to receive fees
              */
-            await mixr.setStakeholderAccount(stakeholders, { from: governor });
+            await mixr.setBILDContract(stakeholders, { from: owner });
 
             /**
              * verify mixr balance is zero

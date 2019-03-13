@@ -1,6 +1,7 @@
 pragma solidity ^0.5.0;
 
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
+import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "./BILDData.sol";
 import "./Whitelist.sol";
 
@@ -9,7 +10,7 @@ import "./Whitelist.sol";
  * @author Bernardo Vieira.
  * @notice Implements governance functions the staking of BILD tokens.
  */
-contract BILDGovernance is BILDData {
+contract BILDGovernance is BILDData, Ownable {
 
     address internal whitelist;
     /**
@@ -59,13 +60,12 @@ contract BILDGovernance is BILDData {
     }
 
     /**
-     * @notice Set the address of the MIXR contract.
+     * @notice Set the address of the MIXR contract. Only the owner can do this.
      * @param _mixr The address of the MIXR contract.
-     * @dev TODO: Consider doing this as onlyOwner, instead of onlyGovernor.
      */
     function setMIXRContract(address _mixr)
         public
-        onlyGovernor()
+        onlyOwner
     {
         MIXRContract = _mixr;
     }

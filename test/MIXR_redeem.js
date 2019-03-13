@@ -211,7 +211,7 @@ contract('MIXR', (accounts) => {
             /**
              * set account to receive fees
              */
-            await mixr.setStakeholderAccount(stakeholders, { from: governor });
+            await mixr.setBILDContract(stakeholders, { from: owner });
             /**
              * send tokens to mixr contract, so we can redeem
              * in order to use redeemMIXR method, we should deposit first

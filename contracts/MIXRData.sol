@@ -91,9 +91,9 @@ contract MIXRData {
     // mapping(address => address) internal payFeesWith;
     
     /**
-     * @notice Holding account for fees, before they are distributed to stakeholders.
+     * @notice BILD Contract address, which will receive the fees before they are distributed to stakeholders.
      */
-    address internal stakeholderAccount;
+    address internal BILDContract;
 
     /**
      * @dev This is one of the possible solutions allowing to check

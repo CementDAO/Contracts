@@ -15,6 +15,7 @@ contract('BILD governance', (accounts) => {
     const governor = accounts[1];
     const distributor = accounts[2];
     const MIXRContract = accounts[3];
+    const user = accounts[4];
 
     before(async () => {
         bildGovernance = await BILDGovernance.deployed();
@@ -29,6 +30,18 @@ contract('BILD governance', (accounts) => {
                 from: owner,
             });
         });
+
+        itShouldThrow(
+            'regular users can\'t set the minimum stake for nominating agents.',
+            async () => {
+                await bildGovernance.setMinimumStake(
+                    1,
+                    { from: user },
+                );
+            },
+            'Message sender isn\'t part of the governance whitelist.',
+        );
+
         it('a governor can set the minimum stake for nominating agents.', async () => {
             await bildGovernance.setMinimumStake(
                 1,
@@ -47,10 +60,22 @@ contract('BILD governance', (accounts) => {
                 from: owner,
             });
         });
-        it('a governor can set the address for the MIXR contract.', async () => {
+        
+        itShouldThrow(
+            'regular users can\'t set the MIXR Contract address.',
+            async () => {
+                await bildGovernance.setMIXRContract(
+                    MIXRContract,
+                    { from: user },
+                );
+            },
+            'revert',
+        );
+        
+        it('the contract owner can set the address for the MIXR contract.', async () => {
             await bildGovernance.setMIXRContract(
                 MIXRContract,
-                { from: governor },
+                { from: owner },
             );
             const result = await bildGovernance.getMIXRContract();
             assert.equal(result, MIXRContract, 'Addresses don\'t match');
