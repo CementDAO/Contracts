@@ -53,21 +53,17 @@ contract BILD is BILDGovernance {
      * @param _to The address to transfer to.
      * @param _value The amount to be transferred.
      */
-    function transfer(address _to, uint256 _value) 
+    /* function transfer(address _to, uint256 _value) 
         public 
         onlyStakeholder(_to)
         hasFreeBILD(_value)
         returns(bool)
     {
-        _transfer(msg.sender, _to, _value);
-        return true;
-    }
+        return ERC20Detailed(this).transfer(_to, _value);
+    } */
 
     /**
-     * @dev TODO: Should I implement transferFrom or make it throw?
      * @notice Transfer BILD from one address to another.
-     * Note that while this function emits an Approval event, this is not required as per the specification,
-     * and other compliant implementations may not emit the event.
      * @param _from address The address which you want to send tokens from
      * @param _to address The address which you want to transfer to
      * @param _value uint256 the amount of tokens to be transferred
@@ -83,7 +79,7 @@ contract BILD is BILDGovernance {
         hasFreeBILD(_value)
         returns(bool)
     {
-        return _transferFrom(_from, _to, _value);
+        return ERC20Detailed(this).transferFrom(_from, _to, _value);
     } */
 
     /**
@@ -219,6 +215,7 @@ contract BILD is BILDGovernance {
     /**
      * @notice Determines whether an agent exists with a given name.
      * @param _name The name to look for
+     * @return True if the name is used by any agent in the list, False otherwise.
      */
     function nameExists(string memory _name)
         public
@@ -236,6 +233,7 @@ contract BILD is BILDGovernance {
 
     /**
      * @notice Calculates the number of Curating Agents
+     * @return The number of Curating Agents
      * @dev Currently this returns 10 or the number of Nominated Agents, whichever is lower.
      */
     function calculateR()
@@ -243,14 +241,37 @@ contract BILD is BILDGovernance {
         view
         returns(uint256)
     {
-        address current = highestAgent;
+        address agent = highestAgent;
         uint256 _R = 0;
-        while (current != NULL_ADDRESS){
+        while (agent != NULL_ADDRESS){
             _R += 1;
             if (_R >= R) break;
-            current = agents[current].lowerAgent;
+            agent = agents[agent].lowerAgent;
         }
         return _R;
+    }
+
+    /**
+     * @notice Calculates the aggregated stakes for the R top rated agents.
+     * @param _R The number of agents to aggregate stakes for, starting by the top rated agent.
+     * @return The aggregated stakes fot the R top ranked agents.
+     */
+    function totalStakes(uint256 _R)
+        public
+        view
+        returns(uint256)
+    {
+        uint256 _stakes = 0;
+        address agent = highestAgent;
+        for (uint256 agentIndex = 0; agentIndex < _R; agentIndex += 1){
+            require(
+                agent != NULL_ADDRESS,
+                "R is greater than the number of agents."
+            );
+            _stakes += aggregateAgentStakes(agent);
+            agent = agents[agent].lowerAgent;
+        }
+        return _stakes;
     }
 
     /**
@@ -258,22 +279,28 @@ contract BILD is BILDGovernance {
      * @param _agentPayout The payout to distribute for a given agent.
      * @param _agentStakes The aggregated stakes for a given agent.
      * @param _stake The stake that the payout is for. 
+     * @return The payout to the stakeholder in BILD wei
      */
     function stakePayout(uint256 _agentPayout, uint256 _agentStakes, uint256 _stake)
         public
         pure
         returns(uint256)
     {
-        return _agentPayout * (_stake / _agentStakes); // TODO: Needs to use Fixidity or SafeMath for multiplication
+        // The maximum stake is 10**28 (BILD total supply).
+        // maxInt256 ~= 10**76
+        // The operation below is safe up to agent payouts of 10**24 MIX tokens
+        return (_agentPayout.mul(_stake)).div(_agentStakes);
     }
 
     /**
      * @notice Distributes a fee pool to an agent and its stakeholders.
      * @param _agentPayout The fees due for _agent.
      * @param _agent An agent with fees due.
+     * @return The aggregation of fees paid, which can be lower than _agentPayout due to rounding.
      */
     function payFees(uint256 _agentPayout, address _agent)
         private
+        returns(uint256)
     {
         require(
             MIXRContract != NULL_ADDRESS, 
@@ -283,6 +310,7 @@ contract BILD is BILDGovernance {
         IERC20(MIXRContract).approve(address(this), _agentPayout / 2);
         IERC20(MIXRContract).transferFrom(address(this), _agent, _agentPayout / 2);
         uint256 stakeholdersPayout = _agentPayout / 2;
+        uint256 paidFees = 0;
 
         // Pay to the stakeholders
         Stake[] memory agentStakes = stakesByAgent[_agent];
@@ -297,43 +325,29 @@ contract BILD is BILDGovernance {
             // Send the fee in MIX to the stakeholder account
             IERC20(MIXRContract).approve(address(this), payout);
             IERC20(MIXRContract).transferFrom(address(this), stake.stakeholder, payout);
-
+            paidFees += payout; // Cannot be bigger than _agentPayout
         }
-    }
-
-    /**
-     * @notice Calculates the aggregated stakes for the R top rated agents.
-     * @param _R The number of agents to aggregate stakes for, starting by the top rated agent.
-     */
-    function totalStakes(uint256 _R)
-        public
-        view
-        returns(uint256)
-    {
-        uint256 _stakes = 0;
-        address currentAgent = highestAgent;
-        for (uint256 agentIndex = 0; agentIndex < _R; agentIndex += 1){
-            _stakes += aggregateAgentStakes(currentAgent);
-            currentAgent = agents[currentAgent].lowerAgent;
-            // TODO: Throw here if current == NULL_ADDRESS
-        }
-        return _stakes;
+        return paidFees;
     }
 
     /**
      * @notice Pays accumulated fees to R top rated agents and their stakeholders.
+     * @return The aggregation of fees paid, which can be lower than the MIX balance of the BILD contract due to rounding.
      */
     function payoutFees()
         private
+        returns(uint256)
     {
         // TODO: Return if the MIXR balance of the BILD contract is zero
         uint256 _R = calculateR(); // This must ensure a valid R at or below the total number f agents is returned.
         uint256 _totalStakes = totalStakes(_R);
+        uint256 paidFees = 0;
         address currentAgent = highestAgent;
         for (uint256 agentIndex = 0; agentIndex < _R; agentIndex += 1){
             uint256 agentPayout = _totalStakes / aggregateAgentStakes(currentAgent);
-            payFees(agentPayout, currentAgent);
+            paidFees += payFees(agentPayout, currentAgent); // paidFees cannot be bigger than MIXR.totalSupply()
             currentAgent = agents[currentAgent].lowerAgent;
         }
+        return paidFees;
     }
 }
