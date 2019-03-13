@@ -13,8 +13,10 @@ contract('BILD', (accounts) => {
     let bildDataTest;
     let whitelist;
     const bildDecimals = 18;
+    const owner = accounts[0];
     const distributor = accounts[1];
-    const stakeholder1 = accounts[2];
+    const governor = accounts[2];
+    const stakeholder1 = accounts[3];
     const agent1 = accounts[5];
     const agent2 = accounts[6];
     const agent3 = accounts[7];
@@ -29,10 +31,18 @@ contract('BILD', (accounts) => {
         manyBILDTokens = tokenNumber(bildDecimals, 100);
     });
 
+    // TODO: Reimplement these tests so that only insertAgent, detachAgent and sortAgent are used.
+    // Doing that, we don't need to initialize the whitelist or do BILD transfers
     describe('sortAgent on nominateAgent', () => {
         beforeEach(async () => {
             whitelist = await Whitelist.new();
             bild = await BILD.new(distributor, whitelist.address);
+            await whitelist.addGovernor(governor, {
+                from: owner,
+            });
+            await whitelist.addStakeholder(stakeholder1, {
+                from: governor,
+            });
             await bild.transfer(
                 stakeholder1,
                 manyBILDTokens,
@@ -164,6 +174,12 @@ contract('BILD', (accounts) => {
     describe('rankAt', () => {
         beforeEach(async () => {
             bildDataTest = await BILDDataTest.new(distributor);
+            /* await whitelist.addGovernor(governor, {
+                from: owner,
+            });
+            await whitelist.addStakeholder(stakeholder1, {
+                from: governor,
+            }); */
             await bildDataTest.transfer(
                 stakeholder1,
                 manyBILDTokens,
@@ -223,6 +239,12 @@ contract('BILD', (accounts) => {
     describe('higherAgent', () => {
         beforeEach(async () => {
             bildDataTest = await BILDDataTest.new(distributor);
+            /* await whitelist.addGovernor(governor, {
+                from: owner,
+            });
+            await whitelist.addStakeholder(stakeholder1, {
+                from: governor,
+            }); */
             await bild.transfer(
                 stakeholder1,
                 manyBILDTokens,
@@ -287,6 +309,12 @@ contract('BILD', (accounts) => {
         beforeEach(async () => {
             whitelist = await Whitelist.new();
             bild = await BILD.new(distributor, whitelist.address);
+            await whitelist.addGovernor(governor, {
+                from: owner,
+            });
+            await whitelist.addStakeholder(stakeholder1, {
+                from: governor,
+            });
             await bild.transfer(
                 stakeholder1,
                 manyBILDTokens,
@@ -375,6 +403,12 @@ contract('BILD', (accounts) => {
         beforeEach(async () => {
             whitelist = await Whitelist.new();
             bild = await BILD.new(distributor, whitelist.address);
+            await whitelist.addGovernor(governor, {
+                from: owner,
+            });
+            await whitelist.addStakeholder(stakeholder1, {
+                from: governor,
+            });
             await bild.transfer(
                 stakeholder1,
                 manyBILDTokens,
@@ -498,6 +532,12 @@ contract('BILD', (accounts) => {
         beforeEach(async () => {
             whitelist = await Whitelist.new();
             bild = await BILD.new(distributor, whitelist.address);
+            await whitelist.addGovernor(governor, {
+                from: owner,
+            });
+            await whitelist.addStakeholder(stakeholder1, {
+                from: governor,
+            });
             await bild.transfer(
                 stakeholder1,
                 manyBILDTokens,
@@ -586,6 +626,12 @@ contract('BILD', (accounts) => {
         beforeEach(async () => {
             whitelist = await Whitelist.new();
             bild = await BILD.new(distributor, whitelist.address);
+            await whitelist.addGovernor(governor, {
+                from: owner,
+            });
+            await whitelist.addStakeholder(stakeholder1, {
+                from: governor,
+            });
             await bild.transfer(
                 stakeholder1,
                 manyBILDTokens,

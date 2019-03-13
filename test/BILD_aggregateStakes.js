@@ -11,13 +11,15 @@ contract('BILD', (accounts) => {
     let bild;
     let whitelist;
     const bildDecimals = 18;
+    const owner = accounts[0];
     const distributor = accounts[1];
-    const stakeholder1 = accounts[2];
-    const stakeholder2 = accounts[3];
-    const stakeholder3 = accounts[4];
-    const agent1 = accounts[5];
-    const agent2 = accounts[6];
-    const agent3 = accounts[7];
+    const governor = accounts[2];
+    const stakeholder1 = accounts[3];
+    const stakeholder2 = accounts[4];
+    const stakeholder3 = accounts[5];
+    const agent1 = accounts[6];
+    const agent2 = accounts[7];
+    const agent3 = accounts[8];
     let oneBILDToken;
     let twoBILDTokens;
     let manyBILDTokens;
@@ -50,7 +52,15 @@ contract('BILD', (accounts) => {
         beforeEach(async () => {
             whitelist = await Whitelist.new();
             bild = await BILD.new(distributor, whitelist.address);
-
+            await whitelist.addGovernor(governor, {
+                from: owner,
+            });
+            await whitelist.addStakeholder(stakeholder1, {
+                from: governor,
+            });
+            await whitelist.addStakeholder(stakeholder2, {
+                from: governor,
+            });
             await bild.transfer(
                 stakeholder1,
                 manyBILDTokens,
@@ -186,7 +196,15 @@ contract('BILD', (accounts) => {
         beforeEach(async () => {
             whitelist = await Whitelist.new();
             bild = await BILD.new(distributor, whitelist.address);
-
+            await whitelist.addGovernor(governor, {
+                from: owner,
+            });
+            await whitelist.addStakeholder(stakeholder1, {
+                from: governor,
+            });
+            await whitelist.addStakeholder(stakeholder2, {
+                from: governor,
+            });
             await bild.transfer(
                 stakeholder1,
                 manyBILDTokens,

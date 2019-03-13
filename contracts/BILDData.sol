@@ -95,6 +95,7 @@ contract BILDData is ERC20, ERC20Detailed {
      * @notice Constructor with the details of the ERC20Detailed.
      * BILD is constructed with 18 decimals and 10**9 tokens are minted and
      * assigned to the distributor account.
+     * @dev The distributor doesn't need to be in the stakeholders whitelist.
      */
     constructor(address _distributor) public ERC20Detailed("BILD", "BILD", 18) {
         _mint(_distributor, 10**27);

@@ -29,21 +29,27 @@ contract BILD is BILDGovernance {
 
     /**
      * @notice Verifies that an address is whitelisted as a BILD Stakeholder.
+     * @param _address The address to verify.
      */
-    modifier onlyStakeholder(address _address)
+    modifier isStakeholder(address _address)
     {
         require(
-            Whitelist(whitelist).isStakeholder(msg.sender) == true,
+            Whitelist(whitelist).isStakeholder(_address) == true,
             "This address is not authorized to hold BILD tokens."
         );
         _;
     }
 
-    modifier hasFreeBILD(uint256 _bild)
+    /**
+     * @notice Verify a stakeholder has a certain unstaked BILD amount.
+     * @param _stakeholder The address of the stakeholder to verify the balance for.
+     * @param _value The amount to be transferred.
+     */
+    modifier hasFreeBILD(address _stakeholder, uint256 _value)
     {
         require (
-            _bild <= ERC20(address(this)).balanceOf(msg.sender) - stakesByHolder[msg.sender],
-            "Not enough BILD are available."
+            _value <= ERC20(address(this)).balanceOf(_stakeholder) - stakesByHolder[_stakeholder],
+            "Sender doesn't have enough unstaked BILD."
         );
         _;
     }
@@ -53,14 +59,15 @@ contract BILD is BILDGovernance {
      * @param _to The address to transfer to.
      * @param _value The amount to be transferred.
      */
-    /* function transfer(address _to, uint256 _value) 
+    function transfer(address _to, uint256 _value) 
         public 
-        onlyStakeholder(_to)
-        hasFreeBILD(_value)
+        isStakeholder(_to)
+        hasFreeBILD(msg.sender, _value)
         returns(bool)
     {
-        return ERC20Detailed(this).transfer(_to, _value);
-    } */
+        _transfer(msg.sender, _to, _value);
+        return true;
+    }
 
     /**
      * @notice Transfer BILD from one address to another.
@@ -68,19 +75,19 @@ contract BILD is BILDGovernance {
      * @param _to address The address which you want to transfer to
      * @param _value uint256 the amount of tokens to be transferred
      */
-    /* function transferFrom
+    function transferFrom
     (
         address _from, 
         address _to, 
         uint256 _value
     ) 
         public 
-        onlyStakeholder(_to)
-        hasFreeBILD(_value)
+        isStakeholder(_to)
+        hasFreeBILD(_from, _value)
         returns(bool)
     {
-        return ERC20Detailed(this).transferFrom(_from, _to, _value);
-    } */
+        return IERC20(this).transferFrom(_from, _to, _value);
+    }
 
     /**
      * @notice Allows a stakeholder to nominate an agent.
@@ -128,7 +135,7 @@ contract BILD is BILDGovernance {
     function createStake(address _agent, uint256 _stake)
     public
     agentExists(_agent)
-    hasFreeBILD(_stake)
+    hasFreeBILD(msg.sender, _stake)
     {
         // Look for a stake for the agent from the stakeholder.
         uint256 stakeIndex = findStakeIndex(_agent, msg.sender);
@@ -234,7 +241,7 @@ contract BILD is BILDGovernance {
     /**
      * @notice Calculates the number of Curating Agents
      * @return The number of Curating Agents
-     * @dev Currently this returns 10 or the number of Nominated Agents, whichever is lower.
+     * @dev Currently this returns the hardcoded BILDData.R or the number of Nominated Agents, whichever is lower.
      */
     function calculateR()
         public
