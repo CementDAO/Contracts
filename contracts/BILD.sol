@@ -305,8 +305,8 @@ contract BILD is BILDGovernance {
      * @param _agent An agent with fees due.
      * @return The aggregation of fees paid, which can be lower than _agentPayout due to rounding.
      */
-    function payFees(uint256 _agentPayout, address _agent)
-        private
+    function payFeesForAgent(uint256 _agentPayout, address _agent)
+        public // TODO: Make private for production
         returns(uint256)
     {
         require(
@@ -352,7 +352,7 @@ contract BILD is BILDGovernance {
         address currentAgent = highestAgent;
         for (uint256 agentIndex = 0; agentIndex < _R; agentIndex += 1){
             uint256 agentPayout = _totalStakes / aggregateAgentStakes(currentAgent);
-            paidFees += payFees(agentPayout, currentAgent); // paidFees cannot be bigger than MIXR.totalSupply()
+            paidFees += payFeesForAgent(agentPayout, currentAgent); // paidFees cannot be bigger than MIXR.totalSupply()
             currentAgent = agents[currentAgent].lowerAgent;
         }
         return paidFees;
