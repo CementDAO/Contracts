@@ -48,7 +48,6 @@ library UtilsLib {
      * @notice Compare whether two strings are the same
      * @param _a First string.
      * @param _b Second string.
-     * TODO: Move to UtilsLib
      */
     function stringsAreEqual(string memory _a, string memory _b) 
         public

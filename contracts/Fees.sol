@@ -235,7 +235,6 @@ library Fees {
      * @param _logitPoint The result of calculating the logit on deviation.
      * @return int256 The scaled logit point.
      */
-     // TODO: _baseFee should be in fixed point units, not MIX wei
     function scaleLogit(
         int256 _baseFee,
         int256 _scalingFactor,
