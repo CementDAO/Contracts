@@ -73,7 +73,7 @@ contract BILDData is ERC20, ERC20Detailed {
     /**
      * @notice The number of agents that can be Curating Agents
      */
-    uint256 internal R = 3;
+    uint256 internal R = 10;
 
     /**
      * @notice All BILD stakes, mapped by agent address.
