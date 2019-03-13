@@ -26,11 +26,7 @@ contract('BILDDataTest', (accounts) => {
     describe('detachAgent 1', () => {
         beforeEach(async () => {
             bild = await BILDDataTest.new(distributor);
-            await bild.transfer(
-                stakeholder1,
-                manyBILDTokens,
-                { from: distributor },
-            );
+
             await bild.testInsertAgent(
                 agent1,
                 {
@@ -72,11 +68,7 @@ contract('BILDDataTest', (accounts) => {
     describe('detachAgent 2', () => {
         beforeEach(async () => {
             bild = await BILDDataTest.new(distributor);
-            await bild.transfer(
-                stakeholder1,
-                manyBILDTokens,
-                { from: distributor },
-            );
+
             await bild.testInsertAgent(
                 agent2,
                 {
@@ -138,11 +130,7 @@ contract('BILDDataTest', (accounts) => {
     describe('detachAgent 3', () => {
         beforeEach(async () => {
             bild = await BILDDataTest.new(distributor);
-            await bild.transfer(
-                stakeholder1,
-                manyBILDTokens,
-                { from: distributor },
-            );
+
             await bild.testInsertAgent(
                 agent3,
                 {
