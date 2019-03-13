@@ -79,3 +79,6 @@ typings/
 
 # DynamoDB Local files
 .dynamodb/
+
+# images
+*.png

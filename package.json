@@ -17,7 +17,12 @@
         "lint:solidity": "solium -d contracts",
         "lint:js": "eslint *.js .",
         "lint": "npm run lint:solidity && npm run lint:js",
-        "security": "docker run --memory=3g -v $(pwd):/tmp -w \"/tmp/\" mythril/myth --truffle",
+        "security": "docker run --rm --memory=3g -v $(pwd):/tmp -w \"/tmp/\" mythril/myth --truffle",
+        "graph:mixr": "surya graph contracts/MIXR.sol | dot -Tpng > MIXR.png",
+        "graph:bild": "surya graph contracts/BILD.sol | dot -Tpng > BILD.png",
+        "graph:all": "surya graph contracts/*.sol | dot -Tpng > CementDAO.png",
+        "graph": "echo Use graph:mixr or graph:bild or graph:all",
+        "describe": "surya describe contracts/*.sol",
         "coverage": "solidity-coverage"
     },
     "keywords": [],
@@ -38,7 +43,8 @@
         "eth-gas-reporter": "^0.1.12",
         "ethlint": "1.2.3",
         "ganache-cli": "6.3.0",
-        "solidity-coverage": "obernardovieira/solidity-coverage#bf55aed",
-        "truffle": "5.0.0"
+        "solidity-coverage": "0.6.0-beta.3",
+        "truffle": "5.0.0",
+        "surya": "0.2.8"
     }
 }
