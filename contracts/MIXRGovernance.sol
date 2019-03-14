@@ -98,6 +98,7 @@ contract MIXRGovernance is MIXRData, Ownable {
         onlyGovernor()
     {
         require(_fee >= minimumFee, "Fees can't be set to less than the minimum fee.");
+        require(_fee <= FixidityLib.fixed1(), "Fees can't be set to more than 1.");
         if (_transactionType == Fees.DEPOSIT()) baseDepositFee = _fee;
         else if (_transactionType == Fees.TRANSFER()) baseTransferFee = _fee;
         else if (_transactionType == Fees.REDEMPTION()) baseRedemptionFee = _fee;

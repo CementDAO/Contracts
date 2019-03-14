@@ -1,5 +1,6 @@
 const MIXR = artifacts.require('./MIXR.sol');
 const Whitelist = artifacts.require('./Whitelist.sol');
+const FeesMock = artifacts.require('./FeesMock.sol');
 const FixidityLibMock = artifacts.require('./FixidityLibMock.sol');
 const SampleERC721 = artifacts.require('./test/SampleERC721.sol');
 const SampleDetailedERC20 = artifacts.require('./test/SampleDetailedERC20.sol');
@@ -15,6 +16,7 @@ chai.use(require('chai-bignumber')()).should();
 contract('MIXR governance', (accounts) => {
     let mixr;
     let whitelist;
+    let feesMock;
     let fixidityLibMock;
     let sampleDetailedERC20;
     let sampleDetailedERC20Other;
@@ -26,15 +28,20 @@ contract('MIXR governance', (accounts) => {
     const governor = accounts[1];
     const user = accounts[2];
     const stakeholders = accounts[3];
+    let DEPOSIT;
+    let REDEMPTION;
 
     before(async () => {
         mixr = await MIXR.deployed();
         whitelist = await Whitelist.deployed();
+        feesMock = await FeesMock.deployed();
         someERC721 = await SampleERC721.deployed();
         fixidityLibMock = await FixidityLibMock.deployed();
         sampleDetailedERC20 = await SampleDetailedERC20.deployed();
         sampleDetailedERC20Other = await SampleDetailedERC20.deployed();
         somePlainERC20 = await SamplePlainERC20.deployed();
+        DEPOSIT = await feesMock.DEPOSIT();
+        REDEMPTION = await feesMock.REDEMPTION();
     });
 
     describe('setting the BILD Contract address', () => {
@@ -148,6 +155,63 @@ contract('MIXR governance', (accounts) => {
             },
             'revert',
         );
+    });
+
+    describe('setting the base fees', () => {
+        beforeEach(async () => {
+            whitelist = await Whitelist.new();
+            mixr = await MIXR.new(whitelist.address);
+            await whitelist.addGovernor(governor, {
+                from: owner,
+            });
+        });
+
+        itShouldThrow(
+            'regular users can\'t set the base fees.',
+            async () => {
+                await mixr.setTransactionFee(
+                    new BigNumber(await fixidityLibMock.newFixed(1)).minus(1).toString(10),
+                    DEPOSIT,
+                    { from: user },
+                );
+            },
+            'Message sender isn\'t part of the governance whitelist.',
+        );
+
+        itShouldThrow(
+            'base fees cannot be set below the minimumFee.',
+            async () => {
+                await mixr.setTransactionFee(
+                    1,
+                    DEPOSIT,
+                    { from: governor },
+                );
+            },
+            'Fees can\'t be set to less than the minimum fee.',
+        );
+
+        itShouldThrow(
+            'base fees cannot be greater than 1',
+            async () => {
+                await mixr.setTransactionFee(
+                    new BigNumber(await fixidityLibMock.newFixed(1)).plus(1).toString(10),
+                    DEPOSIT,
+                    { from: governor },
+                );
+            },
+            'Fees can\'t be set to more than 1.',
+        );
+
+        it('base fees can be set.', async () => {
+            const depositFee = new BigNumber(await fixidityLibMock.newFixed(1)).minus(1).toString(10);
+            await mixr.setTransactionFee(
+                depositFee,
+                DEPOSIT,
+                { from: governor },
+            );
+            const result = new BigNumber(await mixr.getDepositFee());
+            result.should.be.bignumber.equal(depositFee);
+        });
     });
 
     // These tests rely on another test to have changed the fixtures (ERC20 approval).
