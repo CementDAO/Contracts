@@ -158,12 +158,6 @@ contract MIXR is MIXRGovernance, ERC20, ERC20Detailed {
             getDecimals(_token), 
             withoutFeeInBasketWei
         );
-        
-        // Check that we have enough of _token to return
-        require(
-            IERC20(_token).balanceOf(address(this)) >= returnInTokenWei,
-            "The MIXR doesn't have enough stablecoins for this redemption."
-        );
 
         // Receive the MIXR token that was sent
         IERC20(address(this)).transferFrom(msg.sender, address(this), _redemptionInBasketWei);
@@ -195,35 +189,11 @@ contract MIXR is MIXRGovernance, ERC20, ERC20Detailed {
         view
         returns (uint256) 
     {
-        if(_transactionType == Fees.REDEMPTION())
-        {
-            // _transactionAmount is in MIX wei for redemptions, but Fees.transactionFee
-            // requires all amounts to be converted to MIX wei
-            uint256 redemptionInTokenWei = UtilsLib.convertTokenAmount(
-                ERC20Detailed(address(this)).decimals(), 
-                getDecimals(_token), 
-                _transactionAmount
-            );
-            require(
-                IERC20(_token).balanceOf(address(this)) >= redemptionInTokenWei,
-                "The MIXR doesn't have enough stablecoins for this redemption."
-            );
-            uint256 feeInBasketWei = Fees.transactionFee(
-                _token,
-                address(this),
-                redemptionInTokenWei,
-                Fees.REDEMPTION()
-            );
-            return feeInBasketWei;
-        }
-        if(_transactionType == Fees.DEPOSIT())
-        {
-            return Fees.transactionFee(
-                _token, 
-                _basket,
-                _transactionAmount, 
-                _transactionType
-            );
-        }
+        return Fees.transactionFee(
+            _token, 
+            _basket,
+            _transactionAmount, 
+            _transactionType
+        );
     }
 }

@@ -109,7 +109,10 @@ library Fees {
                 transactionAmount
             );
         } else if (_transactionType == REDEMPTION()) {
-            assert(transactionAmount <= tokenBalance);
+            require(
+                transactionAmount <= tokenBalance,
+                "The MIXR doesn't have enough stablecoins for this redemption."
+            );
             tokenBalanceAfterTransaction = FixidityLib.subtract(
                 tokenBalance, 
                 transactionAmount
