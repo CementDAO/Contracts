@@ -1,6 +1,7 @@
 pragma solidity ^0.5.0;
 
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./BILDGovernance.sol";
@@ -14,6 +15,8 @@ import "./UtilsLib.sol";
  */
 contract BILD is BILDGovernance {
     using SafeMath for uint256;
+
+    event debug(uint256 x, address y);
 
     /**
      * @notice Constructor of the BILD Business Layer. BILD is constructed with 18 decimals 
@@ -306,7 +309,7 @@ contract BILD is BILDGovernance {
      * @return The aggregation of fees paid, which can be lower than _agentPayout due to rounding.
      */
     function payFeesForAgent(uint256 _totalPayout, address _agent)
-        public view // TODO: Make private for production
+        public // TODO: Make private for production
         returns(uint256)
     {
         require(
@@ -316,9 +319,9 @@ contract BILD is BILDGovernance {
         // Pay to the agent first
         uint256 _agentPayout = _totalPayout / 2;
         uint256 stakeholdersPayout = _totalPayout / 2;
-        // IERC20(MIXRContract).approve(address(this), _agentPayout);
-        // IERC20(MIXRContract).transferFrom(address(this), _agent, _agentPayout);
         uint256 paidFees = _agentPayout;
+        IERC20(MIXRContract).approve(address(this), _agentPayout);
+        IERC20(MIXRContract).transferFrom(address(this), _agent, _agentPayout);
 
         // Pay to the stakeholders
         Stake[] memory agentStakes = stakesByAgent[_agent];
@@ -332,9 +335,9 @@ contract BILD is BILDGovernance {
                 stake.value
             );
             // Send the fee in MIX to the stakeholder account
-            // IERC20(MIXRContract).approve(address(this), payout);
-            // IERC20(MIXRContract).transferFrom(address(this), stake.stakeholder, payout);
             paidFees += payout; // Cannot be bigger than _agentPayout
+            IERC20(MIXRContract).approve(address(this), payout);
+            IERC20(MIXRContract).transferFrom(address(this), stake.stakeholder, payout);
         }
         return paidFees;
     }
@@ -344,7 +347,7 @@ contract BILD is BILDGovernance {
      * @return The aggregation of fees paid, which can be lower than the MIX balance of the BILD contract due to rounding.
      */
     function payoutFees()
-        public view
+        public
         returns(uint256)
     {
         // TODO: Return if the MIXR balance of the BILD contract is zero
