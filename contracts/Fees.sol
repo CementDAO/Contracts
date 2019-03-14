@@ -393,6 +393,8 @@ library Fees {
      * @param _token Address of the token to calculate the transaction fee for.
      * @param _basket Address of the MIXR basket.
      * @param _transactionAmount Amount to deposit or redeem in _token wei.
+     * TODO: redemptionFee should take the _transactionAmount in MIX wei. 
+     * Right now anyone calling this function needs to convert to token wei first, which doesn't make sense
      * @return uint256 The calculated fee in MIX wei.
      */
     function redemptionFee(
