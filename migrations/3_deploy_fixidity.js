@@ -1,9 +1,5 @@
-const FixidityLib = artifacts.require('./fixidity/FixidityLib.sol');
-const LogarithmLib = artifacts.require('./fixidity/LogarithmLib.sol');
-const UtilsLib = artifacts.require('./UtilsLib.sol');
-const Fees = artifacts.require('./Fees.sol');
-const Whitelist = artifacts.require('./Whitelist.sol');
-const MIXR = artifacts.require('./MIXR.sol');
+const FixidityLib = artifacts.require('fixidity/contracts/FixidityLib.sol');
+const LogarithmLib = artifacts.require('fixidity/contracts/LogarithmLib.sol');
 
 module.exports = (deployer) => {
     // deploy fixidity

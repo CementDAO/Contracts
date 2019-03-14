@@ -2,7 +2,7 @@ pragma solidity ^0.5.0;
 
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
-import "./fixidity/FixidityLib.sol";
+import "fixidity/contracts/FixidityLib.sol";
 import "./MIXRData.sol";
 import "./Fees.sol";
 import "./Whitelist.sol";
