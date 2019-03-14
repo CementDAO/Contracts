@@ -347,7 +347,7 @@ library Fees {
             DEPOSIT()
         );
         int256 targetProportion = MIXRData(_basket).getTargetProportion(_token);
-        int256 baseFee = MIXRData(_basket).getDepositFee(_token);
+        int256 baseFee = MIXRData(_basket).getDepositFee();
         int256 fee;
 
         // Floors and ceilings
@@ -411,7 +411,7 @@ library Fees {
             REDEMPTION()
         );
         int256 targetProportion = MIXRData(_basket).getTargetProportion(_token);
-        int256 baseFee = MIXRData(_basket).getRedemptionFee(_token);
+        int256 baseFee = MIXRData(_basket).getRedemptionFee();
         int256 fee;
 
         // Floors and ceilings

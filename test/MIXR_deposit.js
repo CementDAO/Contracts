@@ -139,7 +139,6 @@ contract('MIXR', (accounts) => {
              */
             const baseFee = new BigNumber(10).pow(23).toString(10);
             await mixr.setTransactionFee(
-                sampleDetailedERC20.address,
                 baseFee,
                 DEPOSIT,
                 {
@@ -147,7 +146,6 @@ contract('MIXR', (accounts) => {
                 },
             );
             await mixr.setTransactionFee(
-                sampleDetailedERC20.address,
                 baseFee,
                 REDEMPTION,
                 {

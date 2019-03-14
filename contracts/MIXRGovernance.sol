@@ -87,25 +87,21 @@ contract MIXRGovernance is MIXRData, Ownable {
 
     /**
      * @notice Set the base fee for deposit, redemption and transfer transactions.
-     * @param _token Address for the token that we are setting the fees for.
      * @param _fee Amount to set in fixed point units (FixidityLib.digits()).
      * @param _transactionType One of REDEMPTION(), DEPOSIT() or TRANSFER().
      * @dev
      * Test setTransactionFee(minimumFee) works and token.transactionFee returns minimumFee
      * Test setTransactionFee(minimumFee-1) throws
      */
-    function setTransactionFee(address _token, int256 _fee, int8 _transactionType)
+    function setTransactionFee(int256 _fee, int8 _transactionType)
         public
         onlyGovernor()
     {
         require(_fee >= minimumFee, "Fees can't be set to less than the minimum fee.");
-        TokenData memory token = tokens[_token];
-        if (_transactionType == Fees.DEPOSIT()) token.depositFee = _fee;
-        else if (_transactionType == Fees.TRANSFER()) token.transferFee = _fee;
-        else if (_transactionType == Fees.REDEMPTION()) token.redemptionFee = _fee;
+        if (_transactionType == Fees.DEPOSIT()) baseDepositFee = _fee;
+        else if (_transactionType == Fees.TRANSFER()) baseTransferFee = _fee;
+        else if (_transactionType == Fees.REDEMPTION()) baseRedemptionFee = _fee;
         else revert("Transaction type not accepted.");
-        
-        tokens[_token] = token;
     }
 
     /**

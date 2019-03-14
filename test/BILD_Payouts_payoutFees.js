@@ -106,7 +106,6 @@ contract('BILD', (accounts) => {
             );
             const baseFee = fixed01;
             await mixr.setTransactionFee(
-                sampleDetailedERC20.address,
                 baseFee,
                 DEPOSIT,
                 {
@@ -114,7 +113,6 @@ contract('BILD', (accounts) => {
                 },
             );
             await mixr.setTransactionFee(
-                sampleDetailedERC20.address,
                 baseFee,
                 REDEMPTION,
                 {

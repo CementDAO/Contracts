@@ -89,7 +89,9 @@ contract BILD is BILDGovernance {
         hasFreeBILD(_from, _value)
         returns(bool)
     {
-        return IERC20(this).transferFrom(_from, _to, _value);
+        _transfer(msg.sender, _to, _value);
+        // decreaseAllowance(_from, _value); // TODO: Make this work
+        return true;
     }
 
     /**

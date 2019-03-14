@@ -34,6 +34,19 @@ contract MIXRData {
      * expressed in in fixed point units (FixidityLib.digits()).
      */
     int256 constant public minimumFee = 1000000000000000000;
+        
+    /**
+     * @notice The base deposit percentage fees in fixed point units (FixidityLib.digits()).
+     */
+    int256 baseDepositFee;
+    /**
+     * @notice The base redemption percentage fees in fixed point units (FixidityLib.digits()).
+     */
+    int256 baseRedemptionFee;
+    /**
+     * @notice The base transfer percentage fees in fixed point units (FixidityLib.digits()).
+     */
+    int256 baseTransferFee;
 
     /**
      * @notice Additional token data which is required for MIXR transactions.
@@ -56,18 +69,6 @@ contract MIXRData {
          * implement it.
          */
         int256 targetProportion;
-        /**
-         * @notice The base deposit percentage fees in fixed point units (FixidityLib.digits()) for this token.
-         */
-        int256 depositFee;
-        /**
-         * @notice The base redemption percentage fees in fixed point units (FixidityLib.digits()) for this token.
-         */
-        int256 redemptionFee;
-        /**
-         * @notice The base transfer percentage fees in fixed point units (FixidityLib.digits()) for this token.
-         */
-        int256 transferFee;
         /**
          * @notice The token name.
          */
@@ -150,10 +151,6 @@ contract MIXRData {
             token.targetProportion > 0,
             "The given token can't be deposited, the target proportion is 0."
         );
-        require(
-            token.depositFee >= minimumFee,
-            "The given token can't deposited, the base deposit fee is too low."
-        );
         _;
     }
 
@@ -169,10 +166,6 @@ contract MIXRData {
         require(
             token.registered == true,
             "The given token is not registered."
-        );
-        require(
-            token.redemptionFee >= minimumFee,
-            "The given token can't accepted, the base redemption fee is too low."
         );
         _;
     }
@@ -251,51 +244,36 @@ contract MIXRData {
     }
 
     /**
-     * @notice Returns the base deposit fee for a token, in MIX wei.
-     * @param _token The token ERC20 contract address that we are retrieving 
-     * the base deposit fee for. The token needs to have been registered in 
-     * CementDAO.
+     * @notice Returns the base deposit fee, in MIX wei.
      */
-    function getDepositFee(address _token) 
+    function getDepositFee() 
     public
     view
-    isRegistered(_token)
     returns(int256)
     {
-        TokenData memory token = tokens[_token];
-        return token.depositFee;
+        return baseDepositFee;
     }
 
     /**
-     * @notice Returns the base redemption fee for a token, in MIX wei.
-     * @param _token The token ERC20 contract address that we are retrieving 
-     * the base redemption fee for. The token needs to have been registered in 
-     * CementDAO.
+     * @notice Returns the base redemption fee, in MIX wei.
      */
-    function getRedemptionFee(address _token) 
+    function getRedemptionFee() 
     public
     view
-    isRegistered(_token)
     returns(int256)
     {
-        TokenData memory token = tokens[_token];
-        return token.redemptionFee;
+        return baseRedemptionFee;
     }
 
     /**
-     * @notice Returns the base transfer fee for a token, in MIX wei.
-     * @param _token The token ERC20 contract address that we are retrieving 
-     * the base transfer fee for. The token needs to have been registered in 
-     * CementDAO.
+     * @notice Returns the base transfer fee, in MIX wei.
      */
-    function getTransferFee(address _token) 
+    function getTransferFee() 
     public
     view
-    isRegistered(_token)
     returns(int256)
     {
-        TokenData memory token = tokens[_token];
-        return token.transferFee;
+        return baseTransferFee;
     }
 
     /**

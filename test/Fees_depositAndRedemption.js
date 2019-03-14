@@ -94,15 +94,6 @@ contract('Fees', (accounts) => {
             const baseFee = new BigNumber(10).pow(23).toString(10);
 
             await mixr.setTransactionFee(
-                sampleDetailedERC20.address,
-                baseFee,
-                DEPOSIT.toString(10),
-                {
-                    from: governor,
-                },
-            );
-            await mixr.setTransactionFee(
-                sampleDetailedERC20Other.address,
                 baseFee,
                 DEPOSIT.toString(10),
                 {
@@ -197,7 +188,6 @@ contract('Fees', (accounts) => {
                 { from: user },
             );
             await mixr.setTransactionFee(
-                sampleDetailedERC20.address,
                 minimumFee,
                 DEPOSIT.toString(10),
                 {
@@ -284,15 +274,6 @@ contract('Fees', (accounts) => {
             const baseFee = new BigNumber(10).pow(23).toString(10);
 
             await mixr.setTransactionFee(
-                sampleDetailedERC20.address,
-                baseFee,
-                REDEMPTION.toString(10),
-                {
-                    from: governor,
-                },
-            );
-            await mixr.setTransactionFee(
-                sampleDetailedERC20Other.address,
                 baseFee,
                 REDEMPTION.toString(10),
                 {
@@ -382,7 +363,6 @@ contract('Fees', (accounts) => {
             await sampleDetailedERC20.transfer(mixr.address, xInBasket.toString(10), { from: governor });
             await sampleDetailedERC20Other.transfer(mixr.address, yInBasket.toString(10), { from: governor });
             await mixr.setTransactionFee(
-                sampleDetailedERC20.address,
                 minimumFee,
                 REDEMPTION.toString(10),
                 {
