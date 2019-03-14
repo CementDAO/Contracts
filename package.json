@@ -11,12 +11,12 @@
         "test": "test"
     },
     "scripts": {
-        "deploy": "truffle deploy",
-        "develop": "truffle develop",
+        "deploy:ganache": "truffle deploy --network development",
+        "start:ganache:dev": "ganache-cli -m \"width whip dream dress captain vessel mix drive oxygen broken soap bone\" -p 8545 -i 201903 --debug",
         "test": "truffle test --network test",
-        "lint:solidity": "solium -d contracts",
+        "lint:sol": "solium -d contracts",
         "lint:js": "eslint *.js .",
-        "lint": "npm run lint:solidity && npm run lint:js",
+        "lint": "npm run lint:sol && npm run lint:js",
         "security": "docker run --rm --memory=3g -v $(pwd):/tmp -w \"/tmp/\" mythril/myth --truffle",
         "graph:mixr": "surya graph contracts/MIXR.sol | dot -Tpng > MIXR.png",
         "graph:bild": "surya graph contracts/BILD.sol | dot -Tpng > BILD.png",
