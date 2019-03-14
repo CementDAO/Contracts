@@ -282,13 +282,13 @@ contract BILD is BILDGovernance {
     }
 
     /**
-     * @notice Calculates the proportion of an agent payout due to a stakeholder.
-     * @param _agentPayout The payout to distribute for a given agent.
-     * @param _agentStakes The aggregated stakes for a given agent.
+     * @notice Calculates the proportion of a payout for a stake between many.
+     * @param _payout The payout to distribute.
+     * @param _totalStakes The aggregated stakes.
      * @param _stake The stake that the payout is for. 
      * @return The payout to the stakeholder in BILD wei
      */
-    function stakePayout(uint256 _agentPayout, uint256 _agentStakes, uint256 _stake)
+    function stakePayout(uint256 _payout, uint256 _totalStakes, uint256 _stake)
         public
         pure
         returns(uint256)
@@ -296,17 +296,17 @@ contract BILD is BILDGovernance {
         // The maximum stake is 10**28 (BILD total supply).
         // maxInt256 ~= 10**76
         // The operation below is safe up to agent payouts of 10**24 MIX tokens
-        return (_agentPayout.mul(_stake)).div(_agentStakes);
+        return (_payout.mul(_stake)).div(_totalStakes);
     }
 
     /**
      * @notice Distributes a fee pool to an agent and its stakeholders.
-     * @param _agentPayout The fees due for _agent.
+     * @param _totalPayout The fees due for _agent.
      * @param _agent An agent with fees due.
      * @return The aggregation of fees paid, which can be lower than _agentPayout due to rounding.
      */
-    function payFeesForAgent(uint256 _agentPayout, address _agent)
-        public // TODO: Make private for production
+    function payFeesForAgent(uint256 _totalPayout, address _agent)
+        public view // TODO: Make private for production
         returns(uint256)
     {
         require(
@@ -314,24 +314,26 @@ contract BILD is BILDGovernance {
             "The address for the MIXR Contract needs to be set first."
         );
         // Pay to the agent first
-        IERC20(MIXRContract).approve(address(this), _agentPayout / 2);
-        IERC20(MIXRContract).transferFrom(address(this), _agent, _agentPayout / 2);
-        uint256 stakeholdersPayout = _agentPayout / 2;
-        uint256 paidFees = 0;
+        uint256 _agentPayout = _totalPayout / 2;
+        uint256 stakeholdersPayout = _totalPayout / 2;
+        // IERC20(MIXRContract).approve(address(this), _agentPayout);
+        // IERC20(MIXRContract).transferFrom(address(this), _agent, _agentPayout);
+        uint256 paidFees = _agentPayout;
 
         // Pay to the stakeholders
         Stake[] memory agentStakes = stakesByAgent[_agent];
+        uint256 aggregatedAgentStakes = aggregateAgentStakes(_agent);
         for (uint256 stakeIndex = 0; stakeIndex < agentStakes.length; stakeIndex += 1)
         {
             Stake memory stake = agentStakes[stakeIndex];
             uint256 payout = stakePayout(
                 stakeholdersPayout,
-                aggregateAgentStakes(_agent),
+                aggregatedAgentStakes,
                 stake.value
             );
             // Send the fee in MIX to the stakeholder account
-            IERC20(MIXRContract).approve(address(this), payout);
-            IERC20(MIXRContract).transferFrom(address(this), stake.stakeholder, payout);
+            // IERC20(MIXRContract).approve(address(this), payout);
+            // IERC20(MIXRContract).transferFrom(address(this), stake.stakeholder, payout);
             paidFees += payout; // Cannot be bigger than _agentPayout
         }
         return paidFees;
@@ -342,16 +344,21 @@ contract BILD is BILDGovernance {
      * @return The aggregation of fees paid, which can be lower than the MIX balance of the BILD contract due to rounding.
      */
     function payoutFees()
-        private
+        public view
         returns(uint256)
     {
         // TODO: Return if the MIXR balance of the BILD contract is zero
         uint256 _R = calculateR(); // This must ensure a valid R at or below the total number f agents is returned.
         uint256 _totalStakes = totalStakes(_R);
         uint256 paidFees = 0;
+        uint256 totalPayout = IERC20(MIXRContract).balanceOf(address(this));
         address currentAgent = highestAgent;
         for (uint256 agentIndex = 0; agentIndex < _R; agentIndex += 1){
-            uint256 agentPayout = _totalStakes / aggregateAgentStakes(currentAgent);
+            uint256 agentPayout = stakePayout(
+                totalPayout,
+                _totalStakes,
+                aggregateAgentStakes(currentAgent)
+            );
             paidFees += payFeesForAgent(agentPayout, currentAgent); // paidFees cannot be bigger than MIXR.totalSupply()
             currentAgent = agents[currentAgent].lowerAgent;
         }

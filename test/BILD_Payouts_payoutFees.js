@@ -54,16 +54,16 @@ contract('BILD', (accounts) => {
         oneBILDToken = new BigNumber(tokenNumber(bildDecimals, 1));
         oneSampleToken = new BigNumber(tokenNumber(sampleDecimals, 1));
         oneMIXToken = new BigNumber(tokenNumber(mixDecimals, 1));
-        manyBILDTokens = tokenNumber(bildDecimals, 100);
-        manyMIXTokens = tokenNumber(mixDecimals, 100);
-        manySampleTokens = tokenNumber(sampleDecimals, 100);
+        manyBILDTokens = tokenNumber(bildDecimals, 400);
+        manyMIXTokens = tokenNumber(mixDecimals, 400);
+        manySampleTokens = tokenNumber(sampleDecimals, 400);
 
         feesMock = await FeesMock.deployed(); // TODO: Is this how the frontend does it?
         DEPOSIT = await feesMock.DEPOSIT();
         REDEMPTION = await feesMock.REDEMPTION();
     });
 
-    describe('totalStakes', () => {
+    describe('payFeesForAgent', () => {
         beforeEach(async () => {
             // Initialize and link contracts
             whitelist = await Whitelist.new();
@@ -175,7 +175,7 @@ contract('BILD', (accounts) => {
             // Stakeholder1 stakes for agent 2
             await bild.nominateAgent(
                 agent2,
-                oneBILDToken,
+                oneBILDToken.multipliedBy(10),
                 'agent2',
                 'contact2',
                 {
@@ -193,26 +193,50 @@ contract('BILD', (accounts) => {
             await mixr.approve(bild.address, manyMIXTokens.toString(10), {
                 from: mixrUser,
             });
-            // This should mean 10 sample tokens go as fees to the BILD contract
+            // This should mean 40 sample tokens go as fees to the BILD contract
             await mixr.depositToken(sampleDetailedERC20.address, manySampleTokens.toString(10), {
                 from: mixrUser,
             });
         });
-        it('All fees paid to one stakeholder', async () => {
-            const paidFees = new BigNumber(await bild.payFeesForAgent(oneBILDToken.multipliedBy(10), agent2));
-            paidFees.should.be.bignumber.equal(new BigNumber(10));
-            const balance = new BigNumber(await mixr.balanceOf(stakeholder1));
-            balance.should.be.bignumber.equal(oneMIXToken.multipliedBy(10));
+        it('All fees paid to one stakeholder and one agent', async () => {
+            const paidFees = new BigNumber(
+                await bild.payFeesForAgent(
+                    oneMIXToken.multipliedBy(40).toString(10), 
+                    agent2
+                )
+            );
+            paidFees.should.be.bignumber.equal(oneMIXToken.multipliedBy(40).toString(10));
+            const balanceAgent = new BigNumber(await mixr.balanceOf(agent2));
+            // balanceAgent.should.be.bignumber.equal(oneMIXToken.multipliedBy(20));
+            const balanceStakeholder = new BigNumber(await mixr.balanceOf(stakeholder1));
+            // balanceStakeholder.should.be.bignumber.equal(oneMIXToken.multipliedBy(20));
+
         });
-        it('All fees distributed between stakeholders', async () => {
-            const paidFees = new BigNumber(await bild.payFeesForAgent(oneBILDToken.multipliedBy(10), agent2));
-            paidFees.should.be.bignumber.equal(new BigNumber(10));
-            const balance1 = new BigNumber(await mixr.balanceOf(stakeholder1));
-            balance1.should.be.bignumber.equal(oneMIXToken.multipliedBy(2));
-            const balance2 = new BigNumber(await mixr.balanceOf(stakeholder1));
-            balance2.should.be.bignumber.equal(oneMIXToken.multipliedBy(3));
-            const balance3 = new BigNumber(await mixr.balanceOf(stakeholder1));
-            balance3.should.be.bignumber.equal(oneMIXToken.multipliedBy(5));
+        it('All fees distributed between stakeholders and one agent', async () => {
+            const paidFees = new BigNumber(await bild.payFeesForAgent(oneMIXToken.multipliedBy(40).toString(10), agent2));
+            paidFees.should.be.bignumber.equal(new BigNumber(oneMIXToken.multipliedBy(40).toString(10)));
+            const balanceAgent = new BigNumber(await mixr.balanceOf(agent2));
+            // balanceAgent.should.be.bignumber.equal(oneMIXToken.multipliedBy(20));
+            const balanceStakeholder1 = new BigNumber(await mixr.balanceOf(stakeholder1));
+            // balanceStakeholder1.should.be.bignumber.equal(oneMIXToken.multipliedBy(8));
+            const balanceStakeholder2 = new BigNumber(await mixr.balanceOf(stakeholder1));
+            // balanceStakeholder2.should.be.bignumber.equal(oneMIXToken.multipliedBy(12));
+            const balanceStakeholder3 = new BigNumber(await mixr.balanceOf(stakeholder1));
+            // balanceStakeholder3.should.be.bignumber.equal(oneMIXToken.multipliedBy(10));
+        });
+        it('All fees distributed between all stakeholders and all agents', async () => {
+            const paidFees = new BigNumber(await bild.payoutFees());
+            paidFees.should.be.bignumber.equal(new BigNumber(oneMIXToken.multipliedBy(40).toString(10)));
+            const balanceAgent1 = new BigNumber(await mixr.balanceOf(agent1));
+            // balanceAgent1.should.be.bignumber.equal(oneMIXToken.multipliedBy(10));
+            const balanceAgent2 = new BigNumber(await mixr.balanceOf(agent2));
+            // balanceAgent2.should.be.bignumber.equal(oneMIXToken.multipliedBy(10));
+            const balanceStakeholder1 = new BigNumber(await mixr.balanceOf(stakeholder1));
+            // balanceStakeholder1.should.be.bignumber.equal(oneMIXToken.multipliedBy(12));
+            const balanceStakeholder2 = new BigNumber(await mixr.balanceOf(stakeholder1));
+            // balanceStakeholder2.should.be.bignumber.equal(oneMIXToken.multipliedBy(3));
+            const balanceStakeholder3 = new BigNumber(await mixr.balanceOf(stakeholder1));
+            // balanceStakeholder3.should.be.bignumber.equal(oneMIXToken.multipliedBy(5));
         });
     });
 });
