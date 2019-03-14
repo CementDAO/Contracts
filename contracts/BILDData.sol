@@ -1,7 +1,7 @@
 pragma solidity ^0.5.0;
 
-import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
-import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
+// import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
+// import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./UtilsLib.sol";
 
@@ -10,7 +10,7 @@ import "./UtilsLib.sol";
  * @author Alberto Cuesta Canada, Bernardo Vieira
  * @notice Implements data structures the staking of BILD tokens.
  */
-contract BILDData is ERC20, ERC20Detailed {
+contract BILDData {
     using SafeMath for uint256;
 
     /**
@@ -90,16 +90,6 @@ contract BILDData is ERC20, ERC20Detailed {
      * create stakes than those that transact with MIX.
      */
     mapping(address => uint256) internal stakesByHolder;
-
-    /**
-     * @notice Constructor with the details of the ERC20Detailed.
-     * BILD is constructed with 18 decimals and 10**9 tokens are minted and
-     * assigned to the distributor account.
-     * @dev The distributor doesn't need to be in the stakeholders whitelist.
-     */
-    constructor(address _distributor) public ERC20Detailed("BILD", "BILD", 18) {
-        _mint(_distributor, 10**27);
-    }
 
     /**
      * @notice Verifies that an agent exists

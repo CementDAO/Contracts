@@ -13,7 +13,6 @@ contract('BILD governance', (accounts) => {
     let bildGovernance;
     const owner = accounts[0];
     const governor = accounts[1];
-    const distributor = accounts[2];
     const MIXRContract = accounts[3];
     const user = accounts[4];
 
@@ -25,7 +24,7 @@ contract('BILD governance', (accounts) => {
     describe('setting the minimum stake for nominating agents', () => {
         beforeEach(async () => {
             whitelist = await Whitelist.new();
-            bildGovernance = await BILDGovernance.new(distributor, whitelist.address);
+            bildGovernance = await BILDGovernance.new(whitelist.address);
             await whitelist.addGovernor(governor, {
                 from: owner,
             });
@@ -55,7 +54,7 @@ contract('BILD governance', (accounts) => {
     describe('setting the MIXR contract address', () => {
         beforeEach(async () => {
             whitelist = await Whitelist.new();
-            bildGovernance = await BILDGovernance.new(distributor, whitelist.address);
+            bildGovernance = await BILDGovernance.new(whitelist.address);
             await whitelist.addGovernor(governor, {
                 from: owner,
             });

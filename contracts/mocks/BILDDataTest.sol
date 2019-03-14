@@ -10,17 +10,6 @@ import "../BILDData.sol";
 contract BILDDataTest is BILDData {
 
     /**
-     * @notice Constructor with the details of the ERC20Detailed.
-     * BILD is constructed with 18 decimals and 10**9 tokens are minted and
-     * assigned to the distributor account.
-     */
-    constructor(address _distributor) 
-        public
-        BILDData(_distributor) 
-    {
-    }
-
-    /**
      * @notice Places an agent at the lowest position of the agents list.
      * @param _agent The agent to insert.
      */

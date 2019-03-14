@@ -173,18 +173,8 @@ contract('BILD', (accounts) => {
 
     describe('rankAt', () => {
         beforeEach(async () => {
-            bildDataTest = await BILDDataTest.new(distributor);
-            /* await whitelist.addGovernor(governor, {
-                from: owner,
-            });
-            await whitelist.addStakeholder(stakeholder1, {
-                from: governor,
-            }); */
-            await bildDataTest.transfer(
-                stakeholder1,
-                manyBILDTokens,
-                { from: distributor },
-            );
+            bildDataTest = await BILDDataTest.new();
+
             await bildDataTest.testInsertAgent(
                 agent3,
             );

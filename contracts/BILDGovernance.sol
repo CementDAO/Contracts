@@ -15,12 +15,10 @@ contract BILDGovernance is BILDData, Ownable {
     address internal whitelist;
     /**
      * @notice Constructor of the BILD Governance layer.
-     * @param _distributor The account that will receive all BILD tokens on contract creation.
      * @param _whitelist The address for the governance and BILD holding authorized individuals.
      */
-    constructor(address _distributor, address _whitelist) 
+    constructor(address _whitelist) 
         public 
-        BILDData(_distributor)
     {
         whitelist = _whitelist;
     }

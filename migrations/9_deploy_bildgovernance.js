@@ -9,6 +9,5 @@ module.exports = (deployer, network, accounts) => {
     deployer.deploy(UtilsLib);
     deployer.link(UtilsLib, BILDGovernance);
     // deploy bild
-    const distributor = accounts[1];
-    deployer.deploy(BILDGovernance, distributor, Whitelist.address);
+    deployer.deploy(BILDGovernance, Whitelist.address);
 };

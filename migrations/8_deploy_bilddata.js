@@ -7,6 +7,5 @@ module.exports = (deployer, network, accounts) => {
     deployer.deploy(UtilsLib);
     deployer.link(UtilsLib, BILDDataTest);
     // deploy bild
-    const distributor = accounts[1];
-    deployer.deploy(BILDDataTest, distributor);
+    deployer.deploy(BILDDataTest);
 };
