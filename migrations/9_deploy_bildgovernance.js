@@ -1,5 +1,3 @@
-// TODO: Split into BILD_Data -> BILD Governance -> BILD Business
-// TODO: Split into BILD_Data -> BILD Governance -> BILD Business
 const BILDGovernance = artifacts.require('./BILDGovernance.sol'); 
 const Whitelist = artifacts.require('./Whitelist.sol');
 const UtilsLib = artifacts.require('./UtilsLib.sol');

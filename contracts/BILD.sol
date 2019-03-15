@@ -353,7 +353,6 @@ contract BILD is BILDGovernance, ERC20, ERC20Detailed {
         public
         returns(uint256)
     {
-        // TODO: Return if the MIXR balance of the BILD contract is zero
         uint256 _R = calculateR(); // This must ensure a valid R at or below the total number f agents is returned.
         uint256 _totalStakes = totalStakes(_R);
         uint256 paidFees = 0;

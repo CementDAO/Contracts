@@ -336,7 +336,7 @@ contract BILDData {
             return;
         }
         agents[higherAgent(_agent)].lowerAgent = agents[_agent].lowerAgent;
-        delete agents[_agent].lowerAgent; // TODO: test this
+        delete agents[_agent].lowerAgent;
     }
 
     /**

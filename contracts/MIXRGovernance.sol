@@ -89,7 +89,6 @@ contract MIXRGovernance is MIXRData, Ownable {
      * @notice Set the base fee for deposit, redemption and transfer transactions.
      * @param _fee Amount to set in fixed point units (FixidityLib.digits()).
      * @param _transactionType One of REDEMPTION(), DEPOSIT() or TRANSFER().
-     * TODO: Rename to setBaseFee
      */
     function setBaseFee(int256 _fee, int8 _transactionType)
         public
