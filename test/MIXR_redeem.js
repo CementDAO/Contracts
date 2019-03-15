@@ -184,14 +184,14 @@ contract('MIXR', (accounts) => {
              * set base fee
              */
             const baseFee = new BigNumber(10).pow(23).toString(10);
-            await mixr.setTransactionFee(
+            await mixr.setBaseFee(
                 baseFee,
                 DEPOSIT,
                 {
                     from: governor,
                 },
             );
-            await mixr.setTransactionFee(
+            await mixr.setBaseFee(
                 baseFee,
                 REDEMPTION,
                 {

@@ -105,14 +105,14 @@ contract('BILD', (accounts) => {
                 },
             );
             const baseFee = fixed01;
-            await mixr.setTransactionFee(
+            await mixr.setBaseFee(
                 baseFee,
                 DEPOSIT,
                 {
                     from: governor,
                 },
             );
-            await mixr.setTransactionFee(
+            await mixr.setBaseFee(
                 baseFee,
                 REDEMPTION,
                 {

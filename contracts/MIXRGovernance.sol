@@ -91,7 +91,7 @@ contract MIXRGovernance is MIXRData, Ownable {
      * @param _transactionType One of REDEMPTION(), DEPOSIT() or TRANSFER().
      * TODO: Rename to setBaseFee
      */
-    function setTransactionFee(int256 _fee, int8 _transactionType)
+    function setBaseFee(int256 _fee, int8 _transactionType)
         public
         onlyGovernor()
     {

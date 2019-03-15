@@ -169,7 +169,7 @@ contract('MIXR governance', (accounts) => {
         itShouldThrow(
             'regular users can\'t set the base fees.',
             async () => {
-                await mixr.setTransactionFee(
+                await mixr.setBaseFee(
                     new BigNumber(await fixidityLibMock.newFixed(1)).minus(1).toString(10),
                     DEPOSIT,
                     { from: user },
@@ -181,7 +181,7 @@ contract('MIXR governance', (accounts) => {
         itShouldThrow(
             'base fees cannot be set below the minimumFee.',
             async () => {
-                await mixr.setTransactionFee(
+                await mixr.setBaseFee(
                     1,
                     DEPOSIT,
                     { from: governor },
@@ -193,7 +193,7 @@ contract('MIXR governance', (accounts) => {
         itShouldThrow(
             'base fees cannot be greater than 1',
             async () => {
-                await mixr.setTransactionFee(
+                await mixr.setBaseFee(
                     new BigNumber(await fixidityLibMock.newFixed(1)).plus(1).toString(10),
                     DEPOSIT,
                     { from: governor },
@@ -204,7 +204,7 @@ contract('MIXR governance', (accounts) => {
 
         it('base fees can be set.', async () => {
             const depositFee = new BigNumber(await fixidityLibMock.newFixed(1)).minus(1).toString(10);
-            await mixr.setTransactionFee(
+            await mixr.setBaseFee(
                 depositFee,
                 DEPOSIT,
                 { from: governor },
