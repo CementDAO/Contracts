@@ -89,9 +89,7 @@ contract MIXRGovernance is MIXRData, Ownable {
      * @notice Set the base fee for deposit, redemption and transfer transactions.
      * @param _fee Amount to set in fixed point units (FixidityLib.digits()).
      * @param _transactionType One of REDEMPTION(), DEPOSIT() or TRANSFER().
-     * @dev
-     * Test setTransactionFee(minimumFee) works and token.transactionFee returns minimumFee
-     * Test setTransactionFee(minimumFee-1) throws
+     * TODO: Rename to setBaseFee
      */
     function setTransactionFee(int256 _fee, int8 _transactionType)
         public
@@ -109,13 +107,6 @@ contract MIXRGovernance is MIXRData, Ownable {
      * @notice This function sets a proportion for a token in the basket,
      * allowing this smart contract to receive them. This proportions are
      * stored as fixidity units.
-     * @dev
-     * Test setTokenTargetProportions() throws if the proportions passed on the parameter don’t add up to FixidityLib.fixed1()
-     * Test setTokenTargetProportions() throws if the proportions passed on the parameter don’t exactly match the approved tokens.
-     * Test setTokenTargetProportions() throws if any of the proportions passed on the parameter is below 0
-     * Test setTokenTargetProportions([FixidityLib.fixed1()]) works for one approved token.
-     * Test setTokenTargetProportions([FixidityLib.fixed1()/2,FixidityLib.fixed1()/2]) works for two approved tokens.
-     * Test setTokenTargetProportions([FixidityLib.fixed1(),0]) works for two approved tokens.
      */
     function setTokensTargetProportion(address[] memory _tokens, int256[] memory _proportions)
         public

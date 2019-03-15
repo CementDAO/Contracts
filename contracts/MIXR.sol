@@ -135,7 +135,7 @@ contract MIXR is MIXRGovernance, ERC20, ERC20Detailed {
      * @param _token Address of the token to deposit.
      * @param _redemptionInBasketWei Amount of MIX wei to redeem.
      */
-    function redeemMIXR(address _token, uint256 _redemptionInBasketWei) // TODO: Rename to redeemMIX
+    function redeemMIX(address _token, uint256 _redemptionInBasketWei) // TODO: Rename to redeemMIX
         public
         acceptedForRedemptions(_token)
     {

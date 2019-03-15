@@ -435,7 +435,7 @@ library Fees {
         );
         if (deviation < lowerBound)
             deviation = lowerBound;
-        // Redemptions when no tokens are in the basket are managed by the redeemMIXR function
+        // Redemptions when no tokens are in the basket are managed by the redeemMIX function
         
         // Calculate the fee following the formula from the inside out
         int256 logitPoint = calculateLogit(targetProportion, deviation);
