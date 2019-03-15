@@ -16,7 +16,7 @@ import "./UtilsLib.sol";
 contract BILD is BILDGovernance, ERC20, ERC20Detailed {
     using SafeMath for uint256;
 
-    event debug(uint256 x, address y);
+    event debug(address _from, uint256 _value);
 
     /**
      * @notice Constructor of the BILD Business Layer. BILD is constructed as an ERC20Detailed with 18 decimals 
@@ -75,8 +75,8 @@ contract BILD is BILDGovernance, ERC20, ERC20Detailed {
 
     /**
      * @notice Transfer BILD from one address to another.
-     * @param _from address The address which you want to send tokens from
-     * @param _to address The address which you want to transfer to
+     * @param _from address The address that holds the tokens being sent
+     * @param _to address The address receiving the tokens
      * @param _value uint256 the amount of tokens to be transferred
      */
     function transferFrom
@@ -90,8 +90,9 @@ contract BILD is BILDGovernance, ERC20, ERC20Detailed {
         hasFreeBILD(_from, _value)
         returns(bool)
     {
-        _transfer(msg.sender, _to, _value);
-        // decreaseAllowance(_from, _value); // TODO: Make this work
+        // TODO: At compilation says is not visible, but in ERC20.sol it is internal?!?
+        // _approve(_from, msg.sender, allowance(_from, msg.sender).sub(_value));
+        _transfer(_from, _to, _value);
         return true;
     }
 

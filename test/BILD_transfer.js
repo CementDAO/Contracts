@@ -27,8 +27,8 @@ contract('BILD', (accounts) => {
         bild = await BILD.deployed();
         bildDataTest = await BILDDataTest.deployed();
         whitelist = await Whitelist.deployed();
-        oneBILDToken = tokenNumber(bildDecimals, 1);
-        twoBILDTokens = tokenNumber(bildDecimals, 2);
+        oneBILDToken = new BigNumber(tokenNumber(bildDecimals, 1)).toString(10);
+        twoBILDTokens = new BigNumber(tokenNumber(bildDecimals, 2)).toString(10);
     });
 
     describe('transfer BILD', () => {
@@ -61,6 +61,10 @@ contract('BILD', (accounts) => {
                 oneBILDToken,
                 { from: distributor },
             );
+            const balance = new BigNumber(
+                await bild.balanceOf(stakeholder1)
+            );
+            balance.should.be.bignumber.equal(oneBILDToken);
         });
 
         itShouldThrow(
@@ -119,12 +123,20 @@ contract('BILD', (accounts) => {
             );
 
             // Transfer BILD
-            await bild.approve(bild.address, oneBILDToken.toString(10), {
+            await bild.approve(stakeholder2, oneBILDToken.toString(10), {
                 from: stakeholder1,
             });
             await bild.transferFrom(stakeholder1, stakeholder2, oneBILDToken.toString(10), {
-                from: stakeholder1,
+                from: stakeholder2,
             });
+            const balanceStakeholder1 = new BigNumber(
+                await bild.balanceOf(stakeholder1)
+            );
+            balanceStakeholder1.should.be.bignumber.equal(oneBILDToken);
+            const balanceStakeholder2 = new BigNumber(
+                await bild.balanceOf(stakeholder2)
+            );
+            balanceStakeholder2.should.be.bignumber.equal(oneBILDToken);
         });
     });
 });
