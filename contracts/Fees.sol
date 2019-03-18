@@ -274,7 +274,7 @@ library Fees {
         view
         returns(uint256)
     {
-        assert(_fee >= 0);
+        require(_fee >= 0, "Attempted to apply a negative fee.");
         int256 validatedFee = _fee;
         if (validatedFee < MIXRData(_basket).getMinimumFee()) 
             validatedFee = MIXRData(_basket).getMinimumFee();

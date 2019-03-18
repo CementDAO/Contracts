@@ -51,33 +51,7 @@ contract MIXR is MIXRGovernance, ERC20, ERC20Detailed {
         view
         returns (uint256)
     {
-        int256 balance = 0;
-        uint256 totalTokens;
-        address[] memory registeredTokens;
-
-        (registeredTokens, totalTokens) = getRegisteredTokens();
-
-        for ( uint256 i = 0; i < totalTokens; i += 1 )
-        {
-            balance = FixidityLib.add(
-                balance, 
-                FixidityLib.newFixed(
-                    // convertTokens below returns the balance in the basket decimals
-                    UtilsLib.safeCast(
-                        UtilsLib.convertTokenAmount(
-                            getDecimals(registeredTokens[i]), 
-                            ERC20Detailed(address(this)).decimals(), 
-                            IERC20(registeredTokens[i]).balanceOf(address(this)))
-                        ), 
-                    // We create a new fixed point number from basket decimals to the
-                    // library precision to be able to use the add function
-                    ERC20Detailed(address(this)).decimals()
-                )
-            );
-        }
-        assert(balance >= 0);
-        // We convert back from library precision to basket precision and to uint
-        return uint256(FixidityLib.fromFixed(balance, ERC20Detailed(address(this)).decimals()));
+        return totalSupply();
     } 
 
     /**
@@ -118,13 +92,15 @@ contract MIXR is MIXRGovernance, ERC20, ERC20Detailed {
         // Receive the token that was sent and mint an equal number of MIX
         IERC20(_token).transferFrom(msg.sender, address(this), _depositInTokenWei);
         _mint(address(this), depositInBasketWei);
-        IERC20(address(this)).approve(address(this), depositInBasketWei);
+        // IERC20(address(this)).approve(address(this), depositInBasketWei);
 
+        // TODO: Refactor as a withdrawal
         // Send the deposit fee to the stakeholder account
-        IERC20(address(this)).transferFrom(address(this), BILDContract, feeInBasketWei);
+        IERC20(address(this)).transfer(BILDContract, feeInBasketWei);
 
+        // TODO: Refactor as a withdrawal
         // Return an equal nubmer of MIX minus the fee to sender
-        IERC20(address(this)).transferFrom(address(this), msg.sender, returnInBasketWei);
+        IERC20(address(this)).transfer(msg.sender, returnInBasketWei);
     }
 
     /**
@@ -162,13 +138,15 @@ contract MIXR is MIXRGovernance, ERC20, ERC20Detailed {
         // Receive the MIXR token that was sent
         IERC20(address(this)).transferFrom(msg.sender, address(this), _redemptionInBasketWei);
 
+        // TODO: Refactor as a withdrawal
         // Send the fee in MIX to the stakeholder account
-        IERC20(address(this)).approve(address(this), feeInBasketWei);
-        IERC20(address(this)).transferFrom(address(this), BILDContract, feeInBasketWei);
+        // IERC20(address(this)).approve(address(this), feeInBasketWei);
+        IERC20(address(this)).transfer(BILDContract, feeInBasketWei);
 
+        // TODO: Refactor as a withdrawal
         // Return the token equivalent to the redeemed MIX minus the fee back to the sender
-        IERC20(_token).approve(address(this), returnInTokenWei);
-        IERC20(_token).transferFrom(address(this), msg.sender, returnInTokenWei);
+        // IERC20(_token).approve(address(this), returnInTokenWei);
+        IERC20(_token).transfer(msg.sender, returnInTokenWei);
         
         // We always mint and burn MIX amounts
         _burn(address(this), withoutFeeInBasketWei);

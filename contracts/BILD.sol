@@ -340,8 +340,8 @@ contract BILD is BILDGovernance, ERC20, ERC20Detailed {
             );
             // Send the fee in MIX to the stakeholder account
             paidFees += payout; // Cannot be bigger than _agentPayout
-            IERC20(MIXRContract).approve(address(this), payout);
-            IERC20(MIXRContract).transferFrom(address(this), stake.stakeholder, payout);
+            // TODO: Refactor as a withdrawal
+            IERC20(MIXRContract).transfer(stake.stakeholder, payout);
         }
         return paidFees;
     }
