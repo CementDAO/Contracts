@@ -34,28 +34,71 @@ contract BILD is BILDGovernance, ERC20, ERC20Detailed {
     /**
      * @notice Verifies that an address is whitelisted as a BILD Stakeholder.
      * @param _address The address to verify.
+     * @return True if the address is whitelisted as a BILD stakeholder.
      */
-    modifier isStakeholder(address _address)
+    function isStakeholder(address _address)
+        public
+        view
+        returns(bool)
     {
-        require(
-            Whitelist(whitelist).isStakeholder(_address) == true,
-            "This address is not authorized to hold BILD tokens."
-        );
-        _;
+        return Whitelist(whitelist).isStakeholder(_address) == true;
     }
 
     /**
      * @notice Verify a stakeholder has a certain unstaked BILD amount.
      * @param _stakeholder The address of the stakeholder to verify the balance for.
      * @param _value The amount to be transferred.
+     * @return True if the stakeholder has enough unstaked BILD.
      */
-    modifier hasFreeBILD(address _stakeholder, uint256 _value)
+    function hasFreeBILD(address _stakeholder, uint256 _value)
+        public
+        view
+        returns(bool)
     {
-        require (
-            _value <= ERC20(address(this)).balanceOf(_stakeholder) - stakesByHolder[_stakeholder],
-            "Sender doesn't have enough unstaked BILD."
-        );
-        _;
+        return _value <= ERC20(address(this)).balanceOf(_stakeholder) - stakesByHolder[_stakeholder];
+    }
+
+    /**
+     * @notice Verifies whether a transfer is restricted
+     * @param _from address The address that holds the tokens being sent
+     * @param _to address The address receiving the tokens
+     * @param _value uint256 the amount of tokens to be transferred
+     * @return Zero for no restrictions, an error code otherwise
+     */
+    function detectTransferRestriction ( 
+        address _from, 
+        address _to, 
+        uint256 _value 
+    ) 
+        public
+        view
+        returns (uint8)
+    {
+        if (!isStakeholder(_to)) return 1;
+        if (!hasFreeBILD(_from, _value)) return 2;
+        if (_from != msg.sender) return 3;
+        return 0;
+    } 
+    
+    /**
+     * @notice Converts an error code from detectTransferRestriction to a human readable message.
+     * @param _restrictionCode The error code to convert.
+     * @return A human readable message.
+     */
+    function messageForTransferRestriction ( 
+        uint8 _restrictionCode 
+    ) 
+        public
+        pure
+        returns (string memory)
+    {
+        if (_restrictionCode == 1) 
+            return "This address is not authorized to hold BILD tokens.";
+        if (_restrictionCode == 2)
+            return "Sender doesn't have enough unstaked BILD.";
+        if (_restrictionCode == 3)
+            return "TransferFrom not supported.";
+        return "No restrictions were found for this transaction.";        
     }
 
     /**
@@ -65,10 +108,13 @@ contract BILD is BILDGovernance, ERC20, ERC20Detailed {
      */
     function transfer(address _to, uint256 _value) 
         public 
-        isStakeholder(_to)
-        hasFreeBILD(msg.sender, _value)
         returns(bool)
     {
+        uint8 transferRestriction = detectTransferRestriction ( 
+            msg.sender, _to, _value
+        );
+        if (transferRestriction != 0)
+            revert(messageForTransferRestriction(transferRestriction)); 
         _transfer(msg.sender, _to, _value);
         return true;
     }
@@ -86,11 +132,14 @@ contract BILD is BILDGovernance, ERC20, ERC20Detailed {
         uint256 _value
     ) 
         public 
-        isStakeholder(_to)
-        hasFreeBILD(_from, _value)
         returns(bool)
     {
-        // TODO: At compilation says is not visible, but in ERC20.sol it is internal?!?
+        uint8 transferRestriction = detectTransferRestriction ( 
+            _from, _to, _value
+        );
+        if (transferRestriction != 0)
+            revert(messageForTransferRestriction(transferRestriction)); 
+        // TODO: Need to upgrade to openzeppelin-solidity:2.2.0 and solc >= 0.5.2
         // _approve(_from, msg.sender, allowance(_from, msg.sender).sub(_value));
         _transfer(_from, _to, _value);
         return true;
@@ -142,8 +191,11 @@ contract BILD is BILDGovernance, ERC20, ERC20Detailed {
     function createStake(address _agent, uint256 _stake)
     public
     agentExists(_agent)
-    hasFreeBILD(msg.sender, _stake)
     {
+        require(
+            hasFreeBILD(msg.sender, _stake),
+            "Sender doesn't have enough unstaked BILD."
+        );
         // Look for a stake for the agent from the stakeholder.
         uint256 stakeIndex = findStakeIndex(_agent, msg.sender);
         // If the agent has no earlier stakes by the stakeholder create one
