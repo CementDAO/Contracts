@@ -167,6 +167,10 @@ contract MIXRData {
             token.registered == true,
             "The given token is not registered."
         );
+        require(
+            IERC20(_token).balanceOf(address(this)) > 0,
+            "MIXR doesn't contain any of the given tokens."
+        );
         _;
     }
 
@@ -290,6 +294,45 @@ contract MIXRData {
         for (uint256 totalIndex = 0; totalIndex < totalAddresses; totalIndex += 1) {
             TokenData memory token = tokens[tokensList[totalIndex]];
             if (token.registered) {
+                activeAddresses[activeIndex] = tokensList[totalIndex];
+                activeIndex += 1; // Unlikely to overflow
+            }
+        }
+        // Do we need to return activeIndex? Can't the caller use activeAddresses.length?
+        return (activeAddresses, activeIndex);
+    }
+
+    function getTokensAcceptedForDeposits()
+        public
+        view
+        returns(address[] memory, uint256)
+    {
+        uint256 totalAddresses = tokensList.length;
+        uint256 activeIndex = 0;
+        address[] memory activeAddresses = new address[](totalAddresses);
+        for (uint256 totalIndex = 0; totalIndex < totalAddresses; totalIndex += 1) {
+            TokenData memory token = tokens[tokensList[totalIndex]];
+            if (token.registered && token.targetProportion > 0) {
+                activeAddresses[activeIndex] = tokensList[totalIndex];
+                activeIndex += 1; // Unlikely to overflow
+            }
+        }
+        // Do we need to return activeIndex? Can't the caller use activeAddresses.length?
+        return (activeAddresses, activeIndex);
+    }
+
+    function getTokensAcceptedForRedemptions()
+        public
+        view
+        returns(address[] memory, uint256)
+    {
+        uint256 totalAddresses = tokensList.length;
+        uint256 activeIndex = 0;
+        address[] memory activeAddresses = new address[](totalAddresses);
+        for (uint256 totalIndex = 0; totalIndex < totalAddresses; totalIndex += 1) {
+            address tokenAddress = tokensList[totalIndex];
+            TokenData memory token = tokens[tokenAddress];
+            if (token.registered && IERC20(tokenAddress).balanceOf(address(this)) > 0) {
                 activeAddresses[activeIndex] = tokensList[totalIndex];
                 activeIndex += 1; // Unlikely to overflow
             }
