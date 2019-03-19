@@ -25,7 +25,8 @@ contract BILD is BILDGovernance, ERC20, ERC20Detailed {
      * @param _whitelist The address for the governance and BILD holding authorized individuals.
      */
     constructor(address _distributor, address _whitelist) 
-        public BILDGovernance(_whitelist)
+        public 
+        BILDGovernance(_whitelist)
         ERC20Detailed("BILD", "BILD", 18)
     {
         _mint(_distributor, 10**27);
@@ -252,7 +253,7 @@ contract BILD is BILDGovernance, ERC20, ERC20Detailed {
      * @param _agent The stakeholder to revoke the nomination from.
      */
     function revokeNomination(address _agent)
-        public
+        internal
         agentExists(_agent)
     {
         require (
@@ -361,7 +362,7 @@ contract BILD is BILDGovernance, ERC20, ERC20Detailed {
      * @return The aggregation of fees paid, which can be lower than _agentPayout due to rounding.
      */
     function payFeesForAgent(uint256 _totalPayout, address _agent)
-        public // TODO: Make private for production
+        internal
         returns(uint256)
     {
         require(
@@ -399,7 +400,7 @@ contract BILD is BILDGovernance, ERC20, ERC20Detailed {
      * @return The aggregation of fees paid, which can be lower than the MIX balance of the BILD contract due to rounding.
      */
     function payoutFees()
-        public
+        internal
         returns(uint256)
     {
         uint256 _R = calculateR(); // This must ensure a valid R at or below the total number f agents is returned.

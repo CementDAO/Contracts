@@ -1,4 +1,3 @@
-// TODO: Remove for production deployment
 const BILDDataTest = artifacts.require('./mocks/BILDDataTest.sol'); 
 const UtilsLib = artifacts.require('./UtilsLib.sol');
 

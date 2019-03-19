@@ -1,4 +1,4 @@
-const BILD = artifacts.require('./BILD.sol');
+const BILD = artifacts.require('./BILDTest.sol');
 const MIXR = artifacts.require('./MIXR.sol');
 const Whitelist = artifacts.require('./Whitelist.sol');
 const FeesMock = artifacts.require('./FeesMock.sol');
@@ -198,7 +198,7 @@ contract('BILD', (accounts) => {
         });
         it('All fees paid to one stakeholder and one agent', async () => {
             const paidFees = new BigNumber(
-                await bild.payFeesForAgent(
+                await bild.testPayFeesForAgent(
                     oneMIXToken.multipliedBy(40).toString(10), 
                     agent2,
                     {
@@ -217,7 +217,7 @@ contract('BILD', (accounts) => {
         });
         it('All fees distributed between stakeholders and one agent', async () => {
             const paidFees = new BigNumber(
-                await bild.payFeesForAgent(
+                await bild.testPayFeesForAgent(
                     oneMIXToken.multipliedBy(40).toString(10),
                     agent1,
                     {
@@ -243,7 +243,7 @@ contract('BILD', (accounts) => {
         });
         it('All fees distributed between all stakeholders and all agents', async () => {
             const paidFees = new BigNumber(
-                await bild.payoutFees(
+                await bild.testPayoutFees(
                     {
                         from: mixrUser,
                     }

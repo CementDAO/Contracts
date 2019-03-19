@@ -1,4 +1,4 @@
-const BILD = artifacts.require('./BILD.sol');
+const BILD = artifacts.require('./BILDTest.sol');
 const Whitelist = artifacts.require('./Whitelist.sol');
 
 const BigNumber = require('bignumber.js');
@@ -57,7 +57,7 @@ contract('BILD', (accounts) => {
         itShouldThrow(
             'revokeNomination fails for non nominated agent.',
             async () => {
-                await bild.revokeNomination(
+                await bild.testRevokeNomination(
                     agent1,
                     {
                         from: stakeholder1,
@@ -79,7 +79,7 @@ contract('BILD', (accounts) => {
                     },
                 );
 
-                await bild.revokeNomination(
+                await bild.testRevokeNomination(
                     agent1,
                     {
                         from: stakeholder1,
