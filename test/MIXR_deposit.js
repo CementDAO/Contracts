@@ -42,9 +42,6 @@ const depositTest = async (
     /**
      * approve and deposit
      */
-    await mixr.approve(mixr.address, depositInMIXWei.toString(10), {
-        from: user,
-    });
     await sampleDetailedERC20.approve(mixr.address, depositInERC20Wei.toString(10), {
         from: user,
     });

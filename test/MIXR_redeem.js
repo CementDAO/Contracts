@@ -219,9 +219,7 @@ contract('MIXR', (accounts) => {
             /**
              * approve transfers and deposit
              */
-            await mixr.approve(mixr.address, baseFee.toString(10), {
-                from: user,
-            });
+
             await sampleDetailedERC20.approve(mixr.address, tokensToTransfer.toString(10), {
                 from: user,
             });

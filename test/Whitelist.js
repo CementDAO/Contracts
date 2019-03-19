@@ -7,20 +7,11 @@ const { itShouldThrow, tokenNumber } = require('./utils');
 chai.use(require('chai-bignumber')()).should();
 
 contract('BILD', (accounts) => {
-    let bild;
-    let bildDataTest;
     let whitelist;
-    const bildDecimals = 18;
     const owner = accounts[0];
-    const distributor = accounts[1];
     const governor = accounts[2];
     const stakeholder = accounts[3];
     const nonStakeholder = accounts[4];
-    const agent1 = accounts[5];
-    const agent2 = accounts[6];
-    const agent3 = accounts[7];
-    let oneBILDToken;
-    let manyBILDTokens;
 
     before(async () => {
         whitelist = await Whitelist.deployed();
@@ -29,12 +20,6 @@ contract('BILD', (accounts) => {
     describe('Governors', () => {
         beforeEach(async () => {
             whitelist = await Whitelist.new();
-            /* await whitelist.addGovernor(governor, {
-                from: owner,
-            });
-            await whitelist.addStakeholder(stakeholder, {
-                from: governor,
-            }); */
         });
 
         itShouldThrow(
@@ -89,9 +74,6 @@ contract('BILD', (accounts) => {
             await whitelist.addGovernor(governor, {
                 from: owner,
             });
-            /* await whitelist.addStakeholder(stakeholder, {
-                from: governor,
-            }); */
         });
 
         itShouldThrow(
