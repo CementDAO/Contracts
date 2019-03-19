@@ -343,13 +343,15 @@ library Fees {
         view
         returns (uint256) 
     {
+        int256 targetProportion = MIXRData(_basket).getTargetProportion(_token);
+        
         int256 deviation = deviationAfterTransaction(
             _token,
             _basket,
             _transactionAmount,
             DEPOSIT()
         );
-        int256 targetProportion = MIXRData(_basket).getTargetProportion(_token);
+        
         int256 baseFee = MIXRData(_basket).getDepositFee();
         int256 fee;
 
@@ -409,13 +411,24 @@ library Fees {
         view
         returns (uint256) 
     {
+        int256 targetProportion = MIXRData(_basket).getTargetProportion(_token);
+        
+        // The fee calculation formula implies a division by zero if the target proportion is zero.
+        if (targetProportion == 0)
+            return applyFee(
+                _token, 
+                _basket,
+                _transactionAmount, 
+                MIXRData(_basket).getMinimumFee()
+            );
+
         int256 deviation = deviationAfterTransaction(
             _token,
             _basket,
             _transactionAmount,
             REDEMPTION()
         );
-        int256 targetProportion = MIXRData(_basket).getTargetProportion(_token);
+        
         int256 baseFee = MIXRData(_basket).getRedemptionFee();
         int256 fee;
 

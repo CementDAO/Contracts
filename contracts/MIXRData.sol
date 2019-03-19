@@ -302,6 +302,9 @@ contract MIXRData {
         return (activeAddresses, activeIndex);
     }
 
+    /**
+     * @notice Returns an address array of tokens that are accepted for deposits, and their size
+     */
     function getTokensAcceptedForDeposits()
         public
         view
@@ -321,6 +324,9 @@ contract MIXRData {
         return (activeAddresses, activeIndex);
     }
 
+    /**
+     * @notice Returns an address array of tokens that are accepted for redemptions, and their size
+     */
     function getTokensAcceptedForRedemptions()
         public
         view

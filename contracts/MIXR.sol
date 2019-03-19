@@ -92,7 +92,6 @@ contract MIXR is MIXRGovernance, ERC20, ERC20Detailed {
         // Receive the token that was sent and mint an equal number of MIX
         IERC20(_token).transferFrom(msg.sender, address(this), _depositInTokenWei);
         _mint(address(this), depositInBasketWei);
-        // IERC20(address(this)).approve(address(this), depositInBasketWei);
 
         // TODO: Refactor as a withdrawal
         // Send the deposit fee to the stakeholder account
@@ -140,12 +139,10 @@ contract MIXR is MIXRGovernance, ERC20, ERC20Detailed {
 
         // TODO: Refactor as a withdrawal
         // Send the fee in MIX to the stakeholder account
-        // IERC20(address(this)).approve(address(this), feeInBasketWei);
         IERC20(address(this)).transfer(BILDContract, feeInBasketWei);
 
         // TODO: Refactor as a withdrawal
         // Return the token equivalent to the redeemed MIX minus the fee back to the sender
-        // IERC20(_token).approve(address(this), returnInTokenWei);
         IERC20(_token).transfer(msg.sender, returnInTokenWei);
         
         // We always mint and burn MIX amounts

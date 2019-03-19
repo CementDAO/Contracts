@@ -602,6 +602,32 @@ contract('Fees', (accounts) => {
             );
             result.should.be.bignumber.equal(new BigNumber(baseFee).multipliedBy(90));
         });
+        it('redemptionFee(x, basket, ...) with targetProportion = 0 - Fee == Minimum Fee.', async () => {
+            await mixr.setTokensTargetProportion(
+                [
+                    sampleDetailedERC20.address,
+                    sampleDetailedERC20Other.address,
+                ],
+                [
+                    new BigNumber(0).toString(10),
+                    new BigNumber(await fixidityLibMock.fixed1()).toString(10),
+                ],
+                {
+                    from: governor,
+                },
+            );
+            
+            const amountToTransfer = new BigNumber(10).pow(18).multipliedBy(10);
+            const result = new BigNumber(
+                await feesMock.transactionFee(
+                    sampleDetailedERC20.address,
+                    mixr.address,
+                    amountToTransfer.toString(10),
+                    REDEMPTION.toString(10),
+                ),
+            );
+            result.should.be.bignumber.equal(new BigNumber(minimumFee).multipliedBy(10));
+        });
         itShouldThrow('redemptionFee(x, basket, 121) '
         + '120 x and 30 y in basket - Redemption above basket balance.', async () => {
             const amountToTransfer = new BigNumber(10).pow(18).multipliedBy(121);
