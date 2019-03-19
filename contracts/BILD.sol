@@ -76,7 +76,6 @@ contract BILD is BILDGovernance, ERC20, ERC20Detailed {
     {
         if (!isStakeholder(_to)) return 1;
         if (!hasFreeBILD(_from, _value)) return 2;
-        if (_from != msg.sender) return 3;
         return 0;
     } 
     
@@ -96,8 +95,6 @@ contract BILD is BILDGovernance, ERC20, ERC20Detailed {
             return "This address is not authorized to hold BILD tokens.";
         if (_restrictionCode == 2)
             return "Sender doesn't have enough unstaked BILD.";
-        if (_restrictionCode == 3)
-            return "TransferFrom not supported.";
         return "No restrictions were found for this transaction.";        
     }
 
@@ -139,8 +136,7 @@ contract BILD is BILDGovernance, ERC20, ERC20Detailed {
         );
         if (transferRestriction != 0)
             revert(messageForTransferRestriction(transferRestriction)); 
-        // TODO: Need to upgrade to openzeppelin-solidity:2.2.0 and solc >= 0.5.2
-        // _approve(_from, msg.sender, allowance(_from, msg.sender).sub(_value));
+        _approve(_from, msg.sender, allowance(_from, msg.sender).sub(_value));
         _transfer(_from, _to, _value);
         return true;
     }

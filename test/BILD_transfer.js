@@ -101,49 +101,7 @@ contract('BILD', (accounts) => {
             'Sender doesn\'t have enough unstaked BILD.',
         );
 
-        itShouldThrow(
-            'transfers of more than the unstaked BILD of the sender fail.',
-            async () => {
-                // Get initial BILD from distributor    
-                await bild.transfer(
-                    stakeholder1,
-                    twoBILDTokens,
-                    { from: distributor },
-                );
-                await whitelist.addStakeholder(stakeholder2, {
-                    from: governor,
-                });
-                // Nominate agent
-                bild.nominateAgent(
-                    agent1,
-                    oneBILDToken,
-                    'agent1',
-                    'contact1',
-                    {
-                        from: stakeholder1,
-                    },
-                );
-
-                // Transfer BILD
-                await bild.approve(stakeholder2, oneBILDToken.toString(10), {
-                    from: stakeholder1,
-                });
-                await bild.transferFrom(stakeholder1, stakeholder2, oneBILDToken.toString(10), {
-                    from: stakeholder2,
-                });
-                const balanceStakeholder1 = new BigNumber(
-                    await bild.balanceOf(stakeholder1)
-                );
-                balanceStakeholder1.should.be.bignumber.equal(oneBILDToken);
-                const balanceStakeholder2 = new BigNumber(
-                    await bild.balanceOf(stakeholder2)
-                );
-                balanceStakeholder2.should.be.bignumber.equal(oneBILDToken);
-            },
-            'TransferFrom not supported.',
-        );
-
-        /* it('transfers to approved BILD stakeholders under the unstaked BILD balance succeed.', async () => {
+        it('transfers to approved BILD stakeholders under the unstaked BILD balance succeed.', async () => {
             // Get initial BILD from distributor    
             await bild.transfer(
                 stakeholder1,
@@ -179,6 +137,6 @@ contract('BILD', (accounts) => {
                 await bild.balanceOf(stakeholder2)
             );
             balanceStakeholder2.should.be.bignumber.equal(oneBILDToken);
-        }); */
+        });
     });
 });
