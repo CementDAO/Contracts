@@ -405,7 +405,7 @@ contract('Fees', (accounts) => {
             result.should.be.bignumber.equal(new BigNumber(baseFee).multipliedBy(50));
         });
     });
-    // TODO: Test redemptions are possible with a target proportion of zero.
+    
     describe('redemption fee calculation functionality', () => {
         beforeEach(async () => {
             sampleERC20Decimals = 18;
