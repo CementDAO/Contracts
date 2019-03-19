@@ -140,7 +140,7 @@ contract('MIXR governance', (accounts) => {
         it('allows a governor to approve an ERC20 token', async () => {
             await mixr.registerStandardToken(
                 somePlainERC20.address,
-                web3.utils.utf8ToHex('SAMPLE'),
+                'SAMPLE',
                 18,
                 { from: governor },
             );

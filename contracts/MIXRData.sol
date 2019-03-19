@@ -72,7 +72,7 @@ contract MIXRData {
         /**
          * @notice The token name.
          */
-        bytes32 name;
+        string name;
     }
 
     /**
@@ -225,7 +225,7 @@ contract MIXRData {
     public
     view
     isRegistered(_token)
-    returns(bytes32)
+    returns(string memory)
     {
         TokenData memory token = tokens[_token];
         return token.name;
