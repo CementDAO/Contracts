@@ -63,6 +63,7 @@ contract MIXRGovernance is MIXRData, Ownable {
         registerStandardToken(
             _token,
             ERC20Detailed(_token).name(),
+            ERC20Detailed(_token).symbol(),
             ERC20Detailed(_token).decimals()
         );
     }
@@ -70,7 +71,7 @@ contract MIXRGovernance is MIXRData, Ownable {
     /**
      * @notice This function adds an ERC20 token to the registered tokens list.
      */
-    function registerStandardToken(address _token, string memory _name, uint8 _decimals)
+    function registerStandardToken(address _token, string memory _name, string memory _symbol, uint8 _decimals)
         public
         onlyGovernor()
         isCompliantToken(_token)
@@ -80,6 +81,7 @@ contract MIXRGovernance is MIXRData, Ownable {
         token.registered = true;
         token.decimals = _decimals;
         token.name = _name;
+        token.symbol = _symbol;
         tokens[_token] = token;
         tokensList.push(_token);
     }

@@ -73,6 +73,7 @@ contract MIXRData {
          * @notice The token name.
          */
         string name;
+        string symbol;
     }
 
     /**
@@ -229,6 +230,23 @@ contract MIXRData {
     {
         TokenData memory token = tokens[_token];
         return token.name;
+    }
+
+    /**
+     * @notice Returns the name of a token.
+     * @param _token The token ERC20 contract address that we are retrieving 
+     * the name. The token needs to have been registered in CementDAO.
+     * @dev The MIX token inheriting from MIXRData implements ERC20Detailed and you
+     * can retrieve its name as mixr.name().
+     */
+    function getSymbol(address _token) 
+    public
+    view
+    isRegistered(_token)
+    returns(string memory)
+    {
+        TokenData memory token = tokens[_token];
+        return token.symbol;
     }
 
     /**
