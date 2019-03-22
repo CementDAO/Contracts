@@ -141,6 +141,7 @@ contract('MIXR governance', (accounts) => {
             await mixr.registerStandardToken(
                 somePlainERC20.address,
                 'SAMPLE',
+                'SMP',
                 18,
                 { from: governor },
             );

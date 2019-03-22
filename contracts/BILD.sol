@@ -56,7 +56,7 @@ contract BILD is BILDGovernance, ERC20, ERC20Detailed {
         view
         returns(bool)
     {
-        return _value <= ERC20(address(this)).balanceOf(_stakeholder) - stakesByHolder[_stakeholder];
+        return _value <= ERC20(address(this)).balanceOf(_stakeholder).sub(stakesByHolder[_stakeholder]);
     }
 
     /**
