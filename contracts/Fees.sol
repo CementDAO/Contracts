@@ -276,8 +276,9 @@ library Fees {
     {
         require(_fee >= 0, "Attempted to apply a negative fee.");
         int256 validatedFee = _fee;
-        if (validatedFee < MIXRData(_basket).getMinimumFee()) 
-            validatedFee = MIXRData(_basket).getMinimumFee();
+        int256 minimumFee = MIXRData(_basket).getMinimumFee(); 
+        if (validatedFee < minimumFee) 
+            validatedFee = minimumFee;
 
         int256 transactionAmount = FixidityLib.newFixed(
             UtilsLib.safeCast(_transactionAmount), 
