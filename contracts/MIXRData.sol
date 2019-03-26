@@ -211,8 +211,7 @@ contract MIXRData {
     isRegistered(_token)
     returns(uint8)
     {
-        TokenData memory token = tokens[_token];
-        return token.decimals;
+        return tokens[_token].decimals;
     }
 
     /**
@@ -228,8 +227,7 @@ contract MIXRData {
     isRegistered(_token)
     returns(string memory)
     {
-        TokenData memory token = tokens[_token];
-        return token.name;
+        return tokens[_token].name;
     }
 
     /**
@@ -245,8 +243,7 @@ contract MIXRData {
     isRegistered(_token)
     returns(string memory)
     {
-        TokenData memory token = tokens[_token];
-        return token.symbol;
+        return tokens[_token].symbol;
     }
 
     /**
@@ -261,8 +258,7 @@ contract MIXRData {
     isRegistered(_token)
     returns(int256)
     {
-        TokenData memory token = tokens[_token];
-        return token.targetProportion;
+        return tokens[_token].targetProportion;
     }
 
     /**
