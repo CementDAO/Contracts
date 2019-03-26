@@ -57,15 +57,8 @@ library Fees {
      * @param _transactionType Fees.DEPOSIT or Fees.REDEMPTION.
      * @return int256 A fixed point value representing the proportion in the 
      * [0,fixed1()] range.
-     * @dev 
-     * Testing: With an empty basket.
-     * Test proportionAfterTransaction(token,1,DEPOSIT) returns fixed1
-     * Introduce 1 token of x into the basket.
-     * Test proportionAfterTransaction(x,basket,1,DEPOSIT) returns fixed1
-     * Test proportionAfterTransaction(y,basket,1,DEPOSIT) returns fixed1/2
-     * Testing: With a basket containing 2 wei each of x and y.
-     * Test proportionAfterTransaction(x,basket,1,REDEMPTION) returns fixed1/2
-     * Test proportionAfterTransaction(x,basket,2,REDEMPTION) returns 0
+     * @dev TODO: Refactor all these methods so that instead of passing _basket as
+     * a parameter they use "this" instead.
      */
     function proportionAfterTransaction(
         address _token,
@@ -77,27 +70,29 @@ library Fees {
         view
         returns (int256)
     {
+        MIXR mixr = MIXR(_basket);
+
         int256 tokenBalance = FixidityLib.newFixed(
             // The command below returns the balance of _token with this.decimals precision
             UtilsLib.safeCast(
                 UtilsLib.convertTokenAmount(
-                    MIXR(_basket).getDecimals(_token),
-                    ERC20Detailed(_basket).decimals(),
+                    mixr.getDecimals(_token),
+                    mixr.decimals(),
                     IERC20(_token).balanceOf(_basket))
                 ), 
             // We specify that this already uses a fixed point representation of decimals 
             // to convert to the library representation and be able to use the add function
-            ERC20Detailed(_basket).decimals()
+            mixr.decimals()
         );     
 
         int256 transactionAmount = FixidityLib.newFixed(
             UtilsLib.safeCast(
                 UtilsLib.convertTokenAmount(
-                    MIXR(_basket).getDecimals(_token),
-                    ERC20Detailed(_basket).decimals(),
+                    mixr.getDecimals(_token),
+                    mixr.decimals(),
                     _transactionAmount)
                 ), 
-            ERC20Detailed(_basket).decimals()
+            mixr.decimals()
         );
         // Add the token balance to the amount to deposit, in fixidity units
         int256 tokenBalanceAfterTransaction;
@@ -123,8 +118,8 @@ library Fees {
         // dividing by zero on an empty basket.
         
         int256 basketBeforeTransaction = FixidityLib.newFixed(
-                UtilsLib.safeCast(MIXR(_basket).basketBalance()),
-                ERC20Detailed(_basket).decimals()
+                UtilsLib.safeCast(mixr.basketBalance()),
+                mixr.decimals()
         );
         int256 basketAfterTransaction;
         if (_transactionType == DEPOSIT()) {
@@ -160,14 +155,6 @@ library Fees {
      * @param _transactionType Fees.DEPOSIT or Fees.REDEMPTION.
      * @return int256 A fixed point value representing the proportion in the 
      * [-fixed1(),fixed1()] range.
-     * @dev
-     * With an empty basket:
-     * Set targetProportion of token x to 1
-     * Test deviationAfterTransaction(x,basket,1,DEPOSIT) returns 1
-     * Introduce 1 token of type y (not x) to the basket.
-     * Test deviationAfterTransaction(x,basket,1,DEPOSIT) returns -0.5
-     * Set targetProportion of token x to 0
-     * Test deviationAfterTransaction(x,basket,1,DEPOSIT) returns 0.5
      */
     function deviationAfterTransaction(
         address _token,
@@ -276,19 +263,19 @@ library Fees {
     {
         require(_fee >= 0, "Attempted to apply a negative fee.");
         int256 validatedFee = _fee;
-        int256 minimumFee = MIXRData(_basket).getMinimumFee(); 
-        if (validatedFee < minimumFee) 
-            validatedFee = minimumFee;
+        MIXR mixr = MIXR(_basket);
+        if (validatedFee < mixr.getMinimumFee()) 
+            validatedFee = mixr.getMinimumFee();
 
         int256 transactionAmount = FixidityLib.newFixed(
             UtilsLib.safeCast(_transactionAmount), 
-            MIXR(_basket).getDecimals(_token)
+            mixr.getDecimals(_token)
         );
 
         return uint256(
             FixidityLib.fromFixed(
                 FixidityLib.multiply(transactionAmount, validatedFee),
-                ERC20Detailed(_basket).decimals()
+                mixr.decimals()
             )
         );
     }
@@ -344,7 +331,8 @@ library Fees {
         view
         returns (uint256) 
     {
-        int256 targetProportion = MIXRData(_basket).getTargetProportion(_token);
+        MIXR mixr = MIXR(_basket);
+        int256 targetProportion = mixr.getTargetProportion(_token);
         
         int256 deviation = deviationAfterTransaction(
             _token,
@@ -353,7 +341,7 @@ library Fees {
             DEPOSIT()
         );
         
-        int256 baseFee = MIXRData(_basket).getDepositFee();
+        int256 baseFee = mixr.getDepositFee();
         int256 fee;
 
         // Floors and ceilings
@@ -377,7 +365,7 @@ library Fees {
         int256 logitPoint = calculateLogit(targetProportion, deviation);
         int256 scaledLogit = scaleLogit(
             baseFee,
-            MIXRData(_basket).getScalingFactor(),
+            mixr.getScalingFactor(),
             logitPoint
         );
 
@@ -412,7 +400,8 @@ library Fees {
         view
         returns (uint256) 
     {
-        int256 targetProportion = MIXRData(_basket).getTargetProportion(_token);
+        MIXR mixr = MIXR(_basket);
+        int256 targetProportion = mixr.getTargetProportion(_token);
         
         // The fee calculation formula implies a division by zero if the target proportion is zero.
         if (targetProportion == 0)
@@ -420,7 +409,7 @@ library Fees {
                 _token, 
                 _basket,
                 _transactionAmount, 
-                MIXRData(_basket).getMinimumFee()
+                mixr.getMinimumFee()
             );
 
         int256 deviation = deviationAfterTransaction(
@@ -430,7 +419,7 @@ library Fees {
             REDEMPTION()
         );
         
-        int256 baseFee = MIXRData(_basket).getRedemptionFee();
+        int256 baseFee = mixr.getRedemptionFee();
         int256 fee;
 
         // Floors and ceilings
@@ -456,7 +445,7 @@ library Fees {
 
         int256 scaledLogit = scaleLogit(
             baseFee,
-            MIXRData(_basket).getScalingFactor(),
+            mixr.getScalingFactor(),
             logitPoint
         );
 
