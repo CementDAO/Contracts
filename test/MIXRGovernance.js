@@ -1,4 +1,6 @@
 const MIXR = artifacts.require('./MIXR.sol');
+const Whitelist = artifacts.require('./Whitelist.sol');
+const FeesMock = artifacts.require('./FeesMock.sol');
 const FixidityLibMock = artifacts.require('./FixidityLibMock.sol');
 const SampleERC721 = artifacts.require('./test/SampleERC721.sol');
 const SampleDetailedERC20 = artifacts.require('./test/SampleDetailedERC20.sol');
@@ -13,6 +15,8 @@ chai.use(require('chai-bignumber')()).should();
 
 contract('MIXR governance', (accounts) => {
     let mixr;
+    let whitelist;
+    let feesMock;
     let fixidityLibMock;
     let sampleDetailedERC20;
     let sampleDetailedERC20Other;
@@ -20,84 +24,35 @@ contract('MIXR governance', (accounts) => {
     let someERC721;
     let sampleERC20Decimals;
     let sampleERC20DecimalsOther;
-    // let somePlainERC20Decimals;
     const owner = accounts[0];
     const governor = accounts[1];
     const user = accounts[2];
     const stakeholders = accounts[3];
+    let DEPOSIT;
+    let REDEMPTION;
 
     before(async () => {
         mixr = await MIXR.deployed();
+        whitelist = await Whitelist.deployed();
+        feesMock = await FeesMock.deployed();
         someERC721 = await SampleERC721.deployed();
         fixidityLibMock = await FixidityLibMock.deployed();
         sampleDetailedERC20 = await SampleDetailedERC20.deployed();
         sampleDetailedERC20Other = await SampleDetailedERC20.deployed();
         somePlainERC20 = await SamplePlainERC20.deployed();
+        DEPOSIT = await feesMock.DEPOSIT();
+        REDEMPTION = await feesMock.REDEMPTION();
     });
 
-    describe('whitelist management', () => {
+    describe('setting the BILD Contract address', () => {
         beforeEach(async () => {
-            mixr = await MIXR.new();
-            await mixr.addGovernor(governor, {
-                from: owner,
-            });
-        });
-        itShouldThrow(
-            'only owner can add a governor',
-            async () => {
-                await mixr.addGovernor(
-                    user,
-                    { from: user },
-                );
-            },
-            'revert',
-        );
-
-        it('isGovernor returns false with a non-governor account.', async () => {
-            assert.equal(
-                false,
-                await mixr.isGovernor(user),
-            );
-        });
-
-        it('isGovernor returns true with a governor account.', async () => {
-            assert.equal(
-                true,
-                await mixr.isGovernor(governor),
-            );
-        });
-
-        it('allows the owner to add a governor.', async () => {
-            assert.equal(false, await mixr.isGovernor(user));
-            await mixr.addGovernor(
-                user,
-                { from: owner },
-            );
-            assert.equal(true, await mixr.isGovernor(user));
-        });
-
-        it('allows the contract to remove a governor', async () => {
-            assert.equal(true, await mixr.isGovernor(governor));
-            await mixr.removeGovernor(
-                governor,
-                { from: owner },
-            );
-            assert.equal(false, await mixr.isGovernor(governor));
-        });
-    });
-
-
-    describe('setting the stakeholder fee holding account', () => {
-        beforeEach(async () => {
-            mixr = await MIXR.new();
-            await mixr.addGovernor(governor, {
-                from: owner,
-            });
+            whitelist = await Whitelist.new();
+            mixr = await MIXR.new(whitelist.address);
         });
         /* itShouldThrow(
-            'only valid addresses are allowed as the stakeholder fee holding account.',
+            'only valid addresses are allowed as the BILD Contract address.',
             async () => {
-                await mixr.setStakeholderAccount(
+                await mixr.setBILDContract(
                     '0x00000000000000000000000000000000',
                     { from: governor },
                 );
@@ -106,28 +61,29 @@ contract('MIXR governance', (accounts) => {
         ); */
 
         itShouldThrow(
-            'only governors can set the stakeholder fee holding account.',
+            'regular users can\'t set the BILD Contract address.',
             async () => {
-                await mixr.setStakeholderAccount(
+                await mixr.setBILDContract(
                     stakeholders,
                     { from: user },
                 );
             },
-            'Message sender isn\'t part of the governance whitelist.',
+            'revert',
         );
 
-        it('a governor can set the stakeholder fee holding account.', async () => {
-            await mixr.setStakeholderAccount(
+        it('the contract owner can set the BILD Contract address.', async () => {
+            await mixr.setBILDContract(
                 stakeholders,
-                { from: governor },
+                { from: owner },
             );
         });
     });
 
     describe('token registering', () => {
         beforeEach(async () => {
-            mixr = await MIXR.new();
-            await mixr.addGovernor(governor, {
+            whitelist = await Whitelist.new();
+            mixr = await MIXR.new(whitelist.address);
+            await whitelist.addGovernor(governor, {
                 from: owner,
             });
         });
@@ -184,7 +140,8 @@ contract('MIXR governance', (accounts) => {
         it('allows a governor to approve an ERC20 token', async () => {
             await mixr.registerStandardToken(
                 somePlainERC20.address,
-                web3.utils.utf8ToHex('SAMPLE'),
+                'SAMPLE',
+                'SMP',
                 18,
                 { from: governor },
             );
@@ -201,14 +158,72 @@ contract('MIXR governance', (accounts) => {
         );
     });
 
+    describe('setting the base fees', () => {
+        beforeEach(async () => {
+            whitelist = await Whitelist.new();
+            mixr = await MIXR.new(whitelist.address);
+            await whitelist.addGovernor(governor, {
+                from: owner,
+            });
+        });
+
+        itShouldThrow(
+            'regular users can\'t set the base fees.',
+            async () => {
+                await mixr.setBaseFee(
+                    new BigNumber(await fixidityLibMock.newFixed(1)).minus(1).toString(10),
+                    DEPOSIT,
+                    { from: user },
+                );
+            },
+            'Message sender isn\'t part of the governance whitelist.',
+        );
+
+        itShouldThrow(
+            'base fees cannot be set below the minimumFee.',
+            async () => {
+                await mixr.setBaseFee(
+                    1,
+                    DEPOSIT,
+                    { from: governor },
+                );
+            },
+            'Fees can\'t be set to less than the minimum fee.',
+        );
+
+        itShouldThrow(
+            'base fees cannot be greater than 1',
+            async () => {
+                await mixr.setBaseFee(
+                    new BigNumber(await fixidityLibMock.newFixed(1)).plus(1).toString(10),
+                    DEPOSIT,
+                    { from: governor },
+                );
+            },
+            'Fees can\'t be set to more than 1.',
+        );
+
+        it('base fees can be set.', async () => {
+            const depositFee = new BigNumber(await fixidityLibMock.newFixed(1)).minus(1).toString(10);
+            await mixr.setBaseFee(
+                depositFee,
+                DEPOSIT,
+                { from: governor },
+            );
+            const result = new BigNumber(await mixr.getDepositFee());
+            result.should.be.bignumber.equal(depositFee);
+        });
+    });
+
     // These tests rely on another test to have changed the fixtures (ERC20 approval).
     // If the tests order is changed, or if these tests are ran in isolation they will fail.
     describe('proportion management', async () => {
         beforeEach(async () => {
             sampleERC20Decimals = 18;
             sampleERC20DecimalsOther = 18;
-            mixr = await MIXR.new();
-            await mixr.addGovernor(governor, {
+            whitelist = await Whitelist.new();
+            mixr = await MIXR.new(whitelist.address);
+            await whitelist.addGovernor(governor, {
                 from: owner,
             });
 

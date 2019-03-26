@@ -2,7 +2,7 @@ pragma solidity ^0.5.0;
 
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
-import "./Governance.sol";
+import "./MIXRGovernance.sol";
 import "./Fees.sol";
 
 
@@ -12,12 +12,17 @@ import "./Fees.sol";
  * This means that in addition to the usual ERC20 features the MIXR token
  * can react to transfers of tokens other than itself.
  */
-contract MIXR is Governance, ERC20, ERC20Detailed {
+contract MIXR is MIXRGovernance, ERC20, ERC20Detailed {
 
     /**
      * @notice Constructor with the details of the ERC20.
      */
-    constructor() public ERC20Detailed("MIX", "MIX", 24) {
+    constructor(address _whitelist)
+    public
+    ERC20Detailed("MIX", "MIX", 24)
+    MIXRGovernance(_whitelist)
+    {
+        
     }
 
     /**
@@ -46,33 +51,7 @@ contract MIXR is Governance, ERC20, ERC20Detailed {
         view
         returns (uint256)
     {
-        int256 balance = 0;
-        uint256 totalTokens;
-        address[] memory registeredTokens;
-
-        (registeredTokens, totalTokens) = getRegisteredTokens();
-
-        for ( uint256 i = 0; i < totalTokens; i += 1 )
-        {
-            balance = FixidityLib.add(
-                balance, 
-                FixidityLib.newFixed(
-                    // convertTokens below returns the balance in the basket decimals
-                    UtilsLib.safeCast(
-                        UtilsLib.convertTokenAmount(
-                            getDecimals(registeredTokens[i]), 
-                            ERC20Detailed(address(this)).decimals(), 
-                            IERC20(registeredTokens[i]).balanceOf(address(this)))
-                        ), 
-                    // We create a new fixed point number from basket decimals to the
-                    // library precision to be able to use the add function
-                    ERC20Detailed(address(this)).decimals()
-                )
-            );
-        }
-        assert(balance >= 0);
-        // We convert back from library precision to basket precision and to uint
-        return uint256(FixidityLib.fromFixed(balance, ERC20Detailed(address(this)).decimals()));
+        return totalSupply();
     } 
 
     /**
@@ -89,8 +68,7 @@ contract MIXR is Governance, ERC20, ERC20Detailed {
         acceptedForDeposits(_token)
     {
         // Calculate the deposit fee and the returned amount
-        uint256 feeInBasketWei = Fees
-            .transactionFee(
+        uint256 feeInBasketWei = Fees.transactionFee(
                 _token,
                 address(this),
                 _depositInTokenWei,
@@ -114,28 +92,28 @@ contract MIXR is Governance, ERC20, ERC20Detailed {
         // Receive the token that was sent and mint an equal number of MIX
         IERC20(_token).transferFrom(msg.sender, address(this), _depositInTokenWei);
         _mint(address(this), depositInBasketWei);
-        IERC20(address(this)).approve(address(this), depositInBasketWei);
 
+        // TODO: Refactor as a withdrawal
         // Send the deposit fee to the stakeholder account
-        IERC20(address(this)).transferFrom(address(this), stakeholderAccount, feeInBasketWei);
+        IERC20(address(this)).transfer(BILDContract, feeInBasketWei);
 
+        // TODO: Refactor as a withdrawal
         // Return an equal nubmer of MIX minus the fee to sender
-        IERC20(address(this)).transferFrom(address(this), msg.sender, returnInBasketWei);
+        IERC20(address(this)).transfer(msg.sender, returnInBasketWei);
     }
 
     /**
-     * @notice This function allows to redeem MIX tokens in exhange from
+     * @notice This function allows redeeming MIX tokens in exhange from
      * accepted ERC20 tokens from the MIXR basket. Transaction fees are
      * deducted from the amount returned and the MIX tokens redeemed are 
      * burned.
      * @param _token Address of the token to deposit.
      * @param _redemptionInBasketWei Amount of MIX wei to redeem.
      */
-    function redeemMIXR(address _token, uint256 _redemptionInBasketWei)
+    function redeemMIX(address _token, uint256 _redemptionInBasketWei)
         public
         acceptedForRedemptions(_token)
     {
-
         // Calculate fee and redemption return
         uint256 redemptionInTokenWei = UtilsLib.convertTokenAmount(
             ERC20Detailed(address(this)).decimals(), 
@@ -143,8 +121,7 @@ contract MIXR is Governance, ERC20, ERC20Detailed {
             _redemptionInBasketWei
         );
         //
-        uint256 feeInBasketWei = Fees
-            .transactionFee(
+        uint256 feeInBasketWei = Fees.transactionFee(
                 _token,
                 address(this),
                 redemptionInTokenWei,
@@ -157,28 +134,16 @@ contract MIXR is Governance, ERC20, ERC20Detailed {
             withoutFeeInBasketWei
         );
 
-        // Check for minimum viable redemption
-        require (
-            feeInBasketWei < _redemptionInBasketWei, 
-            "Redemptions at or below the minimum fee are not accepted."
-        );
-
-        // Check that we have enough of _token to return
-        require (
-            returnInTokenWei <= IERC20(_token).balanceOf(address(this)), 
-            "The MIXR doesn't have enough stablecoins for this redemption."
-        );
-
         // Receive the MIXR token that was sent
         IERC20(address(this)).transferFrom(msg.sender, address(this), _redemptionInBasketWei);
 
+        // TODO: Refactor as a withdrawal
         // Send the fee in MIX to the stakeholder account
-        IERC20(address(this)).approve(address(this), feeInBasketWei);
-        IERC20(address(this)).transferFrom(address(this), stakeholderAccount, feeInBasketWei);
+        IERC20(address(this)).transfer(BILDContract, feeInBasketWei);
 
+        // TODO: Refactor as a withdrawal
         // Return the token equivalent to the redeemed MIX minus the fee back to the sender
-        IERC20(_token).approve(address(this), returnInTokenWei);
-        IERC20(_token).transferFrom(address(this), msg.sender, returnInTokenWei);
+        IERC20(_token).transfer(msg.sender, returnInTokenWei);
         
         // We always mint and burn MIX amounts
         _burn(address(this), withoutFeeInBasketWei);

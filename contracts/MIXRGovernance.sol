@@ -1,20 +1,28 @@
 pragma solidity ^0.5.0;
 
-import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
-import "./fixidity/FixidityLib.sol";
-import "./Base.sol";
+import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "fixidity/contracts/FixidityLib.sol";
+import "./MIXRData.sol";
 import "./Fees.sol";
+import "./Whitelist.sol";
 import "./UtilsLib.sol";
 
 
 /**
- * @title Governance.
+ * @title MIXRGovernance.
  * @author Bernardo Vieira.
- * @notice Implements governance functions for a MIXR token as described in the
- * CementDAO whitepaper.
+ * @notice Implements governance functions for a MIXR token.
  */
-contract Governance is Base, Ownable {
+contract MIXRGovernance is MIXRData, Ownable {
+
+    address internal whitelist;
+    /**
+     * @notice Constructor with the details of the ERC20.
+     */
+    constructor(address _whitelist) public {
+        whitelist = _whitelist;
+    }
 
     /**
      * @notice Modifier that enforces that the transaction sender is
@@ -22,61 +30,26 @@ contract Governance is Base, Ownable {
      */
     modifier onlyGovernor() {
         require(
-            governors[msg.sender] == true,
+            Whitelist(whitelist).isGovernor(msg.sender),
             "Message sender isn't part of the governance whitelist."
         );
         _;
     }
 
     /**
-     * @notice Add new user to governors
-     * @param _userAddress The user address to be added.
+     * @notice Set the address of the BILD contract, which will hold the 
+     * transaction fees prior to distribution to stakeholders.
      */
-    function addGovernor(address _userAddress)
+    function setBILDContract(address _bild)
         public
         onlyOwner
     {
-        governors[_userAddress] = true;
-    }
-
-    /**
-     * @notice Allows to query whether or not a given address is a governor.
-     * @param _userAddress The address to be checked.
-     * @return true if the provided user is a governor, false otherwise.
-     */
-    function isGovernor(address _userAddress)
-        public
-        view
-        returns (bool)
-    {
-        return governors[_userAddress];
-    }
-
-    /**
-     * @notice Remove user from governors
-     * @param _userAddress the user address to remove
-     */
-    function removeGovernor(address _userAddress)
-        public
-        onlyOwner
-    {
-        delete governors[_userAddress];
-    }
-
-    /**
-     * @notice Set which account will hold the transaction fees prior to 
-     * distribution to stakeholders.
-     */
-    function setStakeholderAccount(address _wallet)
-        public
-        onlyGovernor()
-    {
-        require(_wallet != NULL_ADDRESS, "Invalid wallet address!");
+        require(_bild != NULL_ADDRESS, "Invalid address!");
         /**
-         * TODO: we should also verify that it's not a contract address.
+         * TODO: we should also verify that it a BILD contract address.
          * Maybe we also want multiple verification.
          */
-        stakeholderAccount = _wallet;
+        BILDContract = _bild;
     }
 
     /**
@@ -89,8 +62,8 @@ contract Governance is Base, Ownable {
     {
         registerStandardToken(
             _token,
-            // TODO: let's fix!
-            "not", // ERC20Detailed(_token).name(),
+            ERC20Detailed(_token).name(),
+            ERC20Detailed(_token).symbol(),
             ERC20Detailed(_token).decimals()
         );
     }
@@ -98,7 +71,7 @@ contract Governance is Base, Ownable {
     /**
      * @notice This function adds an ERC20 token to the registered tokens list.
      */
-    function registerStandardToken(address _token, bytes32 _name, uint8 _decimals)
+    function registerStandardToken(address _token, string memory _name, string memory _symbol, uint8 _decimals)
         public
         onlyGovernor()
         isCompliantToken(_token)
@@ -108,44 +81,32 @@ contract Governance is Base, Ownable {
         token.registered = true;
         token.decimals = _decimals;
         token.name = _name;
+        token.symbol = _symbol;
         tokens[_token] = token;
         tokensList.push(_token);
     }
 
     /**
      * @notice Set the base fee for deposit, redemption and transfer transactions.
-     * @param _token Address for the token that we are setting the fees for.
      * @param _fee Amount to set in fixed point units (FixidityLib.digits()).
      * @param _transactionType One of REDEMPTION(), DEPOSIT() or TRANSFER().
-     * @dev
-     * Test setTransactionFee(minimumFee) works and token.transactionFee returns minimumFee
-     * Test setTransactionFee(minimumFee-1) throws
      */
-    function setTransactionFee(address _token, int256 _fee, int8 _transactionType)
+    function setBaseFee(int256 _fee, int8 _transactionType)
         public
         onlyGovernor()
     {
         require(_fee >= minimumFee, "Fees can't be set to less than the minimum fee.");
-        TokenData memory token = tokens[_token];
-        if (_transactionType == Fees.DEPOSIT()) token.depositFee = _fee;
-        else if (_transactionType == Fees.TRANSFER()) token.transferFee = _fee;
-        else if (_transactionType == Fees.REDEMPTION()) token.redemptionFee = _fee;
+        require(_fee <= FixidityLib.fixed1(), "Fees can't be set to more than 1.");
+        if (_transactionType == Fees.DEPOSIT()) baseDepositFee = _fee;
+        else if (_transactionType == Fees.TRANSFER()) baseTransferFee = _fee;
+        else if (_transactionType == Fees.REDEMPTION()) baseRedemptionFee = _fee;
         else revert("Transaction type not accepted.");
-        
-        tokens[_token] = token;
     }
 
     /**
      * @notice This function sets a proportion for a token in the basket,
      * allowing this smart contract to receive them. This proportions are
      * stored as fixidity units.
-     * @dev
-     * Test setTokenTargetProportions() throws if the proportions passed on the parameter don’t add up to FixidityLib.fixed1()
-     * Test setTokenTargetProportions() throws if the proportions passed on the parameter don’t exactly match the approved tokens.
-     * Test setTokenTargetProportions() throws if any of the proportions passed on the parameter is below 0
-     * Test setTokenTargetProportions([FixidityLib.fixed1()]) works for one approved token.
-     * Test setTokenTargetProportions([FixidityLib.fixed1()/2,FixidityLib.fixed1()/2]) works for two approved tokens.
-     * Test setTokenTargetProportions([FixidityLib.fixed1(),0]) works for two approved tokens.
      */
     function setTokensTargetProportion(address[] memory _tokens, int256[] memory _proportions)
         public

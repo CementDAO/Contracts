@@ -1,16 +1,14 @@
 const MIXR = artifacts.require('./MIXR.sol');
+const Whitelist = artifacts.require('./Whitelist.sol');
 const FeesMock = artifacts.require('./FeesMock.sol');
 const FixidityLibMock = artifacts.require('./FixidityLibMock.sol');
-const UtilsLibMock = artifacts.require('./UtilsLibMock.sol');
 const SampleDetailedERC20 = artifacts.require('./test/SampleDetailedERC20.sol');
 const SampleERC721 = artifacts.require('./test/SampleERC721.sol');
-
 const BigNumber = require('bignumber.js');
 const chai = require('chai');
 const { itShouldThrow, tokenNumber } = require('./utils');
 // use default BigNumber
 chai.use(require('chai-bignumber')()).should();
-
 
 /**
  * Method to test deposit functionality
@@ -44,9 +42,6 @@ const depositTest = async (
     /**
      * approve and deposit
      */
-    await mixr.approve(mixr.address, depositInMIXWei.toString(10), {
-        from: user,
-    });
     await sampleDetailedERC20.approve(mixr.address, depositInERC20Wei.toString(10), {
         from: user,
     });
@@ -76,14 +71,13 @@ const depositTest = async (
 
 contract('MIXR', (accounts) => {
     let mixr;
+    let whitelist;
     let feesMock;
     let fixidityLibMock;
     let sampleDetailedERC20;
     let sampleDetailedERC20Other;
     let someERC721;
-    const defaultAmountOfTokens = 100;
     const sampleERC20Decimals = 18;
-    const sampleERC20DecimalsOther = 20;
     const mixrDecimals = 24;
     const owner = accounts[0];
     const governor = accounts[1];
@@ -96,10 +90,10 @@ contract('MIXR', (accounts) => {
 
     before(async () => {
         mixr = await MIXR.deployed();
+        whitelist = await Whitelist.deployed();
         feesMock = await FeesMock.deployed();
         fixidityLibMock = await FixidityLibMock.deployed();
         sampleDetailedERC20 = await SampleDetailedERC20.deployed();
-        sampleDetailedERC20Other = await SampleDetailedERC20.deployed();
         someERC721 = await SampleERC721.deployed();
         fixed1 = new BigNumber(await fixidityLibMock.fixed1());
         DEPOSIT = await feesMock.DEPOSIT();
@@ -111,10 +105,12 @@ contract('MIXR', (accounts) => {
             /**
              * deploy mixr and sample erc20
              */
-            mixr = await MIXR.new();
-            await mixr.addGovernor(governor, {
+            whitelist = await Whitelist.new();
+            mixr = await MIXR.new(whitelist.address);
+            await whitelist.addGovernor(governor, {
                 from: owner,
             });
+
             sampleDetailedERC20 = await SampleDetailedERC20.new(
                 governor,
                 tokenNumber(sampleERC20Decimals, 100),
@@ -139,16 +135,14 @@ contract('MIXR', (accounts) => {
              * set base fee
              */
             const baseFee = new BigNumber(10).pow(23).toString(10);
-            await mixr.setTransactionFee(
-                sampleDetailedERC20.address,
+            await mixr.setBaseFee(
                 baseFee,
                 DEPOSIT,
                 {
                     from: governor,
                 },
             );
-            await mixr.setTransactionFee(
-                sampleDetailedERC20.address,
+            await mixr.setBaseFee(
                 baseFee,
                 REDEMPTION,
                 {
@@ -166,7 +160,7 @@ contract('MIXR', (accounts) => {
             /**
              * set account to receive fees
              */
-            await mixr.setStakeholderAccount(stakeholders, { from: governor });
+            await mixr.setBILDContract(stakeholders, { from: owner });
 
             /**
              * verify mixr balance is zero
@@ -237,13 +231,13 @@ contract('MIXR', (accounts) => {
         );
 
         it('depositToken(50)', async () => {
-            depositTest(
+            await depositTest(
                 50, user, stakeholders, sampleDetailedERC20, sampleERC20Decimals, mixr, mixrDecimals,
             );
         });
 
         it('depositToken(1)', async () => {
-            depositTest(
+            await depositTest(
                 1, user, stakeholders, sampleDetailedERC20, sampleERC20Decimals, mixr, mixrDecimals,
             );
         });

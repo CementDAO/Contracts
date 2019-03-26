@@ -1,4 +1,5 @@
 const MIXR = artifacts.require('./MIXR.sol');
+const Whitelist = artifacts.require('./Whitelist.sol');
 const FeesMock = artifacts.require('./FeesMock.sol');
 const FixidityLibMock = artifacts.require('./FixidityLibMock.sol');
 const SampleDetailedERC20 = artifacts.require('./test/SampleDetailedERC20.sol');
@@ -11,21 +12,26 @@ chai.use(require('chai-bignumber')()).should();
 
 contract('Fees', (accounts) => {
     let mixr;
+    let whitelist;
     let feesMock;
     let fixidityLibMock;
     let sampleDetailedERC20;
     let sampleDetailedERC20Other;
     let sampleERC20Decimals;
     let sampleERC20DecimalsOther;
+    const mixrDecimals = 24;
     let minimumFee;
     const owner = accounts[0];
     const governor = accounts[1];
     const user = accounts[2];
+    const bild = accounts[3];
+    const baseFee = new BigNumber(10).pow(23).toString(10);
     let DEPOSIT;
     let REDEMPTION;
 
     before(async () => {
         mixr = await MIXR.deployed();
+        whitelist = await Whitelist.deployed();
         feesMock = await FeesMock.deployed();
         fixidityLibMock = await FixidityLibMock.deployed();
         sampleDetailedERC20 = await SampleDetailedERC20.deployed();
@@ -40,10 +46,16 @@ contract('Fees', (accounts) => {
         beforeEach(async () => {
             sampleERC20Decimals = 18;
             sampleERC20DecimalsOther = 18;
-            mixr = await MIXR.new();
-            await mixr.addGovernor(governor, {
+            whitelist = await Whitelist.new();
+            mixr = await MIXR.new(whitelist.address);
+            await whitelist.addGovernor(governor, {
                 from: owner,
             });
+
+            await mixr.setBILDContract(
+                bild,
+                { from: owner },
+            );
 
             sampleDetailedERC20 = await SampleDetailedERC20.new(
                 governor,
@@ -60,9 +72,7 @@ contract('Fees', (accounts) => {
                 'CLP',
             );
 
-            /**
-             * approve tokens!
-             */
+            // approve tokens!
             await mixr.registerDetailedToken(sampleDetailedERC20.address, {
                 from: governor,
             });
@@ -84,18 +94,7 @@ contract('Fees', (accounts) => {
                 },
             );
 
-            const baseFee = new BigNumber(10).pow(23).toString(10);
-
-            await mixr.setTransactionFee(
-                sampleDetailedERC20.address,
-                baseFee,
-                DEPOSIT.toString(10),
-                {
-                    from: governor,
-                },
-            );
-            await mixr.setTransactionFee(
-                sampleDetailedERC20Other.address,
+            await mixr.setBaseFee(
                 baseFee,
                 DEPOSIT.toString(10),
                 {
@@ -113,16 +112,45 @@ contract('Fees', (accounts) => {
                 { from: governor },
             );
         });
-        /*
-        * See depositFees_simulation.py
-        */
+        
+        // See depositFees_simulation.py
 
-        it('transactionFee(x, basket, 70, DEPOSIT) with 30 y in basket - Deposit at deviation ceiling', async () => {
-            await sampleDetailedERC20Other.transfer(
-                mixr.address,
-                tokenNumber(sampleERC20DecimalsOther, 30),
-                { from: user },
+        it('depositFee(x, basket, 70) with 30 y in basket - Deposit at deviation ceiling', async () => {
+            await mixr.setTokensTargetProportion(
+                [
+                    sampleDetailedERC20.address,
+                    sampleDetailedERC20Other.address,
+                ],
+                [
+                    new BigNumber(0).toString(10),
+                    new BigNumber(await fixidityLibMock.fixed1()).toString(10),
+                ],
+                {
+                    from: governor,
+                },
             );
+            const depositInERC20Wei = new BigNumber(tokenNumber(sampleERC20DecimalsOther, 30));
+
+            await sampleDetailedERC20Other.approve(mixr.address, depositInERC20Wei.toString(10), {
+                from: user,
+            });
+            await mixr.depositToken(sampleDetailedERC20Other.address, depositInERC20Wei.toString(10), {
+                from: user,
+            });
+            await mixr.setTokensTargetProportion(
+                [
+                    sampleDetailedERC20.address,
+                    sampleDetailedERC20Other.address,
+                ],
+                [
+                    new BigNumber(await fixidityLibMock.newFixedFraction(1, 2)).toString(10),
+                    new BigNumber(await fixidityLibMock.newFixedFraction(1, 2)).toString(10),
+                ],
+                {
+                    from: governor,
+                },
+            );
+
             const result = new BigNumber(
                 await feesMock.transactionFee(
                     sampleDetailedERC20.address,
@@ -135,12 +163,41 @@ contract('Fees', (accounts) => {
             result.should.be.bignumber.lte(new BigNumber('147712125472000000000000').multipliedBy(70));
         });
 
-        itShouldThrow('transactionFee(x, basket, 71, DEPOSIT) '
+        itShouldThrow('depositFee(x, basket, 71) '
         + 'with 29 y in basket - Deposit above deviation ceiling.', async () => {
-            await sampleDetailedERC20Other.transfer(
-                mixr.address,
-                tokenNumber(sampleERC20DecimalsOther, 29),
-                { from: user },
+            await mixr.setTokensTargetProportion(
+                [
+                    sampleDetailedERC20.address,
+                    sampleDetailedERC20Other.address,
+                ],
+                [
+                    new BigNumber(0).toString(10),
+                    new BigNumber(await fixidityLibMock.fixed1()).toString(10),
+                ],
+                {
+                    from: governor,
+                },
+            );
+            const depositInERC20Wei = new BigNumber(tokenNumber(sampleERC20DecimalsOther, 29));
+
+            await sampleDetailedERC20Other.approve(mixr.address, depositInERC20Wei.toString(10), {
+                from: user,
+            });
+            await mixr.depositToken(sampleDetailedERC20Other.address, depositInERC20Wei.toString(10), {
+                from: user,
+            });
+            await mixr.setTokensTargetProportion(
+                [
+                    sampleDetailedERC20.address,
+                    sampleDetailedERC20Other.address,
+                ],
+                [
+                    new BigNumber(await fixidityLibMock.newFixedFraction(1, 2)).toString(10),
+                    new BigNumber(await fixidityLibMock.newFixedFraction(1, 2)).toString(10),
+                ],
+                {
+                    from: governor,
+                },
             );
             await feesMock.transactionFee(
                 sampleDetailedERC20.address,
@@ -150,12 +207,42 @@ contract('Fees', (accounts) => {
             );
         }, 'revert');
 
-        it('transactionFee(x, basket, 29, DEPOSIT) with 71 y in basket - Deposit below deviation floor.', async () => {
-            await sampleDetailedERC20Other.transfer(
-                mixr.address,
-                tokenNumber(sampleERC20DecimalsOther, 71),
-                { from: user },
+        it('depositFee(x, basket, 29) with 71 y in basket - Deposit below deviation floor.', async () => {
+            await mixr.setTokensTargetProportion(
+                [
+                    sampleDetailedERC20.address,
+                    sampleDetailedERC20Other.address,
+                ],
+                [
+                    new BigNumber(0).toString(10),
+                    new BigNumber(await fixidityLibMock.fixed1()).toString(10),
+                ],
+                {
+                    from: governor,
+                },
             );
+            const depositInERC20Wei = new BigNumber(tokenNumber(sampleERC20DecimalsOther, 71));
+
+            await sampleDetailedERC20Other.approve(mixr.address, depositInERC20Wei.toString(10), {
+                from: user,
+            });
+            await mixr.depositToken(sampleDetailedERC20Other.address, depositInERC20Wei.toString(10), {
+                from: user,
+            });
+            await mixr.setTokensTargetProportion(
+                [
+                    sampleDetailedERC20.address,
+                    sampleDetailedERC20Other.address,
+                ],
+                [
+                    new BigNumber(await fixidityLibMock.newFixedFraction(1, 2)).toString(10),
+                    new BigNumber(await fixidityLibMock.newFixedFraction(1, 2)).toString(10),
+                ],
+                {
+                    from: governor,
+                },
+            );
+
             const result = new BigNumber(
                 await feesMock.transactionFee(
                     sampleDetailedERC20.address,
@@ -167,12 +254,42 @@ contract('Fees', (accounts) => {
             result.should.be.bignumber.gte(new BigNumber('52287874528000000000000').multipliedBy(29));
             result.should.be.bignumber.lte(new BigNumber('52287874528100000000000').multipliedBy(29));
         });
-        it('transactionFee(x, basket, 30, DEPOSIT) with 70 y in basket - Deposit just at deviation floor.', async () => {
-            await sampleDetailedERC20Other.transfer(
-                mixr.address,
-                tokenNumber(sampleERC20DecimalsOther, 70),
-                { from: user },
+        it('depositFee(x, basket, 30) with 70 y in basket - Deposit just at deviation floor.', async () => {
+            await mixr.setTokensTargetProportion(
+                [
+                    sampleDetailedERC20.address,
+                    sampleDetailedERC20Other.address,
+                ],
+                [
+                    new BigNumber(0).toString(10),
+                    new BigNumber(await fixidityLibMock.fixed1()).toString(10),
+                ],
+                {
+                    from: governor,
+                },
             );
+            const depositInERC20Wei = new BigNumber(tokenNumber(sampleERC20DecimalsOther, 70));
+
+            await sampleDetailedERC20Other.approve(mixr.address, depositInERC20Wei.toString(10), {
+                from: user,
+            });
+            await mixr.depositToken(sampleDetailedERC20Other.address, depositInERC20Wei.toString(10), {
+                from: user,
+            });
+            await mixr.setTokensTargetProportion(
+                [
+                    sampleDetailedERC20.address,
+                    sampleDetailedERC20Other.address,
+                ],
+                [
+                    new BigNumber(await fixidityLibMock.newFixedFraction(1, 2)).toString(10),
+                    new BigNumber(await fixidityLibMock.newFixedFraction(1, 2)).toString(10),
+                ],
+                {
+                    from: governor,
+                },
+            );
+
             const result = new BigNumber(
                 await feesMock.transactionFee(
                     sampleDetailedERC20.address,
@@ -184,14 +301,43 @@ contract('Fees', (accounts) => {
             result.should.be.bignumber.gte(new BigNumber('52287874528000000000000').multipliedBy(30));
             result.should.be.bignumber.lte(new BigNumber('52287874528100000000000').multipliedBy(30));
         });
-        it('transactionFee(..., DEPOSIT) >= minimumFee.', async () => {
-            await sampleDetailedERC20Other.transfer(
-                mixr.address,
-                tokenNumber(sampleERC20DecimalsOther, 70),
-                { from: user },
+        it('depositFee(...) >= minimumFee.', async () => {
+            await mixr.setTokensTargetProportion(
+                [
+                    sampleDetailedERC20.address,
+                    sampleDetailedERC20Other.address,
+                ],
+                [
+                    new BigNumber(0).toString(10),
+                    new BigNumber(await fixidityLibMock.fixed1()).toString(10),
+                ],
+                {
+                    from: governor,
+                },
             );
-            await mixr.setTransactionFee(
-                sampleDetailedERC20.address,
+            const depositInERC20Wei = new BigNumber(tokenNumber(sampleERC20DecimalsOther, 70));
+
+            await sampleDetailedERC20Other.approve(mixr.address, depositInERC20Wei.toString(10), {
+                from: user,
+            });
+            await mixr.depositToken(sampleDetailedERC20Other.address, depositInERC20Wei.toString(10), {
+                from: user,
+            });
+            await mixr.setTokensTargetProportion(
+                [
+                    sampleDetailedERC20.address,
+                    sampleDetailedERC20Other.address,
+                ],
+                [
+                    new BigNumber(await fixidityLibMock.newFixedFraction(1, 2)).toString(10),
+                    new BigNumber(await fixidityLibMock.newFixedFraction(1, 2)).toString(10),
+                ],
+                {
+                    from: governor,
+                },
+            );
+
+            await mixr.setBaseFee(
                 minimumFee,
                 DEPOSIT.toString(10),
                 {
@@ -210,12 +356,43 @@ contract('Fees', (accounts) => {
             );
             result.should.be.bignumber.equal(new BigNumber(minimumFee).multipliedBy(30));
         });
-        it('transactionFee(x, basket, 50, DEPOSIT) with 50 y in basket - Fee == Base Fee.', async () => {
-            const baseFee = new BigNumber(10).pow(23).toString(10);
-            await sampleDetailedERC20Other.transfer(
-                mixr.address,
-                tokenNumber(sampleERC20DecimalsOther, 50),
-                { from: user },
+        it('depositFee(x, basket, 50) with 50 y in basket - Fee == Base Fee.', async () => {
+            await mixr.setTokensTargetProportion(
+                [
+                    sampleDetailedERC20.address,
+                    sampleDetailedERC20Other.address,
+                ],
+                [
+                    new BigNumber(0).toString(10),
+                    new BigNumber(await fixidityLibMock.fixed1()).toString(10),
+                ],
+                {
+                    from: governor,
+                },
+            );
+            const depositInERC20Wei = new BigNumber(tokenNumber(sampleERC20DecimalsOther, 50));
+            const depositInMIXWei = new BigNumber(tokenNumber(mixrDecimals, 50));
+            await mixr.approve(mixr.address, depositInMIXWei.toString(10), {
+                from: user,
+            });
+            await sampleDetailedERC20Other.approve(mixr.address, depositInERC20Wei.toString(10), {
+                from: user,
+            });
+            await mixr.depositToken(sampleDetailedERC20Other.address, depositInERC20Wei.toString(10), {
+                from: user,
+            });
+            await mixr.setTokensTargetProportion(
+                [
+                    sampleDetailedERC20.address,
+                    sampleDetailedERC20Other.address,
+                ],
+                [
+                    new BigNumber(await fixidityLibMock.newFixedFraction(1, 2)).toString(10),
+                    new BigNumber(await fixidityLibMock.newFixedFraction(1, 2)).toString(10),
+                ],
+                {
+                    from: governor,
+                },
             );
             const result = new BigNumber(
                 await feesMock.transactionFee(
@@ -228,18 +405,27 @@ contract('Fees', (accounts) => {
             result.should.be.bignumber.equal(new BigNumber(baseFee).multipliedBy(50));
         });
     });
+    
     describe('redemption fee calculation functionality', () => {
         beforeEach(async () => {
             sampleERC20Decimals = 18;
             sampleERC20DecimalsOther = 18;
-            mixr = await MIXR.new();
-            await mixr.addGovernor(governor, {
+            whitelist = await Whitelist.new();
+            mixr = await MIXR.new(whitelist.address);
+            await mixr.setBILDContract(bild, { from: owner });
+            await whitelist.addGovernor(governor, {
                 from: owner,
             });
 
-            
-            // We will simulate that there's already some other token in the basket and we will
-            // deposit a new one.
+            await mixr.setBaseFee(
+                baseFee,
+                REDEMPTION.toString(10),
+                {
+                    from: governor,
+                },
+            );
+
+            // Create tokens and register them in the basket
             sampleDetailedERC20 = await SampleDetailedERC20.new(
                 governor,
                 tokenNumber(sampleERC20Decimals, 2000),
@@ -261,6 +447,60 @@ contract('Fees', (accounts) => {
                 from: governor,
             });
 
+            // Give some of the tokens to an user so that he can deposit them in the basket
+            const amountToUser = new BigNumber(10).pow(18).multipliedBy(1000);
+            await sampleDetailedERC20.transfer(user, amountToUser.toString(10), { from: governor });
+            await sampleDetailedERC20Other.transfer(user, amountToUser.toString(10), { from: governor });
+
+
+            // Deposit x
+            await mixr.setTokensTargetProportion(
+                [
+                    sampleDetailedERC20.address,
+                    sampleDetailedERC20Other.address,
+                ],
+                [
+                    new BigNumber(await fixidityLibMock.fixed1()).toString(10),
+                    new BigNumber(0).toString(10),
+                ],
+                {
+                    from: governor,
+                },
+            );
+            const xInBasket = new BigNumber(tokenNumber(sampleERC20DecimalsOther, 120));
+
+            await sampleDetailedERC20.approve(mixr.address, xInBasket.toString(10), {
+                from: user,
+            });
+
+            await mixr.depositToken(sampleDetailedERC20.address, xInBasket.toString(10), {
+                from: user,
+            });
+            // await sampleDetailedERC20.transfer(mixr.address, xInBasket.toString(10), { from: governor });
+            
+            await mixr.setTokensTargetProportion(
+                [
+                    sampleDetailedERC20.address,
+                    sampleDetailedERC20Other.address,
+                ],
+                [
+                    new BigNumber(0).toString(10),
+                    new BigNumber(await fixidityLibMock.fixed1()).toString(10),
+                ],
+                {
+                    from: governor,
+                },
+            );
+            const yInBasket = new BigNumber(tokenNumber(sampleERC20DecimalsOther, 30));
+
+            await sampleDetailedERC20Other.approve(mixr.address, yInBasket.toString(10), {
+                from: user,
+            });
+
+            await mixr.depositToken(sampleDetailedERC20Other.address, yInBasket.toString(10), {
+                from: user,
+            });
+            
             await mixr.setTokensTargetProportion(
                 [
                     sampleDetailedERC20.address,
@@ -274,37 +514,11 @@ contract('Fees', (accounts) => {
                     from: governor,
                 },
             );
-
-            const baseFee = new BigNumber(10).pow(23).toString(10);
-
-            await mixr.setTransactionFee(
-                sampleDetailedERC20.address,
-                baseFee,
-                REDEMPTION.toString(10),
-                {
-                    from: governor,
-                },
-            );
-            await mixr.setTransactionFee(
-                sampleDetailedERC20Other.address,
-                baseFee,
-                REDEMPTION.toString(10),
-                {
-                    from: governor,
-                },
-            );
-            const amountToUser = new BigNumber(10).pow(18).multipliedBy(1000);
-            await sampleDetailedERC20.transfer(user, amountToUser.toString(10), { from: governor });
-            await sampleDetailedERC20Other.transfer(user, amountToUser.toString(10), { from: governor });
         });
 
         // See redemptionFees_simulation.py
-        it('transactionFee(x, basket, 111, REDEMPTION) - 120 x and 30 y in basket - Below deviation floor', async () => {
-            const xInBasket = new BigNumber(10).pow(18).multipliedBy(120);
-            const yInBasket = new BigNumber(10).pow(18).multipliedBy(30);
+        it('redemptionFee(x, basket, 111) - 120 x and 30 y in basket - Below deviation floor', async () => {
             const amountToTransfer = new BigNumber(10).pow(18).multipliedBy(111);
-            await sampleDetailedERC20.transfer(mixr.address, xInBasket.toString(10), { from: governor });
-            await sampleDetailedERC20Other.transfer(mixr.address, yInBasket.toString(10), { from: governor });
             const result = new BigNumber(
                 await feesMock.transactionFee(
                     sampleDetailedERC20.address,
@@ -317,12 +531,8 @@ contract('Fees', (accounts) => {
             result.should.be.bignumber.lte(new BigNumber(299997828419010000000000).multipliedBy(111));
         });
 
-        it('transactionFee(x, basket, 109, REDEMPTION) - 120 x and 30 y in basket - Above deviation floor.', async () => {
-            const xInBasket = new BigNumber(10).pow(18).multipliedBy(120);
-            const yInBasket = new BigNumber(10).pow(18).multipliedBy(30);
+        it('redemptionFee(x, basket, 109) - 120 x and 30 y in basket - Above deviation floor.', async () => {
             const amountToTransfer = new BigNumber(10).pow(18).multipliedBy(109);
-            await sampleDetailedERC20.transfer(mixr.address, xInBasket.toString(10), { from: governor });
-            await sampleDetailedERC20Other.transfer(mixr.address, yInBasket.toString(10), { from: governor });
             const result = new BigNumber(
                 await feesMock.transactionFee(
                     sampleDetailedERC20.address,
@@ -335,12 +545,8 @@ contract('Fees', (accounts) => {
             result.should.be.bignumber.lte(new BigNumber(171025291828600000000000).multipliedBy(109));
         });
 
-        it('transactionFee(x, basket, 51, REDEMPTION) - 120 x and 30 y in basket - Below deviation ceiling.', async () => {
-            const xInBasket = new BigNumber(10).pow(18).multipliedBy(120);
-            const yInBasket = new BigNumber(10).pow(18).multipliedBy(30);
+        it('redemptionFee(x, basket, 51) - 120 x and 30 y in basket - Below deviation ceiling.', async () => {
             const amountToTransfer = new BigNumber(10).pow(18).multipliedBy(51);
-            await sampleDetailedERC20.transfer(mixr.address, xInBasket.toString(10), { from: governor });
-            await sampleDetailedERC20Other.transfer(mixr.address, yInBasket.toString(10), { from: governor });
             const result = new BigNumber(
                 await feesMock.transactionFee(
                     sampleDetailedERC20.address,
@@ -352,12 +558,8 @@ contract('Fees', (accounts) => {
             result.should.be.bignumber.gte(new BigNumber(53712301418600000000000).multipliedBy(51));
             result.should.be.bignumber.lte(new BigNumber(53712301418700000000000).multipliedBy(51));
         });
-        it('transactionFee(x, basket, 49, REDEMPTION) - 120 x and 30 y in basket - Above deviation ceiling.', async () => {
-            const xInBasket = new BigNumber(10).pow(18).multipliedBy(120);
-            const yInBasket = new BigNumber(10).pow(18).multipliedBy(30);
+        it('redemptionFee(x, basket, 49) - 120 x and 30 y in basket - Above deviation ceiling.', async () => {
             const amountToTransfer = new BigNumber(10).pow(18).multipliedBy(49);
-            await sampleDetailedERC20.transfer(mixr.address, xInBasket.toString(10), { from: governor });
-            await sampleDetailedERC20Other.transfer(mixr.address, yInBasket.toString(10), { from: governor });
             const result = new BigNumber(
                 await feesMock.transactionFee(
                     sampleDetailedERC20.address,
@@ -369,14 +571,9 @@ contract('Fees', (accounts) => {
             result.should.be.bignumber.gte(new BigNumber(52287874528000000000000).multipliedBy(49));
             result.should.be.bignumber.lte(new BigNumber(52287874528100000000000).multipliedBy(49));
         });
-        it('transactionFee(..., REDEMPTION) >= minimumFee.', async () => {
-            const xInBasket = new BigNumber(10).pow(18).multipliedBy(120);
-            const yInBasket = new BigNumber(10).pow(18).multipliedBy(30);
+        it('redemptionFee(...) >= minimumFee.', async () => {
             const amountToTransfer = new BigNumber(10).pow(18).multipliedBy(49);
-            await sampleDetailedERC20.transfer(mixr.address, xInBasket.toString(10), { from: governor });
-            await sampleDetailedERC20Other.transfer(mixr.address, yInBasket.toString(10), { from: governor });
-            await mixr.setTransactionFee(
-                sampleDetailedERC20.address,
+            await mixr.setBaseFee(
                 minimumFee,
                 REDEMPTION.toString(10),
                 {
@@ -393,13 +590,8 @@ contract('Fees', (accounts) => {
             );
             result.should.be.bignumber.equal(new BigNumber(minimumFee).multipliedBy(49));
         });
-        it('transactionFee(x, basket, 50, REDEMPTION) - 100 x and 50 y in basket - Fee == Base Fee.', async () => {
-            const baseFee = new BigNumber(10).pow(23).toString(10);
-            const xInBasket = new BigNumber(10).pow(18).multipliedBy(100);
-            const yInBasket = new BigNumber(10).pow(18).multipliedBy(50);
-            const amountToTransfer = new BigNumber(10).pow(18).multipliedBy(50);
-            await sampleDetailedERC20.transfer(mixr.address, xInBasket.toString(10), { from: governor });
-            await sampleDetailedERC20Other.transfer(mixr.address, yInBasket.toString(10), { from: governor });
+        it('redemptionFee(x, basket, 90) - 120 x and 30 y in basket - Fee == Base Fee.', async () => {
+            const amountToTransfer = new BigNumber(10).pow(18).multipliedBy(90);
             const result = new BigNumber(
                 await feesMock.transactionFee(
                     sampleDetailedERC20.address,
@@ -408,7 +600,45 @@ contract('Fees', (accounts) => {
                     REDEMPTION.toString(10),
                 ),
             );
-            result.should.be.bignumber.equal(new BigNumber(baseFee).multipliedBy(50));
+            result.should.be.bignumber.equal(new BigNumber(baseFee).multipliedBy(90));
         });
+        it('redemptionFee(x, basket, ...) with targetProportion = 0 - Fee == Minimum Fee.', async () => {
+            await mixr.setTokensTargetProportion(
+                [
+                    sampleDetailedERC20.address,
+                    sampleDetailedERC20Other.address,
+                ],
+                [
+                    new BigNumber(0).toString(10),
+                    new BigNumber(await fixidityLibMock.fixed1()).toString(10),
+                ],
+                {
+                    from: governor,
+                },
+            );
+            
+            const amountToTransfer = new BigNumber(10).pow(18).multipliedBy(10);
+            const result = new BigNumber(
+                await feesMock.transactionFee(
+                    sampleDetailedERC20.address,
+                    mixr.address,
+                    amountToTransfer.toString(10),
+                    REDEMPTION.toString(10),
+                ),
+            );
+            result.should.be.bignumber.equal(new BigNumber(minimumFee).multipliedBy(10));
+        });
+        itShouldThrow('redemptionFee(x, basket, 121) '
+        + '120 x and 30 y in basket - Redemption above basket balance.', async () => {
+            const amountToTransfer = new BigNumber(10).pow(18).multipliedBy(121);
+            const result = new BigNumber(
+                await feesMock.transactionFee(
+                    sampleDetailedERC20.address,
+                    mixr.address,
+                    amountToTransfer.toString(10),
+                    REDEMPTION.toString(10),
+                ),
+            );
+        }, 'The MIXR doesn\'t have enough stablecoins for this redemption.');
     });
 });

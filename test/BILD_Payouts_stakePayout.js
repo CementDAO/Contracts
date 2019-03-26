@@ -3,6 +3,7 @@ const Whitelist = artifacts.require('./Whitelist.sol');
 
 const BigNumber = require('bignumber.js');
 const chai = require('chai');
+const { itShouldThrow, tokenNumber } = require('./utils');
 // use default BigNumber
 chai.use(require('chai-bignumber')()).should();
 
@@ -12,23 +13,25 @@ contract('BILD', (accounts) => {
     const distributor = accounts[1];
 
     before(async () => {
-        whitelist = await Whitelist.deployed();
         bild = await BILD.deployed();
+        whitelist = await Whitelist.deployed();
     });
 
-    describe('constructor', () => {
+    describe('stakePayout', () => {
         beforeEach(async () => {
             whitelist = await Whitelist.new();
             bild = await BILD.new(distributor, whitelist.address);
         });
-        it('distributor gets all BILD tokens', async () => {
-            const distributorBalance = new BigNumber(
-                await bild.balanceOf(distributor),
-            );
-            const bildSupply = new BigNumber(
-                await bild.totalSupply(),
-            );
-            distributorBalance.should.be.bignumber.equal(bildSupply);
+        it('(7*5)/3 = 4 (rounded)', async () => {
+            const totalPayout = 7;
+            const agentStakes = 5;
+            const holderStakes = 3;
+            const payout = new BigNumber(await bild.stakePayout(
+                totalPayout, 
+                agentStakes, 
+                holderStakes
+            ));
+            payout.should.be.bignumber.equal(4);
         });
     });
 });

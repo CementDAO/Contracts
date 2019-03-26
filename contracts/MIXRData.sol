@@ -1,10 +1,10 @@
 pragma solidity ^0.5.0;
 
-import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
-import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
+// import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
+// import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-import "./fixidity/FixidityLib.sol";
+import "fixidity/contracts/FixidityLib.sol";
 import "./UtilsLib.sol";
 
 
@@ -14,7 +14,7 @@ import "./UtilsLib.sol";
  * @notice Implements a basket of stablecoins as an ERC20 token, as described
  * in the CementDAO whitepaper.
  */
-contract Base {
+contract MIXRData {
     using SafeMath for uint256;
 
     /**
@@ -34,11 +34,19 @@ contract Base {
      * expressed in in fixed point units (FixidityLib.digits()).
      */
     int256 constant public minimumFee = 1000000000000000000;
-
+        
     /**
-     * @notice (C1) Whitelist of addresses that can do governance.
+     * @notice The base deposit percentage fees in fixed point units (FixidityLib.digits()).
      */
-    mapping(address => bool) internal governors;
+    int256 baseDepositFee;
+    /**
+     * @notice The base redemption percentage fees in fixed point units (FixidityLib.digits()).
+     */
+    int256 baseRedemptionFee;
+    /**
+     * @notice The base transfer percentage fees in fixed point units (FixidityLib.digits()).
+     */
+    int256 baseTransferFee;
 
     /**
      * @notice Additional token data which is required for MIXR transactions.
@@ -62,21 +70,10 @@ contract Base {
          */
         int256 targetProportion;
         /**
-         * @notice The base deposit percentage fees in fixed point units (FixidityLib.digits()) for this token.
-         */
-        int256 depositFee;
-        /**
-         * @notice The base redemption percentage fees in fixed point units (FixidityLib.digits()) for this token.
-         */
-        int256 redemptionFee;
-        /**
-         * @notice The base transfer percentage fees in fixed point units (FixidityLib.digits()) for this token.
-         */
-        int256 transferFee;
-        /**
          * @notice The token name.
          */
-        bytes32 name;
+        string name;
+        string symbol;
     }
 
     /**
@@ -96,9 +93,9 @@ contract Base {
     // mapping(address => address) internal payFeesWith;
     
     /**
-     * @notice Holding account for fees, before they are distributed to stakeholders.
+     * @notice BILD Contract address, which will receive the fees before they are distributed to stakeholders.
      */
-    address internal stakeholderAccount;
+    address internal BILDContract;
 
     /**
      * @dev This is one of the possible solutions allowing to check
@@ -155,10 +152,6 @@ contract Base {
             token.targetProportion > 0,
             "The given token can't be deposited, the target proportion is 0."
         );
-        require(
-            token.depositFee >= minimumFee,
-            "The given token can't deposited, the base deposit fee is too low."
-        );
         _;
     }
 
@@ -176,8 +169,8 @@ contract Base {
             "The given token is not registered."
         );
         require(
-            token.redemptionFee >= minimumFee,
-            "The given token can't accepted, the base redemption fee is too low."
+            IERC20(_token).balanceOf(address(this)) > 0,
+            "MIXR doesn't contain any of the given tokens."
         );
         _;
     }
@@ -209,7 +202,7 @@ contract Base {
      * @param _token The token ERC20 contract address that we are retrieving a
      * target proportion for. The token needs to have been registered in 
      * CementDAO.
-     * @dev The MIX token inheriting from Base implements ERC20Detailed and you
+     * @dev The MIX token inheriting from MIXRData implements ERC20Detailed and you
      * can retrieve its decimals as mixr.decimals().
      */
     function getDecimals(address _token) 
@@ -218,25 +211,39 @@ contract Base {
     isRegistered(_token)
     returns(uint8)
     {
-        TokenData memory token = tokens[_token];
-        return token.decimals;
+        return tokens[_token].decimals;
     }
 
     /**
      * @notice Returns the name of a token.
      * @param _token The token ERC20 contract address that we are retrieving 
      * the name. The token needs to have been registered in CementDAO.
-     * @dev The MIX token inheriting from Base implements ERC20Detailed and you
+     * @dev The MIX token inheriting from MIXRData implements ERC20Detailed and you
      * can retrieve its name as mixr.name().
      */
     function getName(address _token) 
     public
     view
     isRegistered(_token)
-    returns(bytes32)
+    returns(string memory)
     {
-        TokenData memory token = tokens[_token];
-        return token.name;
+        return tokens[_token].name;
+    }
+
+    /**
+     * @notice Returns the name of a token.
+     * @param _token The token ERC20 contract address that we are retrieving 
+     * the name. The token needs to have been registered in CementDAO.
+     * @dev The MIX token inheriting from MIXRData implements ERC20Detailed and you
+     * can retrieve its name as mixr.name().
+     */
+    function getSymbol(address _token) 
+    public
+    view
+    isRegistered(_token)
+    returns(string memory)
+    {
+        return tokens[_token].symbol;
     }
 
     /**
@@ -251,56 +258,40 @@ contract Base {
     isRegistered(_token)
     returns(int256)
     {
-        TokenData memory token = tokens[_token];
-        return token.targetProportion;
+        return tokens[_token].targetProportion;
     }
 
     /**
-     * @notice Returns the base deposit fee for a token, in MIX wei.
-     * @param _token The token ERC20 contract address that we are retrieving 
-     * the base deposit fee for. The token needs to have been registered in 
-     * CementDAO.
+     * @notice Returns the base deposit fee, in MIX wei.
      */
-    function getDepositFee(address _token) 
+    function getDepositFee() 
     public
     view
-    isRegistered(_token)
     returns(int256)
     {
-        TokenData memory token = tokens[_token];
-        return token.depositFee;
+        return baseDepositFee;
     }
 
     /**
-     * @notice Returns the base redemption fee for a token, in MIX wei.
-     * @param _token The token ERC20 contract address that we are retrieving 
-     * the base redemption fee for. The token needs to have been registered in 
-     * CementDAO.
+     * @notice Returns the base redemption fee, in MIX wei.
      */
-    function getRedemptionFee(address _token) 
+    function getRedemptionFee() 
     public
     view
-    isRegistered(_token)
     returns(int256)
     {
-        TokenData memory token = tokens[_token];
-        return token.redemptionFee;
+        return baseRedemptionFee;
     }
 
     /**
-     * @notice Returns the base transfer fee for a token, in MIX wei.
-     * @param _token The token ERC20 contract address that we are retrieving 
-     * the base transfer fee for. The token needs to have been registered in 
-     * CementDAO.
+     * @notice Returns the base transfer fee, in MIX wei.
      */
-    function getTransferFee(address _token) 
+    function getTransferFee() 
     public
     view
-    isRegistered(_token)
     returns(int256)
     {
-        TokenData memory token = tokens[_token];
-        return token.transferFee;
+        return baseTransferFee;
     }
 
     /**
@@ -317,6 +308,51 @@ contract Base {
         for (uint256 totalIndex = 0; totalIndex < totalAddresses; totalIndex += 1) {
             TokenData memory token = tokens[tokensList[totalIndex]];
             if (token.registered) {
+                activeAddresses[activeIndex] = tokensList[totalIndex];
+                activeIndex += 1; // Unlikely to overflow
+            }
+        }
+        // Do we need to return activeIndex? Can't the caller use activeAddresses.length?
+        return (activeAddresses, activeIndex);
+    }
+
+    /**
+     * @notice Returns an address array of tokens that are accepted for deposits, and their size
+     */
+    function getTokensAcceptedForDeposits()
+        public
+        view
+        returns(address[] memory, uint256)
+    {
+        uint256 totalAddresses = tokensList.length;
+        uint256 activeIndex = 0;
+        address[] memory activeAddresses = new address[](totalAddresses);
+        for (uint256 totalIndex = 0; totalIndex < totalAddresses; totalIndex += 1) {
+            TokenData memory token = tokens[tokensList[totalIndex]];
+            if (token.registered && token.targetProportion > 0) {
+                activeAddresses[activeIndex] = tokensList[totalIndex];
+                activeIndex += 1; // Unlikely to overflow
+            }
+        }
+        // Do we need to return activeIndex? Can't the caller use activeAddresses.length?
+        return (activeAddresses, activeIndex);
+    }
+
+    /**
+     * @notice Returns an address array of tokens that are accepted for redemptions, and their size
+     */
+    function getTokensAcceptedForRedemptions()
+        public
+        view
+        returns(address[] memory, uint256)
+    {
+        uint256 totalAddresses = tokensList.length;
+        uint256 activeIndex = 0;
+        address[] memory activeAddresses = new address[](totalAddresses);
+        for (uint256 totalIndex = 0; totalIndex < totalAddresses; totalIndex += 1) {
+            address tokenAddress = tokensList[totalIndex];
+            TokenData memory token = tokens[tokenAddress];
+            if (token.registered && IERC20(tokenAddress).balanceOf(address(this)) > 0) {
                 activeAddresses[activeIndex] = tokensList[totalIndex];
                 activeIndex += 1; // Unlikely to overflow
             }

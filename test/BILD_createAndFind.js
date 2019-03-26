@@ -1,4 +1,5 @@
 const BILD = artifacts.require('./BILD.sol');
+const Whitelist = artifacts.require('./Whitelist.sol');
 
 const BigNumber = require('bignumber.js');
 const chai = require('chai');
@@ -8,14 +9,17 @@ chai.use(require('chai-bignumber')()).should();
 
 contract('BILD', (accounts) => {
     let bild;
+    let whitelist;
     const bildDecimals = 18;
+    const owner = accounts[0];
     const distributor = accounts[1];
-    const stakeholder1 = accounts[2];
-    const stakeholder2 = accounts[3];
-    const stakeholder3 = accounts[4];
-    const agent1 = accounts[5];
-    const agent2 = accounts[6];
-    const agent3 = accounts[7];
+    const governor = accounts[2];
+    const stakeholder1 = accounts[3];
+    const stakeholder2 = accounts[4];
+    const stakeholder3 = accounts[5];
+    const agent1 = accounts[6];
+    const agent2 = accounts[7];
+    const agent3 = accounts[8];
     let oneBILDToken;
     let twoBILDTokens;
     let manyBILDTokens;
@@ -24,6 +28,7 @@ contract('BILD', (accounts) => {
 
     before(async () => {
         bild = await BILD.deployed();
+        whitelist = await Whitelist.deployed();
         oneBILDToken = tokenNumber(bildDecimals, 1);
         twoBILDTokens = tokenNumber(bildDecimals, 2);
         manyBILDTokens = tokenNumber(bildDecimals, 100);
@@ -33,7 +38,21 @@ contract('BILD', (accounts) => {
 
     describe('nominateAgent', () => {
         beforeEach(async () => {
-            bild = await BILD.new(distributor);
+            whitelist = await Whitelist.new();
+            bild = await BILD.new(distributor, whitelist.address);
+
+            await whitelist.addGovernor(governor, {
+                from: owner,
+            });
+            await whitelist.addStakeholder(stakeholder1, {
+                from: governor,
+            });
+
+            await bild.transfer(
+                stakeholder1,
+                minimumStake,
+                { from: distributor },
+            );
         });
         /*
          * Test nominateAgent(_agent, minimumStake - 1) fails - "Minimum stake to nominate an agent not reached."
@@ -41,12 +60,6 @@ contract('BILD', (accounts) => {
         itShouldThrow(
             'nominateAgent fails with an empty agent name.',
             async () => {
-                await bild.transfer(
-                    stakeholder1,
-                    minimumStake,
-                    { from: distributor },
-                );
-
                 await bild.nominateAgent(
                     agent1,
                     minimumStake,
@@ -62,12 +75,6 @@ contract('BILD', (accounts) => {
         itShouldThrow(
             'nominateAgent fails with stake under minimum stake.',
             async () => {
-                await bild.transfer(
-                    stakeholder1,
-                    minimumStake,
-                    { from: distributor },
-                );
-
                 await bild.nominateAgent(
                     agent1,
                     1,
@@ -83,12 +90,6 @@ contract('BILD', (accounts) => {
         itShouldThrow(
             'nominateAgent fails with an agent already nominated.',
             async () => {
-                await bild.transfer(
-                    stakeholder1,
-                    minimumStake,
-                    { from: distributor },
-                );
-
                 await bild.nominateAgent(
                     agent1,
                     minimumStake,
@@ -114,12 +115,6 @@ contract('BILD', (accounts) => {
         itShouldThrow(
             'nominateAgent fails with a non unique agent name.',
             async () => {
-                await bild.transfer(
-                    stakeholder1,
-                    minimumStake,
-                    { from: distributor },
-                );
-
                 await bild.nominateAgent(
                     agent1,
                     minimumStake,
@@ -146,7 +141,14 @@ contract('BILD', (accounts) => {
 
     describe('createStake', () => {
         beforeEach(async () => {
-            bild = await BILD.new(distributor);
+            whitelist = await Whitelist.new();
+            bild = await BILD.new(distributor, whitelist.address);
+            await whitelist.addGovernor(governor, {
+                from: owner,
+            });
+            await whitelist.addStakeholder(stakeholder1, {
+                from: governor,
+            });
             await bild.transfer(
                 stakeholder1,
                 manyBILDTokens,
@@ -183,11 +185,14 @@ contract('BILD', (accounts) => {
                     },
                 );
             },
-            'Attempted stake larger than BILD balance.',
+            'Sender doesn\'t have enough unstaked BILD.',
         );
         itShouldThrow(
             'createStake fails with stake larger than balance',
             async () => {
+                await whitelist.addStakeholder(stakeholder2, {
+                    from: governor,
+                });
                 await bild.transfer(
                     stakeholder2,
                     oneBILDToken,
@@ -204,9 +209,12 @@ contract('BILD', (accounts) => {
                     },
                 );
             },
-            'Attempted stake larger than BILD balance.',
+            'Sender doesn\'t have enough unstaked BILD.',
         );
         it('createStake with 1 BILD token executes', async () => {
+            await whitelist.addStakeholder(stakeholder2, {
+                from: governor,
+            });
             await bild.transfer(
                 stakeholder2,
                 oneBILDToken,
@@ -233,6 +241,9 @@ contract('BILD', (accounts) => {
             createdStake.should.be.bignumber.equal(oneBILDToken);
         });
         it('stakes with the same agent and stakeholder merge.', async () => {
+            await whitelist.addStakeholder(stakeholder2, {
+                from: governor,
+            });
             await bild.transfer(
                 stakeholder2,
                 twoBILDTokens,
@@ -267,6 +278,9 @@ contract('BILD', (accounts) => {
             createdStake.should.be.bignumber.equal(twoBILDTokens);
         });
         it('stakes under minimum stake are allowed for already nominated agents.', async () => {
+            await whitelist.addStakeholder(stakeholder2, {
+                from: governor,
+            });
             await bild.transfer(
                 stakeholder2,
                 oneBILDToken,
@@ -318,14 +332,23 @@ contract('BILD', (accounts) => {
     */
     describe('findStake*', () => {
         beforeEach(async () => {
-            bild = await BILD.new(distributor);
-
+            whitelist = await Whitelist.new();
+            bild = await BILD.new(distributor, whitelist.address);
+            await whitelist.addGovernor(governor, {
+                from: owner,
+            });
+            await whitelist.addStakeholder(stakeholder1, {
+                from: governor,
+            });
             await bild.transfer(
                 stakeholder1,
                 manyBILDTokens,
                 { from: distributor },
             );
 
+            await whitelist.addStakeholder(stakeholder2, {
+                from: governor,
+            });
             await bild.transfer(
                 stakeholder2,
                 manyBILDTokens,

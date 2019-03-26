@@ -1,7 +1,7 @@
 pragma solidity ^0.5.0;
 
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
-import "./fixidity/FixidityLib.sol";
+import "fixidity/contracts/FixidityLib.sol";
 
 
 library UtilsLib {
@@ -48,7 +48,6 @@ library UtilsLib {
      * @notice Compare whether two strings are the same
      * @param _a First string.
      * @param _b Second string.
-     * TODO: Move to UtilsLib
      */
     function stringsAreEqual(string memory _a, string memory _b) 
         public

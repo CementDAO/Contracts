@@ -1,4 +1,5 @@
 const MIXR = artifacts.require('./MIXR.sol');
+const Whitelist = artifacts.require('./Whitelist.sol');
 const FeesMock = artifacts.require('./FeesMock.sol');
 const FixidityLibMock = artifacts.require('./FixidityLibMock.sol');
 const UtilsLibMock = artifacts.require('./UtilsLibMock.sol');
@@ -61,7 +62,7 @@ const redemptionTest = async (
     /**
      * redeem
      */
-    await mixr.redeemMIXR(
+    await mixr.redeemMIX(
         sampleDetailedERC20.address,
         amountInBasketWei.toString(10),
         {
@@ -119,14 +120,13 @@ const redemptionTest = async (
 
 contract('MIXR', (accounts) => {
     let mixr;
+    let whitelist;
     let feesMock;
     let fixidityLibMock;
     let sampleDetailedERC20;
-    let sampleDetailedERC20Other;
     let someERC721;
     const defaultAmountOfTokens = 100;
     const sampleERC20Decimals = 18;
-    const sampleERC20DecimalsOther = 20;
     const mixrDecimals = 24;
     const owner = accounts[0];
     const governor = accounts[1];
@@ -139,10 +139,10 @@ contract('MIXR', (accounts) => {
 
     before(async () => {
         mixr = await MIXR.deployed();
+        whitelist = await Whitelist.deployed();
         feesMock = await FeesMock.deployed();
         fixidityLibMock = await FixidityLibMock.deployed();
         sampleDetailedERC20 = await SampleDetailedERC20.deployed();
-        sampleDetailedERC20Other = await SampleDetailedERC20.deployed();
         someERC721 = await SampleERC721.deployed();
         fixed1 = new BigNumber(await fixidityLibMock.fixed1());
         DEPOSIT = await feesMock.DEPOSIT();
@@ -154,10 +154,12 @@ contract('MIXR', (accounts) => {
             /**
              * deploy mixr and sample erc20
              */
-            mixr = await MIXR.new();
-            await mixr.addGovernor(governor, {
+            whitelist = await Whitelist.new();
+            mixr = await MIXR.new(whitelist.address);
+            await whitelist.addGovernor(governor, {
                 from: owner,
             });
+
             sampleDetailedERC20 = await SampleDetailedERC20.new(
                 governor,
                 tokenNumber(sampleERC20Decimals, defaultAmountOfTokens),
@@ -182,16 +184,14 @@ contract('MIXR', (accounts) => {
              * set base fee
              */
             const baseFee = new BigNumber(10).pow(23).toString(10);
-            await mixr.setTransactionFee(
-                sampleDetailedERC20.address,
+            await mixr.setBaseFee(
                 baseFee,
                 DEPOSIT,
                 {
                     from: governor,
                 },
             );
-            await mixr.setTransactionFee(
-                sampleDetailedERC20.address,
+            await mixr.setBaseFee(
                 baseFee,
                 REDEMPTION,
                 {
@@ -209,19 +209,17 @@ contract('MIXR', (accounts) => {
             /**
              * set account to receive fees
              */
-            await mixr.setStakeholderAccount(stakeholders, { from: governor });
+            await mixr.setBILDContract(stakeholders, { from: owner });
             /**
              * send tokens to mixr contract, so we can redeem
-             * in order to use redeemMIXR method, we should deposit first
+             * in order to use redeemMIX method, we should deposit first
              */
             const tokensToTransfer = new BigNumber(10)
                 .pow(sampleERC20Decimals).multipliedBy(defaultAmountOfTokens);
             /**
              * approve transfers and deposit
              */
-            await mixr.approve(mixr.address, baseFee.toString(10), {
-                from: user,
-            });
+
             await sampleDetailedERC20.approve(mixr.address, tokensToTransfer.toString(10), {
                 from: user,
             });
@@ -233,7 +231,7 @@ contract('MIXR', (accounts) => {
         itShouldThrow(
             'forbids redeeming without allowance',
             async () => {
-                await mixr.redeemMIXR(
+                await mixr.redeemMIX(
                     sampleDetailedERC20.address,
                     tokenNumber(sampleERC20Decimals, 1),
                     {
@@ -254,7 +252,7 @@ contract('MIXR', (accounts) => {
                     'SAMPLE',
                     'SMP',
                 );
-                await mixr.redeemMIXR(
+                await mixr.redeemMIX(
                     newSomeOtherERC20.address,
                     tokenNumber(sampleERC20Decimals, 1),
                     {
@@ -268,7 +266,7 @@ contract('MIXR', (accounts) => {
         itShouldThrow(
             'forbids redeeming bad ERC20',
             async () => {
-                await mixr.redeemMIXR(
+                await mixr.redeemMIX(
                     someERC721.address,
                     tokenNumber(sampleERC20Decimals, 1),
                     {
@@ -280,13 +278,13 @@ contract('MIXR', (accounts) => {
         );
 
         it('redeem 1 MIX by 1 token', async () => {
-            redemptionTest(
+            await redemptionTest(
                 1, user, stakeholders, sampleDetailedERC20, sampleERC20Decimals, mixr, mixrDecimals,
             );
         });
 
         it('redeem 50 MIX by 50 token', async () => {
-            redemptionTest(
+            await redemptionTest(
                 50, user, stakeholders, sampleDetailedERC20, sampleERC20Decimals, mixr, mixrDecimals,
             );
         });

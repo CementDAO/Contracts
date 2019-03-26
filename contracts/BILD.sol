@@ -1,8 +1,11 @@
 pragma solidity ^0.5.0;
 
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
+// import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "./BILDGovernance.sol";
+import "./Whitelist.sol";
 import "./UtilsLib.sol";
 
 /**
@@ -10,406 +13,133 @@ import "./UtilsLib.sol";
  * @author Alberto Cuesta Canada, Bernardo Vieira
  * @notice Implements staking of BILD tokens towards a Curation Agent Ranking
  */
-contract BILD is ERC20, ERC20Detailed {
+contract BILD is BILDGovernance, ERC20, ERC20Detailed {
     using SafeMath for uint256;
 
-    /**
-     * @notice Code indicating a stakeholder has no stakes for a given agent
-     * @dev Difficult to create such a large array of stakes, so probably safe
-     */
-    uint256 public NO_STAKES = 115792089237316195423570985008687907853269984665640564039457584007913129639935;
+    event debug(address _from, uint256 _value);
 
     /**
-     * @notice An initializated address.
+     * @notice Constructor of the BILD Business Layer. BILD is constructed as an ERC20Detailed with 18 decimals 
+     * and 10**9 tokens are minted and assigned to the distributor account.
+     * @param _distributor The account that will receive all BILD tokens on contract creation.
+     * @param _whitelist The address for the governance and BILD holding authorized individuals.
      */
-    address public NULL_ADDRESS = address(0);
-
-    /**
-     * @notice Minimum BILD wei that are accepted to nominate a new Curation Agent
-     */
-    uint256 public minimumStake = 10**18;
-
-    /**
-     * @notice An agent
-     * @dev It is not yet supported to store a dynamic array of structs in a 
-     * struct, therefore the agent struct cnnot contain the stakes inside.
-     */
-    struct Agent {
-        string name;
-        string contact;
-        address lowerAgent;
-    }
-
-    /**
-     * @notice A single stake of BILD from one stakeholder.
-     */
-    struct Stake {
-        address stakeholder;
-        uint256 value;
-    }
-
-    /**
-     * @notice All the agents stored in a linked list ordered by their aggregated stakes
-     */
-    mapping(address => Agent) private agents;
-
-    /**
-     * @notice The address of the agent at the top of the list.
-     */
-    address highestAgent;
-    
-    /**
-     * @notice The address of the agent at the top of the list.
-     */
-    address lowestAgent;
-
-    /**
-     * @notice The number of agents that can be Curating Agents
-     */
-    uint256 R = 3;
-
-    /**
-     * @notice All BILD stakes, mapped by agent address.
-     * @dev It might be more gas effective to remove this mapping and just use
-     * the agentRanking list to access the stakes.
-     */
-    mapping(address => Stake[]) private stakesByAgent;
-
-    /**
-     * @notice View of aggregated stakes by stakeholder address.
-     * @dev It might be more cost efficient to traverse all stakes which each 
-     * transaction and aggregate values than to store this mapping. However, it
-     * seems more user friendly to put the cost of the platform on those that
-     * create stakes than those that transact with MIX.
-     */
-    mapping(address => uint256) private stakesByHolder;
-
-    /**
-     * @notice Constructor with the details of the ERC20Detailed.
-     * BILD is constructed with 18 decimals and 10**9 tokens are minted and
-     * assigned to the distributor account.
-     */
-    constructor(address distributor) public ERC20Detailed("BILD", "BILD", 18) {
-        _mint(distributor, 10**27);
-    }
-
-    /**
-     * @notice Verifies that an agent exists
-     * @dev An agent without stakes is considered non existing, and the garbage
-     * collection mechanism might remove it at any time.
-     */
-    modifier agentExists(address _agent)
+    constructor(address _distributor, address _whitelist) 
+        public 
+        BILDGovernance(_whitelist)
+        ERC20Detailed("BILD", "BILD", 18)
     {
-        require (
-            !UtilsLib.stringIsEmpty(agents[_agent].name),
-            "Agent not found."
-        );
-        _;
+        _mint(_distributor, 10**27);
     }
 
     /**
-     * @notice Returns the index of an stake between all stakes for an agent.
-     * An index equal to the length of the stake array means no stakes were found.
-     * @param _agent The agent that the stake is for.
-     * @param _stakeholder The holder that the stake is from.
-     * @dev It is not possible to return a struct, so the data layer needs to
-     * be exposed. This method might become private or internal for deployment.
+     * @notice Verifies that an address is whitelisted as a BILD Stakeholder.
+     * @param _address The address to verify.
+     * @return True if the address is whitelisted as a BILD stakeholder.
      */
-    function findStakeIndex(address _agent, address _stakeholder)
+    function isStakeholder(address _address)
         public
         view
-        agentExists(_agent)
-        returns(uint256)
-    {
-        uint256 stakeIndex = 0;
-        while (stakeIndex < stakesByAgent[_agent].length)
-        {
-            if (stakesByAgent[_agent][stakeIndex].stakeholder == _stakeholder)
-                return stakeIndex;
-            stakeIndex += 1;
-        }
-        return NO_STAKES;
-    }
-
-    /**
-     * @notice Returns the value in BILD wei of an stake from a stakeholder for an agent.
-     * @param _agent The agent that the stake is for.
-     * @param _stakeholder The holder that the stake is from.
-     */
-    function findStakeValue(address _agent, address _stakeholder)
-        public
-        view
-        agentExists(_agent)
-        returns(uint256)
-    {
-        uint256 stakeIndex = findStakeIndex(_agent, _stakeholder);
-        if (stakeIndex == NO_STAKES) return 0;
-        return stakesByAgent[_agent][stakeIndex].value;
-    }
-
-    /**
-     * @notice Returns the aggregation of all stakes for an agent.
-     * @param _agent The agent to aggregate stakes for.
-     * @dev This is a get method, consider writing a set method as well.
-     */
-    function aggregateAgentStakes(address _agent)
-        public
-        view
-        agentExists(_agent)
-        returns(uint256)
-    {
-        //Stake[] memory agentStakes = stakes[_agent];
-        uint256 result = 0;
-        for (uint256 i = 0; i < stakesByAgent[_agent].length; i += 1)
-            result = result.add(
-                stakesByAgent[_agent][i].value
-            );
-        return result;
-    }
-
-    /**
-     * @notice Returns the aggregation of all stakes for a holder.
-     * @param _stakeholder The stakeholder to aggregate stakes for.
-     * @dev This is a get method, consider writing a set method as well.
-     */
-    function aggregateHolderStakes(address _stakeholder)
-        public
-        view
-        returns(uint256)
-    {
-        return stakesByHolder[_stakeholder];
-    }
-
-    /**
-     * @notice Return the address of the highest ranked agent.
-     */
-    function getHighestAgent()
-        public
-        view
-        returns(address)
-    {
-        return highestAgent;
-    }
-
-    /**
-     * @notice Return the address of the lowest ranked agent.
-     */
-    function getLowestAgent()
-        public
-        view
-        returns(address)
-    {
-        return lowestAgent;
-    }
-
-    /**
-     * @notice Find whether an agent is in the agents list
-     * @param _agent The agent to verify.
-     */
-    function agentIsInList(address _agent)
-        public
-        view
-        agentExists(_agent)
         returns(bool)
     {
-        address current = highestAgent;
-        while (current != NULL_ADDRESS){
-            if (current == _agent) return true;
-            current = agents[current].lowerAgent;
-        }
-        return false;
+        return Whitelist(whitelist).isStakeholder(_address) == true;
     }
 
     /**
-     * @notice Find the higher agent in the agents list
-     * @param _agent The agent to find the higher agent for.
+     * @notice Verify a stakeholder has a certain unstaked BILD amount.
+     * @param _stakeholder The address of the stakeholder to verify the balance for.
+     * @param _value The amount to be transferred.
+     * @return True if the stakeholder has enough unstaked BILD.
      */
-    function higherAgent(address _agent)
+    function hasFreeBILD(address _stakeholder, uint256 _value)
         public
         view
-        agentExists(_agent)
-        returns(address)
+        returns(bool)
     {
-        require(
-            agentIsInList(_agent),
-            "The agent is not in the agents ranking."
-        );
-        if (_agent == highestAgent) 
-            return NULL_ADDRESS;
-        
-        address current = highestAgent;
-        while (agents[current].lowerAgent != _agent){
-            current = agents[current].lowerAgent;
-            require(
-                current != NULL_ADDRESS,
-                "The agent is not ranked."
-            );
-        }
-        return current;
-    }
-    /**
-     * @notice Places an agent at the lowest position of the agents list.
-     * @param _agent The agent to insert.
-     */
-    function insertAgent(address _agent)
-        public
-        agentExists(_agent)
-    {
-        require(
-            !agentIsInList(_agent),
-            "Can't insert an agent that is already in the agents ranking."
-        );
-        // If there are no highestAgent and no lowestAgent then _agent is the only one in the list.
-        if (highestAgent == NULL_ADDRESS && lowestAgent == NULL_ADDRESS)
-            highestAgent = _agent;
-        else
-            agents[lowestAgent].lowerAgent = _agent;
-        lowestAgent = _agent;
+        return _value <= ERC20(address(this)).balanceOf(_stakeholder).sub(stakesByHolder[_stakeholder]);
     }
 
     /**
-     * @notice Remove an agent from the list
-     * @param _agent The agent to remove.
+     * @notice Verifies whether a transfer is restricted
+     * @param _from address The address that holds the tokens being sent
+     * @param _to address The address receiving the tokens
+     * @param _value uint256 the amount of tokens to be transferred
+     * @return Zero for no restrictions, an error code otherwise
      */
-    function detachAgent(address _agent)
-        public // TODO: Public for testing, make private for deployment
-        agentExists(_agent)
-    {
-        require(
-            agentIsInList(_agent),
-            "The agent is already detached from the ranking."
-        );
-        if (lowestAgent == _agent && highestAgent == _agent)
-        {
-            delete lowestAgent;
-            delete highestAgent;
-            return;
-        }
-        if (lowestAgent == _agent)
-        {
-            lowestAgent = higherAgent(_agent);
-            delete agents[higherAgent(_agent)].lowerAgent;
-            return;
-        }
-        if (highestAgent == _agent)
-        {
-            highestAgent = agents[_agent].lowerAgent;
-            delete agents[_agent].lowerAgent;
-            return;
-        }
-        agents[higherAgent(_agent)].lowerAgent = agents[_agent].lowerAgent;
-        delete agents[_agent].lowerAgent; // TODO: test this
-    }
-
-    /**
-     * @notice Erase completely an agent from the system
-     * @param _agent The agent to erase.
-     */
-    function eraseAgent(address _agent)
-        public // TODO: Public for testing, make private for deployment
-        agentExists(_agent)
-    {
-        // Remove agent from the list
-        detachAgent(_agent);
-
-        // Erase agent
-        delete agents[_agent].lowerAgent;
-        delete agents[_agent].name;
-        delete agents[_agent].contact;
-    }
-
-    /**
-     * @notice Returns the agent _rank positions under _agent
-     * @param _agent The agent to start counting from.
-     * @param _rank The positions to count.
-     * @dev returns NULL_ADDRESS if trying to retrieve an agent from a rank that doesn't exist
-     */
-    function agentAtRankFrom(address _agent, uint256 _rank)
+    function detectTransferRestriction ( 
+        address _from, 
+        address _to, 
+        uint256 _value 
+    ) 
         public
         view
-        returns(address)
+        returns (uint8)
     {
-        require(
-            agentIsInList(_agent),
-            "The agent is not in the agents ranking."
+        if (!isStakeholder(_to)) return 1;
+        if (!hasFreeBILD(_from, _value)) return 2;
+        return 0;
+    } 
+    
+    /**
+     * @notice Converts an error code from detectTransferRestriction to a human readable message.
+     * @param _restrictionCode The error code to convert.
+     * @return A human readable message.
+     */
+    function messageForTransferRestriction ( 
+        uint8 _restrictionCode 
+    ) 
+        public
+        pure
+        returns (string memory)
+    {
+        if (_restrictionCode == 1) 
+            return "This address is not authorized to hold BILD tokens.";
+        if (_restrictionCode == 2)
+            return "Sender doesn't have enough unstaked BILD.";
+        return "No restrictions were found for this transaction.";        
+    }
+
+    /**
+     * @notice Transfer BILD to a specified address
+     * @param _to The address to transfer to.
+     * @param _value The amount to be transferred.
+     */
+    function transfer(address _to, uint256 _value) 
+        public 
+        returns(bool)
+    {
+        uint8 transferRestriction = detectTransferRestriction ( 
+            msg.sender, _to, _value
         );
-        
-        address current = _agent;
-        for (uint256 i = 0; i < _rank; i += 1){
-            current = agents[current].lowerAgent;
-            require(
-                current != NULL_ADDRESS,
-                "Not enough agents in the list."
-            );
-        }
-        return current;
+        if (transferRestriction != 0)
+            revert(messageForTransferRestriction(transferRestriction)); 
+        _transfer(msg.sender, _to, _value);
+        return true;
     }
 
     /**
-     * @notice Returns the agent at _rank.
-     * @param _rank The rank of the agent returned, with 0 being the highest ranked agent.
+     * @notice Transfer BILD from one address to another.
+     * @param _from address The address that holds the tokens being sent
+     * @param _to address The address receiving the tokens
+     * @param _value uint256 the amount of tokens to be transferred
      */
-    function agentAtRank(uint256 _rank)
-        public
-        view
-        returns(address)
+    function transferFrom
+    (
+        address _from, 
+        address _to, 
+        uint256 _value
+    ) 
+        public 
+        returns(bool)
     {
-        return agentAtRankFrom(highestAgent, _rank);   
-    }
-
-    /**
-     * @notice Places an agent in its right place in the agents list.
-     * @param _agent The agent to find a place for.
-     */
-    function sortAgent(address _agent)
-        public
-        agentExists(_agent)
-    {
-        detachAgent(_agent);
-
-        // If there are no highestAgent and no lowestAgent then _agent is the only one in the list.
-        if (highestAgent == NULL_ADDRESS && lowestAgent == NULL_ADDRESS)
-        {
-            lowestAgent = _agent;
-            highestAgent = _agent;
-            return;
-        }
-        uint256 _agentStakes = aggregateAgentStakes(_agent);
-        
-        // If _agent should be the highestAgent one we just push it on top
-        if (_agentStakes > aggregateAgentStakes(highestAgent))
-        {
-            agents[_agent].lowerAgent = highestAgent;
-            highestAgent = _agent;
-            return;
-        }
-        else
-        {
-            // If _agent shouldn't be highestAgent and there is only one other agent,
-            // then _agent is its lowerAgent and the lowestAgent.
-            if (highestAgent == lowestAgent)
-            {
-                agents[highestAgent].lowerAgent = _agent;
-                lowestAgent = _agent;
-                return;
-            }
-            // There are at least two agents and _agent is not the highestAgent, we 
-            // traverse down until we find a lowerAgent agent, and we sort _agent
-            address current = highestAgent;
-            // While we are not at the lowestAgent
-            while (current != lowestAgent){
-                // Found the spot?
-                if (aggregateAgentStakes(agents[current].lowerAgent) < _agentStakes){
-                    agents[_agent].lowerAgent = agents[current].lowerAgent;
-                    agents[current].lowerAgent = _agent;
-                    return; // Current had a lowerAgent, so now _agent has a lowerAgent and cannot be the lowestAgent.    
-                }
-                current = agents[current].lowerAgent;
-            }
-            // _agent is the new lowestAgent then.    
-            agents[current].lowerAgent = _agent;
-            lowestAgent = _agent;
-        }
+        uint8 transferRestriction = detectTransferRestriction ( 
+            _from, _to, _value
+        );
+        if (transferRestriction != 0)
+            revert(messageForTransferRestriction(transferRestriction)); 
+        _approve(_from, msg.sender, allowance(_from, msg.sender).sub(_value));
+        _transfer(_from, _to, _value);
+        return true;
     }
 
     /**
@@ -443,7 +173,7 @@ contract BILD is ERC20, ERC20Detailed {
         );
 
         // Create an agent by giving him an empty stake from the stakeholder.
-        agents[_agent] = Agent(_name, _contact, NULL_ADDRESS);
+        agents[_agent] = Agent(_name, _contact, NULL_ADDRESS); // TODO: This should be done inside insertAgent
         stakesByAgent[_agent].push(Stake(msg.sender, 0));
         insertAgent(_agent);
         createStake(_agent, _stake);
@@ -459,11 +189,10 @@ contract BILD is ERC20, ERC20Detailed {
     public
     agentExists(_agent)
     {
-        require (
-            _stake <= ERC20(address(this)).balanceOf(msg.sender) - stakesByHolder[msg.sender],
-            "Attempted stake larger than BILD balance."
+        require(
+            hasFreeBILD(msg.sender, _stake),
+            "Sender doesn't have enough unstaked BILD."
         );
-
         // Look for a stake for the agent from the stakeholder.
         uint256 stakeIndex = findStakeIndex(_agent, msg.sender);
         // If the agent has no earlier stakes by the stakeholder create one
@@ -524,7 +253,7 @@ contract BILD is ERC20, ERC20Detailed {
      * @param _agent The stakeholder to revoke the nomination from.
      */
     function revokeNomination(address _agent)
-        public
+        internal
         agentExists(_agent)
     {
         require (
@@ -545,11 +274,11 @@ contract BILD is ERC20, ERC20Detailed {
 
         eraseAgent(_agent);
     }
-    // TODO: Fail on transactions if amountToTransfer > ERC20(address(this)).balanceOf(msg.sender) - stakesByHolder[msg.sender]
 
     /**
      * @notice Determines whether an agent exists with a given name.
      * @param _name The name to look for
+     * @return True if the name is used by any agent in the list, False otherwise.
      */
     function nameExists(string memory _name)
         public
@@ -563,5 +292,131 @@ contract BILD is ERC20, ERC20Detailed {
             agent = agents[agent].lowerAgent;
         }
         return false;
-    }    
+    }
+
+    /**
+     * @notice Calculates the number of Curating Agents
+     * @return The number of Curating Agents
+     * @dev Currently this returns the hardcoded BILDData.R or the number of Nominated Agents, whichever is lower.
+     */
+    function calculateR()
+        public
+        view
+        returns(uint256)
+    {
+        address agent = highestAgent;
+        uint256 _R = 0;
+        while (agent != NULL_ADDRESS){
+            _R += 1;
+            if (_R >= R) break;
+            agent = agents[agent].lowerAgent;
+        }
+        return _R;
+    }
+
+    /**
+     * @notice Calculates the aggregated stakes for the R top rated agents.
+     * @param _R The number of agents to aggregate stakes for, starting by the top rated agent.
+     * @return The aggregated stakes fot the R top ranked agents.
+     */
+    function totalStakes(uint256 _R)
+        public
+        view
+        returns(uint256)
+    {
+        uint256 _stakes = 0;
+        address agent = highestAgent;
+        for (uint256 agentIndex = 0; agentIndex < _R; agentIndex += 1){
+            require(
+                agent != NULL_ADDRESS,
+                "R is greater than the number of agents."
+            );
+            _stakes += aggregateAgentStakes(agent);
+            agent = agents[agent].lowerAgent;
+        }
+        return _stakes;
+    }
+
+    /**
+     * @notice Calculates the proportion of a payout for a stake between many.
+     * @param _payout The payout to distribute.
+     * @param _totalStakes The aggregated stakes.
+     * @param _stake The stake that the payout is for. 
+     * @return The payout to the stakeholder in BILD wei
+     */
+    function stakePayout(uint256 _payout, uint256 _totalStakes, uint256 _stake)
+        public
+        pure
+        returns(uint256)
+    {
+        // The maximum stake is 10**28 (BILD total supply).
+        // maxInt256 ~= 10**76
+        // The operation below is safe up to agent payouts of 10**24 MIX tokens
+        return (_payout.mul(_stake)).div(_totalStakes);
+    }
+
+    /**
+     * @notice Distributes a fee pool to an agent and its stakeholders.
+     * @param _totalPayout The fees due for _agent.
+     * @param _agent An agent with fees due.
+     * @return The aggregation of fees paid, which can be lower than _agentPayout due to rounding.
+     */
+    function payFeesForAgent(uint256 _totalPayout, address _agent)
+        internal
+        returns(uint256)
+    {
+        require(
+            MIXRContract != NULL_ADDRESS, 
+            "The address for the MIXR Contract needs to be set first."
+        );
+        // Pay to the agent first
+        uint256 _agentPayout = _totalPayout / 2;
+        uint256 stakeholdersPayout = _totalPayout / 2;
+        uint256 paidFees = _agentPayout;
+        IERC20(MIXRContract).approve(address(this), _agentPayout);
+        IERC20(MIXRContract).transferFrom(address(this), _agent, _agentPayout);
+
+        // Pay to the stakeholders
+        Stake[] memory agentStakes = stakesByAgent[_agent];
+        uint256 aggregatedAgentStakes = aggregateAgentStakes(_agent);
+        for (uint256 stakeIndex = 0; stakeIndex < agentStakes.length; stakeIndex += 1)
+        {
+            Stake memory stake = agentStakes[stakeIndex];
+            uint256 payout = stakePayout(
+                stakeholdersPayout,
+                aggregatedAgentStakes,
+                stake.value
+            );
+            // Send the fee in MIX to the stakeholder account
+            paidFees += payout; // Cannot be bigger than _agentPayout
+            // TODO: Refactor as a withdrawal
+            IERC20(MIXRContract).transfer(stake.stakeholder, payout);
+        }
+        return paidFees;
+    }
+
+    /**
+     * @notice Pays accumulated fees to R top rated agents and their stakeholders.
+     * @return The aggregation of fees paid, which can be lower than the MIX balance of the BILD contract due to rounding.
+     */
+    function payoutFees()
+        internal
+        returns(uint256)
+    {
+        uint256 _R = calculateR(); // This must ensure a valid R at or below the total number f agents is returned.
+        uint256 _totalStakes = totalStakes(_R);
+        uint256 paidFees = 0;
+        uint256 totalPayout = IERC20(MIXRContract).balanceOf(address(this));
+        address currentAgent = highestAgent;
+        for (uint256 agentIndex = 0; agentIndex < _R; agentIndex += 1){
+            uint256 agentPayout = stakePayout(
+                totalPayout,
+                _totalStakes,
+                aggregateAgentStakes(currentAgent)
+            );
+            paidFees += payFeesForAgent(agentPayout, currentAgent); // paidFees cannot be bigger than MIXR.totalSupply()
+            currentAgent = agents[currentAgent].lowerAgent;
+        }
+        return paidFees;
+    }
 }
