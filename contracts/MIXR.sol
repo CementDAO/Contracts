@@ -103,7 +103,7 @@ contract MIXR is MIXRGovernance, ERC20, ERC20Detailed {
     }
 
     /**
-     * @notice This function allows to redeem MIX tokens in exhange from
+     * @notice This function allows redeeming MIX tokens in exhange from
      * accepted ERC20 tokens from the MIXR basket. Transaction fees are
      * deducted from the amount returned and the MIX tokens redeemed are 
      * burned.
