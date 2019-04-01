@@ -1,7 +1,8 @@
 pragma solidity ^0.5.0;
 
-import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
-import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "zos-lib/contracts/Initializable.sol";
+import "openzeppelin-eth/contracts/token/ERC20/ERC20Detailed.sol";
+import "openzeppelin-eth/contracts/ownership/Ownable.sol";
 import "./BILDData.sol";
 import "./Whitelist.sol";
 
@@ -10,16 +11,18 @@ import "./Whitelist.sol";
  * @author Bernardo Vieira.
  * @notice Implements governance functions the staking of BILD tokens.
  */
-contract BILDGovernance is BILDData, Ownable {
+contract BILDGovernance is Initializable, BILDData, Ownable {
 
     address internal whitelist;
     /**
      * @notice Constructor of the BILD Governance layer.
      * @param _whitelist The address for the governance and BILD holding authorized individuals.
      */
-    constructor(address _whitelist) 
-        public 
+    function initialize(address _owner, address _whitelist) 
+        public
+        initializer
     {
+        Ownable.initialize(_owner);
         whitelist = _whitelist;
     }
 

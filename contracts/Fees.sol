@@ -1,8 +1,8 @@
 pragma solidity ^0.5.0;
 
-import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
-import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "openzeppelin-eth/contracts/token/ERC20/IERC20.sol";
+import "openzeppelin-eth/contracts/token/ERC20/ERC20Detailed.sol";
+import "openzeppelin-eth/contracts/math/SafeMath.sol";
 import "fixidity/contracts/FixidityLib.sol";
 import "fixidity/contracts/LogarithmLib.sol";
 import "./UtilsLib.sol";

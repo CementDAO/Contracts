@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
+import "openzeppelin-eth/contracts/token/ERC20/ERC20Detailed.sol";
 import "fixidity/contracts/FixidityLib.sol";
 
 
@@ -10,7 +10,7 @@ library UtilsLib {
      * @param x Number to cast from uint256 to int256
      */
     function safeCast(uint256 x) 
-        public 
+        internal 
         pure 
         returns(int256)
     {
@@ -31,7 +31,7 @@ library UtilsLib {
         uint8 _destinationTokenDecimals, 
         uint256 _amount
     )
-        public
+        internal
         pure
         returns (uint256)
     {
@@ -50,7 +50,7 @@ library UtilsLib {
      * @param _b Second string.
      */
     function stringsAreEqual(string memory _a, string memory _b) 
-        public
+        internal
         pure 
         returns(bool)
     {
@@ -62,7 +62,7 @@ library UtilsLib {
      * @param _s A string
      */
     function stringIsEmpty(string memory _s) 
-        public
+        internal
         pure 
         returns(bool)
     {

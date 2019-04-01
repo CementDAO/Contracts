@@ -1,13 +1,14 @@
 pragma solidity ^0.5.0;
 
-import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "zos-lib/contracts/Initializable.sol";
+import "openzeppelin-eth/contracts/ownership/Ownable.sol";
 
 /**
  * @title Whitelist.
  * @author Bernardo Vieira, Alberto Cuesta Canada
  * @notice Implements a whitelist for contract governance.
  */
-contract Whitelist is Ownable {
+contract Whitelist is Initializable, Ownable {
 
     /**
      * @notice Whitelist of addresses that can do governance.
@@ -19,6 +20,12 @@ contract Whitelist is Ownable {
      * @notice Whitelist of addresses that can hold BILD tokens.
      */
     mapping(address => bool) internal stakeholders;
+
+    function initialize(address _owner) public initializer {
+        Ownable.initialize(_owner);
+        // add to governors list, the user initializing the contract
+        governors[_owner] = true;
+    }
 
     /**
      * @notice Modifier that enforces that the transaction sender is

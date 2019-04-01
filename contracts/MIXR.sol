@@ -1,7 +1,8 @@
 pragma solidity ^0.5.0;
 
-import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
-import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
+import "zos-lib/contracts/Initializable.sol";
+import "openzeppelin-eth/contracts/token/ERC20/ERC20.sol";
+import "openzeppelin-eth/contracts/token/ERC20/ERC20Detailed.sol";
 import "./MIXRGovernance.sol";
 import "./Fees.sol";
 
@@ -12,17 +13,17 @@ import "./Fees.sol";
  * This means that in addition to the usual ERC20 features the MIXR token
  * can react to transfers of tokens other than itself.
  */
-contract MIXR is MIXRGovernance, ERC20, ERC20Detailed {
+contract MIXR is Initializable, MIXRGovernance, ERC20, ERC20Detailed {
 
     /**
      * @notice Constructor with the details of the ERC20.
      */
-    constructor(address _whitelist)
+    function initialize(address _owner, address _whitelist)
     public
-    ERC20Detailed("MIX", "MIX", 24)
-    MIXRGovernance(_whitelist)
+    initializer
     {
-        
+        ERC20Detailed.initialize("MIX", "MIX", 24);
+        MIXRGovernance.initialize(_owner, _whitelist);
     }
 
     /**
