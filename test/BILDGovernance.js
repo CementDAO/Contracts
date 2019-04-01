@@ -38,7 +38,7 @@ contract('BILD governance', (accounts) => {
                     { from: user },
                 );
             },
-            'Message sender isn\'t part of the governance whitelist.',
+            'Not allowed.',
         );
 
         it('a governor can set the minimum stake for nominating agents.', async () => {

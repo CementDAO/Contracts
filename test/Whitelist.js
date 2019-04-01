@@ -83,7 +83,7 @@ contract('BILD', (accounts) => {
                     from: nonStakeholder,
                 });
             },
-            'Message sender isn\'t part of the governance whitelist.',
+            'Not allowed.',
         );
 
         it('Governors can add stakeholders.', async () => {
@@ -106,7 +106,7 @@ contract('BILD', (accounts) => {
                     from: nonStakeholder,
                 });
             },
-            'Message sender isn\'t part of the governance whitelist.',
+            'Not allowed.',
         );
 
         it('Governors can remove stakeholders.', async () => {

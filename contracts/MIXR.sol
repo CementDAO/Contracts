@@ -84,7 +84,7 @@ contract MIXR is MIXRGovernance, ERC20, ERC20Detailed {
         // Check for minimum viable deposit
         require (
             feeInBasketWei < depositInBasketWei, 
-            "Deposits at or below the minimum fee are not accepted."
+            "Below the minimum fee."
         );
 
         // We should check for deposits that force us to mint more MIX than we want

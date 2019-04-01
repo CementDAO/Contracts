@@ -110,13 +110,13 @@ contract MIXRData {
         // solium-disable-next-line security/no-inline-assembly
         assembly { size := extcodesize(_token) }
         require(
-            size > 0, "The specified address doesn't look like a deployed contract."
+            size > 0, "Address is not a contract."
         );
 
         require(
             IERC20(_token).balanceOf(_token) >= 0 &&
             IERC20(_token).totalSupply() >= 0,
-            "The provided address doesn't look like a valid ERC20 implementation."
+            "Address is not an ERC20."
         );
         _;
     }
@@ -130,7 +130,7 @@ contract MIXRData {
         TokenData memory token = tokens[_token];
         require(
             token.registered == true,
-            "The given token is not registered."
+            "Token is not registered."
         );
         _;
     }
@@ -146,11 +146,11 @@ contract MIXRData {
         TokenData memory token = tokens[_token];
         require(
             token.registered == true,
-            "The given token is not registered."
+            "Token is not registered."
         );
         require(
             token.targetProportion > 0,
-            "The given token can't be deposited, the target proportion is 0."
+            "Target proportion is 0."
         );
         _;
     }
@@ -166,11 +166,11 @@ contract MIXRData {
         TokenData memory token = tokens[_token];
         require(
             token.registered == true,
-            "The given token is not registered."
+            "Token is not registered."
         );
         require(
             IERC20(_token).balanceOf(address(this)) > 0,
-            "MIXR doesn't contain any of the given tokens."
+            "No given tokens."
         );
         _;
     }

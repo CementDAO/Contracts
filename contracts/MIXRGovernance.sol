@@ -31,7 +31,7 @@ contract MIXRGovernance is MIXRData, Ownable {
     modifier onlyGovernor() {
         require(
             Whitelist(whitelist).isGovernor(msg.sender),
-            "Message sender isn't part of the governance whitelist."
+            "Not allowed."
         );
         _;
     }
@@ -77,7 +77,7 @@ contract MIXRGovernance is MIXRData, Ownable {
         isCompliantToken(_token)
     {
         TokenData memory token = tokens[_token];
-        require(token.registered == false, "Token is already registered!");
+        require(token.registered == false, "Token already registered.");
         token.registered = true;
         token.decimals = _decimals;
         token.name = _name;
@@ -95,12 +95,12 @@ contract MIXRGovernance is MIXRData, Ownable {
         public
         onlyGovernor()
     {
-        require(_fee >= minimumFee, "Fees can't be set to less than the minimum fee.");
-        require(_fee <= FixidityLib.fixed1(), "Fees can't be set to more than 1.");
+        require(_fee >= minimumFee, "Below minimum fee.");
+        require(_fee <= FixidityLib.fixed1(), "Above 1.");
         if (_transactionType == Fees.DEPOSIT()) baseDepositFee = _fee;
         else if (_transactionType == Fees.TRANSFER()) baseTransferFee = _fee;
         else if (_transactionType == Fees.REDEMPTION()) baseRedemptionFee = _fee;
-        else revert("Transaction type not accepted.");
+        else revert("Type not accepted.");
     }
 
     /**
@@ -114,7 +114,7 @@ contract MIXRGovernance is MIXRData, Ownable {
     {
         require(
             _tokens.length == _proportions.length, 
-            "The number of target proportions supplied doesn't match the number of token addresses supplied."
+            "Invalid sizes."
         );
 
         // Check proportions supplied for all registered tokens.
@@ -127,7 +127,7 @@ contract MIXRGovernance is MIXRData, Ownable {
         for (uint256 x = 0; x < _proportions.length; x += 1) {
             require(
                 _proportions[x] >= 0 && _proportions[x] <= FixidityLib.fixed1(),
-                "Target proportion not in the [0,1] range."
+                "Invalid proportion."
             );
             bool found = false;
             for (uint256 y = 0; y < registeredTokens.length; y += 1) {
@@ -138,7 +138,7 @@ contract MIXRGovernance is MIXRData, Ownable {
             }
             require(
                 found == true,
-                "Proportions must be given for all registered tokens."
+                "Token not found."
             );
             //
             totalProportions = totalProportions + _proportions[x];
@@ -149,7 +149,7 @@ contract MIXRGovernance is MIXRData, Ownable {
         }
         require (
             totalProportions == FixidityLib.fixed1(),
-            "The target proportions supplied must add up to 1."
+            "Invalid total proportion."
         );
     }
 }

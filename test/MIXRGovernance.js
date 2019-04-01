@@ -95,7 +95,7 @@ contract('MIXR governance', (accounts) => {
                     from: user,
                 });
             },
-            'Message sender isn\'t part of the governance whitelist.',
+            'Not allowed.',
         );
 
         itShouldThrow(
@@ -115,7 +115,7 @@ contract('MIXR governance', (accounts) => {
                     from: governor,
                 });
             },
-            'The specified address doesn\'t look like a deployed contract.',
+            'Address is not a contract.',
         );
 
         itShouldThrow(
@@ -128,7 +128,7 @@ contract('MIXR governance', (accounts) => {
                     from: governor,
                 });
             },
-            'Token is already registered!',
+            'Token already registered.',
         );
 
         it('allows a governor to approve an ERC20Detailed token', async () => {
@@ -176,7 +176,7 @@ contract('MIXR governance', (accounts) => {
                     { from: user },
                 );
             },
-            'Message sender isn\'t part of the governance whitelist.',
+            'Not allowed.',
         );
 
         itShouldThrow(
@@ -188,7 +188,7 @@ contract('MIXR governance', (accounts) => {
                     { from: governor },
                 );
             },
-            'Fees can\'t be set to less than the minimum fee.',
+            'Below minimum fee.',
         );
 
         itShouldThrow(
@@ -200,7 +200,7 @@ contract('MIXR governance', (accounts) => {
                     { from: governor },
                 );
             },
-            'Fees can\'t be set to more than 1.',
+            'Above 1.',
         );
 
         it('base fees can be set.', async () => {
@@ -263,7 +263,7 @@ contract('MIXR governance', (accounts) => {
                     from: governor,
                 },
             );
-        }, 'The number of target proportions supplied doesn\'t match the number of token addresses supplied.');
+        }, 'Invalid sizes.');
 
         itShouldThrow(
             'stops setting proportions for only a subset of registered tokens.',
@@ -301,7 +301,7 @@ contract('MIXR governance', (accounts) => {
                     },
                 );
             },
-            'Proportions must be given for all registered tokens.',
+            'Token not found.',
         );
 
 
@@ -321,7 +321,7 @@ contract('MIXR governance', (accounts) => {
                     from: governor,
                 },
             );
-        }, 'Target proportion not in the [0,1] range.');
+        }, 'Invalid proportion.');
 
         itShouldThrow('forbids to send invalid total proportions', async () => {
             const tokensArray = [
@@ -339,7 +339,7 @@ contract('MIXR governance', (accounts) => {
                     from: governor,
                 },
             );
-        }, 'The target proportions supplied must add up to 1.');
+        }, 'Invalid total proportion.');
 
         itShouldThrow(
             'stops non-governors from setting target proportions.',
@@ -360,7 +360,7 @@ contract('MIXR governance', (accounts) => {
                     },
                 );
             },
-            'Message sender isn\'t part of the governance whitelist.',
+            'Not allowed.',
         );
 
         it('allows a governor to set target proportions', async () => {
