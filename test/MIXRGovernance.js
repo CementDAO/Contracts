@@ -210,7 +210,7 @@ contract('MIXR governance', (accounts) => {
                 DEPOSIT,
                 { from: governor },
             );
-            const result = new BigNumber(await mixr.getDepositFee());
+            const result = new BigNumber(await mixr.baseDepositFee());
             result.should.be.bignumber.equal(depositFee);
         });
     });
@@ -280,7 +280,6 @@ contract('MIXR governance', (accounts) => {
                     },
                 );
             },
-            'Proportions must be given for all registered tokens.',
         );
 
         itShouldThrow(

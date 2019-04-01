@@ -38,15 +38,15 @@ contract MIXRData {
     /**
      * @notice The base deposit percentage fees in fixed point units (FixidityLib.digits()).
      */
-    int256 baseDepositFee;
+    int256 public baseDepositFee;
     /**
      * @notice The base redemption percentage fees in fixed point units (FixidityLib.digits()).
      */
-    int256 baseRedemptionFee;
+    int256 public baseRedemptionFee;
     /**
      * @notice The base transfer percentage fees in fixed point units (FixidityLib.digits()).
      */
-    int256 baseTransferFee;
+    int256 public baseTransferFee;
 
     /**
      * @notice Additional token data which is required for MIXR transactions.
@@ -176,28 +176,6 @@ contract MIXRData {
     }
 
     /**
-     * @notice Returns the scaling factor for MIXR, in fixed point units.
-     */
-    function getScalingFactor() 
-    public
-    pure
-    returns(int256)
-    {
-        return scalingFactor;
-    }
-
-    /**
-     * @notice Returns minimum fee that will be charged for transactions, in MIX wei.
-     */
-    function getMinimumFee() 
-    public
-    pure
-    returns(int256)
-    {
-        return minimumFee;
-    }
-
-    /**
      * @notice Returns the decimals of a token.
      * @param _token The token ERC20 contract address that we are retrieving a
      * target proportion for. The token needs to have been registered in 
@@ -262,36 +240,29 @@ contract MIXRData {
     }
 
     /**
-     * @notice Returns the base deposit fee, in MIX wei.
+     * Generic method to get available tokens under some condition
      */
-    function getDepositFee() 
-    public
-    view
-    returns(int256)
+    function getTokensIf(uint8 _conditionN)
+        public 
+        view 
+        returns(address[] memory) 
     {
-        return baseDepositFee;
-    }
-
-    /**
-     * @notice Returns the base redemption fee, in MIX wei.
-     */
-    function getRedemptionFee() 
-    public
-    view
-    returns(int256)
-    {
-        return baseRedemptionFee;
-    }
-
-    /**
-     * @notice Returns the base transfer fee, in MIX wei.
-     */
-    function getTransferFee() 
-    public
-    view
-    returns(int256)
-    {
-        return baseTransferFee;
+        uint256 totalAddresses = tokensList.length;
+        uint256 activeIndex = 0;
+        address[] memory activeAddresses = new address[](totalAddresses);
+        for (uint256 totalIndex = 0; totalIndex < totalAddresses; totalIndex += 1) {
+            TokenData memory token = tokens[tokensList[totalIndex]];
+            if (
+                (_conditionN == 1 && token.registered) ||
+                (_conditionN == 2 && token.registered && token.targetProportion > 0) ||
+                (_conditionN == 3 && token.registered && IERC20(tokensList[totalIndex]).balanceOf(address(this)) > 0)
+            ) {
+                activeAddresses[activeIndex] = tokensList[totalIndex];
+                activeIndex += 1; // Unlikely to overflow
+            }
+        }
+        // Do we need to return activeIndex? Can't the caller use activeAddresses.length?
+        return activeAddresses;
     }
 
     /**
@@ -300,20 +271,9 @@ contract MIXRData {
     function getRegisteredTokens() 
         public 
         view 
-        returns(address[] memory, uint256) 
+        returns(address[] memory) 
     {
-        uint256 totalAddresses = tokensList.length;
-        uint256 activeIndex = 0;
-        address[] memory activeAddresses = new address[](totalAddresses);
-        for (uint256 totalIndex = 0; totalIndex < totalAddresses; totalIndex += 1) {
-            TokenData memory token = tokens[tokensList[totalIndex]];
-            if (token.registered) {
-                activeAddresses[activeIndex] = tokensList[totalIndex];
-                activeIndex += 1; // Unlikely to overflow
-            }
-        }
-        // Do we need to return activeIndex? Can't the caller use activeAddresses.length?
-        return (activeAddresses, activeIndex);
+        return getTokensIf(1);
     }
 
     /**
@@ -322,20 +282,9 @@ contract MIXRData {
     function getTokensAcceptedForDeposits()
         public
         view
-        returns(address[] memory, uint256)
+        returns(address[] memory)
     {
-        uint256 totalAddresses = tokensList.length;
-        uint256 activeIndex = 0;
-        address[] memory activeAddresses = new address[](totalAddresses);
-        for (uint256 totalIndex = 0; totalIndex < totalAddresses; totalIndex += 1) {
-            TokenData memory token = tokens[tokensList[totalIndex]];
-            if (token.registered && token.targetProportion > 0) {
-                activeAddresses[activeIndex] = tokensList[totalIndex];
-                activeIndex += 1; // Unlikely to overflow
-            }
-        }
-        // Do we need to return activeIndex? Can't the caller use activeAddresses.length?
-        return (activeAddresses, activeIndex);
+        return getTokensIf(2);
     }
 
     /**
@@ -344,20 +293,8 @@ contract MIXRData {
     function getTokensAcceptedForRedemptions()
         public
         view
-        returns(address[] memory, uint256)
+        returns(address[] memory)
     {
-        uint256 totalAddresses = tokensList.length;
-        uint256 activeIndex = 0;
-        address[] memory activeAddresses = new address[](totalAddresses);
-        for (uint256 totalIndex = 0; totalIndex < totalAddresses; totalIndex += 1) {
-            address tokenAddress = tokensList[totalIndex];
-            TokenData memory token = tokens[tokenAddress];
-            if (token.registered && IERC20(tokenAddress).balanceOf(address(this)) > 0) {
-                activeAddresses[activeIndex] = tokensList[totalIndex];
-                activeIndex += 1; // Unlikely to overflow
-            }
-        }
-        // Do we need to return activeIndex? Can't the caller use activeAddresses.length?
-        return (activeAddresses, activeIndex);
+        return getTokensIf(3);
     }
 }

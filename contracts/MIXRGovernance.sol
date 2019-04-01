@@ -118,23 +118,9 @@ contract MIXRGovernance is MIXRData, Ownable {
         );
 
         // Check proportions supplied for all registered tokens.
-        uint256 totalTokens;
-        address[] memory registeredTokens;
-        (registeredTokens, totalTokens) = getRegisteredTokens();
-        
-        for (uint256 x = 0; x < registeredTokens.length; x += 1) {
-            bool found = false;
-            for (uint256 y = 0; y < _tokens.length; y += 1) {
-                if (registeredTokens[x] == _tokens[y]) {
-                    found = true; 
-                    break;
-                }
-            }
-            require(
-                found == true,
-                "Proportions must be given for all registered tokens."
-            );
-        }
+        address[] memory registeredTokens = getRegisteredTokens();
+        // prevent to set subsets
+        require(registeredTokens.length == _tokens.length);
 
         // Check proportions supplied are valid.
         int256 totalProportions = 0;
@@ -143,18 +129,27 @@ contract MIXRGovernance is MIXRData, Ownable {
                 _proportions[x] >= 0 && _proportions[x] <= FixidityLib.fixed1(),
                 "Target proportion not in the [0,1] range."
             );
+            bool found = false;
+            for (uint256 y = 0; y < registeredTokens.length; y += 1) {
+                if (registeredTokens[y] == _tokens[x]) {
+                    found = true; 
+                    break;
+                }
+            }
+            require(
+                found == true,
+                "Proportions must be given for all registered tokens."
+            );
+            //
             totalProportions = totalProportions + _proportions[x];
+            // Apply changes.
+            TokenData memory token = tokens[_tokens[x]];
+            token.targetProportion = _proportions[x];
+            tokens[_tokens[x]] = token;
         }
         require (
             totalProportions == FixidityLib.fixed1(),
             "The target proportions supplied must add up to 1."
         );
-
-        // Apply changes.
-        for (uint256 x = 0; x < _proportions.length; x += 1) {
-            TokenData memory token = tokens[_tokens[x]];
-            token.targetProportion = _proportions[x];
-            tokens[_tokens[x]] = token;
-        }
     }
 }
