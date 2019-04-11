@@ -1,0 +1,3 @@
+[submodule "openzeppelin-eth"]
+	path = openzeppelin-eth
+	url = git@github.com:OpenZeppelin/openzeppelin-eth.git
