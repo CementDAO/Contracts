@@ -82,5 +82,9 @@ typings/
 
 # images
 *.png
+zos.dev*.json
 .zos.session
 .secret
+
+# docs
+docs/
