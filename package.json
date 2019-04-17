@@ -44,6 +44,7 @@
     "eth-gas-reporter": "^0.1.12",
     "ethlint": "1.2.3",
     "ganache-cli": "6.3.0",
+    "solc": "^0.5.7",
     "solidity-coverage": "0.6.0-beta.3",
     "surya": "0.2.8",
     "truffle": "5.0.0"

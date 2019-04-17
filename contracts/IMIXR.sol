@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.7;
 
 interface IMIXR {
     function getDecimals(address _token) external view returns(uint8);
