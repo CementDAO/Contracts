@@ -1,7 +1,7 @@
 const BILD = artifacts.require('./BILDTest.sol');
 const MIXR = artifacts.require('./MIXR.sol');
 const Whitelist = artifacts.require('./Whitelist.sol');
-const FeesMock = artifacts.require('./FeesMock.sol');
+const Fees = artifacts.require('./Fees.sol');
 const SampleDetailedERC20 = artifacts.require('./test/SampleDetailedERC20.sol');
 
 const BigNumber = require('bignumber.js');
@@ -14,7 +14,7 @@ contract('BILD', (accounts) => {
     let bild;
     let mixr;
     let whitelist;
-    let feesMock;
+    let fees;
 
     const owner = accounts[0];
     const distributor = accounts[1];
@@ -58,9 +58,9 @@ contract('BILD', (accounts) => {
         manyMIXTokens = new BigNumber(tokenNumber(mixDecimals, 400));
         manySampleTokens = new BigNumber(tokenNumber(sampleDecimals, 400));
 
-        feesMock = await FeesMock.deployed(); // TODO: Is this how the frontend does it?
-        DEPOSIT = await feesMock.DEPOSIT();
-        REDEMPTION = await feesMock.REDEMPTION();
+        fees = await Fees.deployed(); // TODO: Is this how the frontend does it?
+        DEPOSIT = await fees.DEPOSIT();
+        REDEMPTION = await fees.REDEMPTION();
     });
 
     describe('payFeesForAgent', () => {
@@ -68,7 +68,7 @@ contract('BILD', (accounts) => {
             // Initialize and link contracts
             whitelist = await Whitelist.new();
             bild = await BILD.new(distributor, whitelist.address);
-            mixr = await MIXR.new(whitelist.address);
+            mixr = await MIXR.new(whitelist.address, fees.address);
             await bild.setMIXRContract(mixr.address, { from: owner });
             await mixr.setBILDContract(bild.address, { from: owner });
 

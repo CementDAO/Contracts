@@ -1,6 +1,6 @@
 const MIXR = artifacts.require('./MIXR.sol');
 const Whitelist = artifacts.require('./Whitelist.sol');
-const FeesMock = artifacts.require('./FeesMock.sol');
+const Fees = artifacts.require('./Fees.sol');
 const FixidityLibMock = artifacts.require('./FixidityLibMock.sol');
 const SampleERC721 = artifacts.require('./test/SampleERC721.sol');
 const SampleDetailedERC20 = artifacts.require('./test/SampleDetailedERC20.sol');
@@ -16,7 +16,7 @@ chai.use(require('chai-bignumber')()).should();
 contract('MIXR governance', (accounts) => {
     let mixr;
     let whitelist;
-    let feesMock;
+    let fees;
     let fixidityLibMock;
     let sampleDetailedERC20;
     let sampleDetailedERC20Other;
@@ -34,20 +34,20 @@ contract('MIXR governance', (accounts) => {
     before(async () => {
         mixr = await MIXR.deployed();
         whitelist = await Whitelist.deployed();
-        feesMock = await FeesMock.deployed();
+        fees = await Fees.deployed();
         someERC721 = await SampleERC721.deployed();
         fixidityLibMock = await FixidityLibMock.deployed();
         sampleDetailedERC20 = await SampleDetailedERC20.deployed();
         sampleDetailedERC20Other = await SampleDetailedERC20.deployed();
         somePlainERC20 = await SamplePlainERC20.deployed();
-        DEPOSIT = await feesMock.DEPOSIT();
-        REDEMPTION = await feesMock.REDEMPTION();
+        DEPOSIT = await fees.DEPOSIT();
+        REDEMPTION = await fees.REDEMPTION();
     });
 
     describe('setting the BILD Contract address', () => {
         beforeEach(async () => {
             whitelist = await Whitelist.new();
-            mixr = await MIXR.new(whitelist.address);
+            mixr = await MIXR.new(whitelist.address, fees.address);
         });
         /* itShouldThrow(
             'only valid addresses are allowed as the BILD Contract address.',
@@ -82,7 +82,7 @@ contract('MIXR governance', (accounts) => {
     describe('token registering', () => {
         beforeEach(async () => {
             whitelist = await Whitelist.new();
-            mixr = await MIXR.new(whitelist.address);
+            mixr = await MIXR.new(whitelist.address, fees.address);
             await whitelist.addGovernor(governor, {
                 from: owner,
             });
@@ -161,7 +161,7 @@ contract('MIXR governance', (accounts) => {
     describe('setting the base fees', () => {
         beforeEach(async () => {
             whitelist = await Whitelist.new();
-            mixr = await MIXR.new(whitelist.address);
+            mixr = await MIXR.new(whitelist.address, fees.address);
             await whitelist.addGovernor(governor, {
                 from: owner,
             });
@@ -222,7 +222,7 @@ contract('MIXR governance', (accounts) => {
             sampleERC20Decimals = 18;
             sampleERC20DecimalsOther = 18;
             whitelist = await Whitelist.new();
-            mixr = await MIXR.new(whitelist.address);
+            mixr = await MIXR.new(whitelist.address, fees.address);
             await whitelist.addGovernor(governor, {
                 from: owner,
             });

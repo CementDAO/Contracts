@@ -17,11 +17,14 @@ import "./UtilsLib.sol";
 contract MIXRGovernance is MIXRData, Ownable {
 
     address internal whitelist;
+    address internal fees;
+
     /**
      * @notice Constructor with the details of the ERC20.
      */
-    constructor(address _whitelist) public {
+    constructor(address _whitelist, address _fees) public {
         whitelist = _whitelist;
+        fees = _fees;
     }
 
     /**
@@ -97,9 +100,9 @@ contract MIXRGovernance is MIXRData, Ownable {
     {
         require(_fee >= minimumFee, "Fees can't be set to less than the minimum fee.");
         require(_fee <= FixidityLib.fixed1(), "Fees can't be set to more than 1.");
-        if (_transactionType == Fees.DEPOSIT()) baseDepositFee = _fee;
-        else if (_transactionType == Fees.TRANSFER()) baseTransferFee = _fee;
-        else if (_transactionType == Fees.REDEMPTION()) baseRedemptionFee = _fee;
+        if (_transactionType == Fees(fees).DEPOSIT()) baseDepositFee = _fee;
+        else if (_transactionType == Fees(fees).TRANSFER()) baseTransferFee = _fee;
+        else if (_transactionType == Fees(fees).REDEMPTION()) baseRedemptionFee = _fee;
         else revert("Transaction type not accepted.");
     }
 

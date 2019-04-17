@@ -1,6 +1,6 @@
 const MIXR = artifacts.require('./MIXR.sol');
 const Whitelist = artifacts.require('./Whitelist.sol');
-const FeesMock = artifacts.require('./FeesMock.sol');
+const Fees = artifacts.require('./Fees.sol');
 const FixidityLibMock = artifacts.require('./FixidityLibMock.sol');
 const SampleDetailedERC20 = artifacts.require('./test/SampleDetailedERC20.sol');
 const SampleERC721 = artifacts.require('./test/SampleERC721.sol');
@@ -72,7 +72,7 @@ const depositTest = async (
 contract('MIXR', (accounts) => {
     let mixr;
     let whitelist;
-    let feesMock;
+    let fees;
     let fixidityLibMock;
     let sampleDetailedERC20;
     let sampleDetailedERC20Other;
@@ -91,13 +91,13 @@ contract('MIXR', (accounts) => {
     before(async () => {
         mixr = await MIXR.deployed();
         whitelist = await Whitelist.deployed();
-        feesMock = await FeesMock.deployed();
+        fees = await Fees.deployed();
         fixidityLibMock = await FixidityLibMock.deployed();
         sampleDetailedERC20 = await SampleDetailedERC20.deployed();
         someERC721 = await SampleERC721.deployed();
         fixed1 = new BigNumber(await fixidityLibMock.fixed1());
-        DEPOSIT = await feesMock.DEPOSIT();
-        REDEMPTION = await feesMock.REDEMPTION();
+        DEPOSIT = await fees.DEPOSIT();
+        REDEMPTION = await fees.REDEMPTION();
     });
 
     describe('deposit functionality', () => {
@@ -106,7 +106,7 @@ contract('MIXR', (accounts) => {
              * deploy mixr and sample erc20
              */
             whitelist = await Whitelist.new();
-            mixr = await MIXR.new(whitelist.address);
+            mixr = await MIXR.new(whitelist.address, fees.address);
             await whitelist.addGovernor(governor, {
                 from: owner,
             });

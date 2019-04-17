@@ -18,8 +18,8 @@ module.exports = (deployer) => {
     deployer.link(UtilsLib, Fees);
     deployer.link(UtilsLib, MIXR);
     // deploy fees
-    deployer.deploy(Fees);
-    deployer.link(Fees, MIXR);
-    // deploy mixr
-    deployer.deploy(MIXR, Whitelist.address);
+    deployer.deploy(Fees).then(() => {
+        // deploy mixr
+        return deployer.deploy(MIXR, Whitelist.address, Fees.address);
+    });
 };

@@ -17,10 +17,10 @@ contract MIXR is MIXRGovernance, ERC20, ERC20Detailed {
     /**
      * @notice Constructor with the details of the ERC20.
      */
-    constructor(address _whitelist)
+    constructor(address _whitelist, address _fees)
     public
     ERC20Detailed("MIX", "MIX", 24)
-    MIXRGovernance(_whitelist)
+    MIXRGovernance(_whitelist, _fees)
     {
         
     }
@@ -68,11 +68,11 @@ contract MIXR is MIXRGovernance, ERC20, ERC20Detailed {
         acceptedForDeposits(_token)
     {
         // Calculate the deposit fee and the returned amount
-        uint256 feeInBasketWei = Fees.transactionFee(
+        uint256 feeInBasketWei = Fees(fees).transactionFee(
                 _token,
                 address(this),
                 _depositInTokenWei,
-                Fees.DEPOSIT()
+                Fees(fees).DEPOSIT()
             );
         uint256 depositInBasketWei = UtilsLib.convertTokenAmount(
             getDecimals(_token), 
@@ -121,11 +121,11 @@ contract MIXR is MIXRGovernance, ERC20, ERC20Detailed {
             _redemptionInBasketWei
         );
         //
-        uint256 feeInBasketWei = Fees.transactionFee(
+        uint256 feeInBasketWei = Fees(fees).transactionFee(
                 _token,
                 address(this),
                 redemptionInTokenWei,
-                Fees.REDEMPTION()
+                Fees(fees).REDEMPTION()
             );
         uint256 withoutFeeInBasketWei = _redemptionInBasketWei.sub(feeInBasketWei);
         uint256 returnInTokenWei = UtilsLib.convertTokenAmount(
@@ -164,7 +164,7 @@ contract MIXR is MIXRGovernance, ERC20, ERC20Detailed {
         view
         returns (uint256) 
     {
-        return Fees.transactionFee(
+        return Fees(fees).transactionFee(
             _token, 
             _basket,
             _transactionAmount, 

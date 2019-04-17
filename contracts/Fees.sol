@@ -16,8 +16,12 @@ import "./MIXR.sol";
  * CementDAO whitepaper formulas, using FixidityLib for arithmetic and MIXR.sol
  * to retrieve token basket parameters.
  */
-library Fees {
+contract Fees {
     using SafeMath for uint256;
+
+    constructor() public {
+        //
+    }
 
     /**
      * @notice Accepted transaction type for the proportion, deviation and fee
