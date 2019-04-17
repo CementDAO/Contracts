@@ -116,7 +116,7 @@ contract Fees {
                 tokenBalance, 
                 transactionAmount
             );
-        } else revert("Transaction type not accepted.");
+        } else revert("Type not accepted.");
 
         // The amount to redeem needs to be added to the basket balance to avoid
         // dividing by zero on an empty basket.
@@ -268,8 +268,8 @@ contract Fees {
         require(_fee >= 0, "Attempted to apply a negative fee.");
         int256 validatedFee = _fee;
         MIXR mixr = MIXR(_basket);
-        if (validatedFee < mixr.getMinimumFee()) 
-            validatedFee = mixr.getMinimumFee();
+        if (validatedFee < mixr.minimumFee()) 
+            validatedFee = mixr.minimumFee();
 
         int256 transactionAmount = FixidityLib.newFixed(
             UtilsLib.safeCast(_transactionAmount), 
@@ -316,7 +316,7 @@ contract Fees {
                 _basket,
                 _transactionAmount
             );
-        } else revert("Transaction type not accepted.");
+        } else revert("Type not accepted.");
     }
 
     /**
@@ -345,7 +345,7 @@ contract Fees {
             DEPOSIT()
         );
         
-        int256 baseFee = mixr.getDepositFee();
+        int256 baseFee = mixr.baseDepositFee();
         int256 fee;
 
         // Floors and ceilings
@@ -369,7 +369,7 @@ contract Fees {
         int256 logitPoint = calculateLogit(targetProportion, deviation);
         int256 scaledLogit = scaleLogit(
             baseFee,
-            mixr.getScalingFactor(),
+            mixr.scalingFactor(),
             logitPoint
         );
 
@@ -413,7 +413,7 @@ contract Fees {
                 _token, 
                 _basket,
                 _transactionAmount, 
-                mixr.getMinimumFee()
+                mixr.minimumFee()
             );
 
         int256 deviation = deviationAfterTransaction(
@@ -423,7 +423,7 @@ contract Fees {
             REDEMPTION()
         );
         
-        int256 baseFee = mixr.getRedemptionFee();
+        int256 baseFee = mixr.baseRedemptionFee();
         int256 fee;
 
         // Floors and ceilings
@@ -449,7 +449,7 @@ contract Fees {
 
         int256 scaledLogit = scaleLogit(
             baseFee,
-            mixr.getScalingFactor(),
+            mixr.scalingFactor(),
             logitPoint
         );
 

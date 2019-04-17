@@ -31,7 +31,7 @@ contract BILDGovernance is BILDData, Ownable {
     modifier onlyGovernor() {
         require(
             Whitelist(whitelist).isGovernor(msg.sender),
-            "Message sender isn't part of the governance whitelist."
+            "Not allowed."
         );
         _;
     }

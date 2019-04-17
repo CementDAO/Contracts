@@ -260,7 +260,7 @@ contract('MIXR', (accounts) => {
                     },
                 );
             },
-            'The given token is not registered.',
+            'Token is not registered.',
         );
 
         itShouldThrow(
@@ -274,7 +274,7 @@ contract('MIXR', (accounts) => {
                     },
                 );
             },
-            'The given token is not registered.',
+            'Token is not registered.',
         );
 
         it('redeem 1 MIX by 1 token', async () => {

@@ -84,22 +84,21 @@ contract MIXR is MIXRGovernance, ERC20, ERC20Detailed {
         // Check for minimum viable deposit
         require (
             feeInBasketWei < depositInBasketWei, 
-            "Deposits at or below the minimum fee are not accepted."
+            "Below the minimum fee."
         );
 
         // We should check for deposits that force us to mint more MIX than we want
 
         // Receive the token that was sent and mint an equal number of MIX
         IERC20(_token).transferFrom(msg.sender, address(this), _depositInTokenWei);
-        _mint(address(this), depositInBasketWei);
 
         // TODO: Refactor as a withdrawal
         // Send the deposit fee to the stakeholder account
-        IERC20(address(this)).transfer(BILDContract, feeInBasketWei);
+        _mint(BILDContract, feeInBasketWei);
 
         // TODO: Refactor as a withdrawal
         // Return an equal nubmer of MIX minus the fee to sender
-        IERC20(address(this)).transfer(msg.sender, returnInBasketWei);
+        _mint(msg.sender, returnInBasketWei);
     }
 
     /**

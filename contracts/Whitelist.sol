@@ -28,7 +28,7 @@ contract Whitelist is Ownable {
     modifier onlyGovernor() {
         require(
             isGovernor(msg.sender),
-            "Message sender isn't part of the governance whitelist."
+            "Not allowed."
         );
         _;
     }
