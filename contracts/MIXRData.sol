@@ -20,6 +20,7 @@ contract MIXRData {
     /**
      * @notice An initializated address.
      */
+    // solium-disable-next-line mixedcase
     address public NULL_ADDRESS = address(0);
 
     /**
@@ -95,6 +96,7 @@ contract MIXRData {
     /**
      * @notice BILD Contract address, which will receive the fees before they are distributed to stakeholders.
      */
+    // solium-disable-next-line mixedcase
     address internal BILDContract;
 
     /**

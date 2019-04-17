@@ -1,8 +1,7 @@
 const Whitelist = artifacts.require('./Whitelist.sol');
 
-const BigNumber = require('bignumber.js');
 const chai = require('chai');
-const { itShouldThrow, tokenNumber } = require('./utils');
+const { itShouldThrow } = require('./utils');
 // use default BigNumber
 chai.use(require('chai-bignumber')()).should();
 
@@ -24,7 +23,7 @@ contract('BILD', (accounts) => {
 
         itShouldThrow(
             'General users can\'t add governors.',
-            async () => {    
+            async () => {
                 await whitelist.addGovernor(governor, {
                     from: nonStakeholder,
                 });
@@ -42,7 +41,7 @@ contract('BILD', (accounts) => {
 
         itShouldThrow(
             'General users can\'t remove governors.',
-            async () => {    
+            async () => {
                 assert.equal(await whitelist.isGovernor(governor), false);
                 await whitelist.addGovernor(governor, {
                     from: owner,
@@ -78,7 +77,7 @@ contract('BILD', (accounts) => {
 
         itShouldThrow(
             'General users can\'t add stakeholders.',
-            async () => {    
+            async () => {
                 await whitelist.addStakeholder(stakeholder, {
                     from: nonStakeholder,
                 });
@@ -96,7 +95,7 @@ contract('BILD', (accounts) => {
 
         itShouldThrow(
             'General users can\'t remove stakeholders.',
-            async () => {    
+            async () => {
                 assert.equal(await whitelist.isStakeholder(stakeholder), false);
                 await whitelist.addStakeholder(stakeholder, {
                     from: governor,

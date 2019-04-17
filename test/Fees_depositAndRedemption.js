@@ -112,7 +112,7 @@ contract('Fees', (accounts) => {
                 { from: governor },
             );
         });
-        
+
         // See depositFees_simulation.py
 
         it('depositFee(x, basket, 70) with 30 y in basket - Deposit at deviation ceiling', async () => {
@@ -405,7 +405,7 @@ contract('Fees', (accounts) => {
             result.should.be.bignumber.equal(new BigNumber(baseFee).multipliedBy(50));
         });
     });
-    
+
     describe('redemption fee calculation functionality', () => {
         beforeEach(async () => {
             sampleERC20Decimals = 18;
@@ -477,7 +477,7 @@ contract('Fees', (accounts) => {
                 from: user,
             });
             // await sampleDetailedERC20.transfer(mixr.address, xInBasket.toString(10), { from: governor });
-            
+
             await mixr.setTokensTargetProportion(
                 [
                     sampleDetailedERC20.address,
@@ -500,7 +500,7 @@ contract('Fees', (accounts) => {
             await mixr.depositToken(sampleDetailedERC20Other.address, yInBasket.toString(10), {
                 from: user,
             });
-            
+
             await mixr.setTokensTargetProportion(
                 [
                     sampleDetailedERC20.address,
@@ -616,7 +616,7 @@ contract('Fees', (accounts) => {
                     from: governor,
                 },
             );
-            
+
             const amountToTransfer = new BigNumber(10).pow(18).multipliedBy(10);
             const result = new BigNumber(
                 await fees.transactionFee(
@@ -631,13 +631,11 @@ contract('Fees', (accounts) => {
         itShouldThrow('redemptionFee(x, basket, 121) '
         + '120 x and 30 y in basket - Redemption above basket balance.', async () => {
             const amountToTransfer = new BigNumber(10).pow(18).multipliedBy(121);
-            const result = new BigNumber(
-                await fees.transactionFee(
-                    sampleDetailedERC20.address,
-                    mixr.address,
-                    amountToTransfer.toString(10),
-                    REDEMPTION.toString(10),
-                ),
+            await fees.transactionFee(
+                sampleDetailedERC20.address,
+                mixr.address,
+                amountToTransfer.toString(10),
+                REDEMPTION.toString(10),
             );
         }, 'The MIXR doesn\'t have enough stablecoins for this redemption.');
     });

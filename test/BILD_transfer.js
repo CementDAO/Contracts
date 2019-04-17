@@ -1,5 +1,4 @@
 const BILD = artifacts.require('./BILD.sol');
-const BILDDataTest = artifacts.require('./BILDDataTest.sol');
 const Whitelist = artifacts.require('./Whitelist.sol');
 
 const BigNumber = require('bignumber.js');
@@ -10,7 +9,6 @@ chai.use(require('chai-bignumber')()).should();
 
 contract('BILD', (accounts) => {
     let bild;
-    let bildDataTest;
     let whitelist;
     const bildDecimals = 18;
     const owner = accounts[0];
@@ -25,7 +23,6 @@ contract('BILD', (accounts) => {
 
     before(async () => {
         bild = await BILD.deployed();
-        bildDataTest = await BILDDataTest.deployed();
         whitelist = await Whitelist.deployed();
         oneBILDToken = new BigNumber(tokenNumber(bildDecimals, 1)).toString(10);
         twoBILDTokens = new BigNumber(tokenNumber(bildDecimals, 2)).toString(10);
@@ -45,7 +42,7 @@ contract('BILD', (accounts) => {
 
         itShouldThrow(
             'transfers to addresses not in the stakeholders whitelist fail.',
-            async () => {    
+            async () => {
                 await bild.transfer(
                     nonStakeholder,
                     oneBILDToken,
@@ -62,7 +59,7 @@ contract('BILD', (accounts) => {
                 { from: distributor },
             );
             const balance = new BigNumber(
-                await bild.balanceOf(stakeholder1)
+                await bild.balanceOf(stakeholder1),
             );
             balance.should.be.bignumber.equal(oneBILDToken);
         });
@@ -70,7 +67,7 @@ contract('BILD', (accounts) => {
         itShouldThrow(
             'transfers of more than the unstaked BILD of the sender fail.',
             async () => {
-                // Get initial BILD from distributor    
+                // Get initial BILD from distributor
                 await bild.transfer(
                     stakeholder1,
                     oneBILDToken,
@@ -102,7 +99,7 @@ contract('BILD', (accounts) => {
         );
 
         it('transfers to approved BILD stakeholders under the unstaked BILD balance succeed.', async () => {
-            // Get initial BILD from distributor    
+            // Get initial BILD from distributor
             await bild.transfer(
                 stakeholder1,
                 twoBILDTokens,
@@ -130,11 +127,11 @@ contract('BILD', (accounts) => {
                 from: stakeholder2,
             });
             const balanceStakeholder1 = new BigNumber(
-                await bild.balanceOf(stakeholder1)
+                await bild.balanceOf(stakeholder1),
             );
             balanceStakeholder1.should.be.bignumber.equal(oneBILDToken);
             const balanceStakeholder2 = new BigNumber(
-                await bild.balanceOf(stakeholder2)
+                await bild.balanceOf(stakeholder2),
             );
             balanceStakeholder2.should.be.bignumber.equal(oneBILDToken);
         });

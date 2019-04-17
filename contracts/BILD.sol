@@ -8,6 +8,7 @@ import "./BILDGovernance.sol";
 import "./Whitelist.sol";
 import "./UtilsLib.sol";
 
+
 /**
  * @title BILD Staking contract. 
  * @author Alberto Cuesta Canada, Bernardo Vieira
@@ -15,8 +16,6 @@ import "./UtilsLib.sol";
  */
 contract BILD is BILDGovernance, ERC20, ERC20Detailed {
     using SafeMath for uint256;
-
-    event debug(address _from, uint256 _value);
 
     /**
      * @notice Constructor of the BILD Business Layer. BILD is constructed as an ERC20Detailed with 18 decimals 
@@ -245,36 +244,6 @@ contract BILD is BILDGovernance, ERC20, ERC20Detailed {
             revokeNomination(_agent);
     }
 
-
-    /**
-     * @notice Removes all stakes for an agent, effectively revoking its 
-     * nomination. This function requires that the aggregated stakes for the
-     * agent are below the minimum stake for nomination.
-     * @param _agent The stakeholder to revoke the nomination from.
-     */
-    function revokeNomination(address _agent)
-        internal
-        agentExists(_agent)
-    {
-        require (
-            aggregateAgentStakes(_agent) < minimumStake,
-            "Too many stakes to revoke agent nomination."
-        );
-
-        // We pop each stake from the agent after updating the aggregate holder stakes view 
-        while (stakesByAgent[_agent].length > 0)
-        {
-            uint256 lastStake = stakesByAgent[_agent].length.sub(1);
-            address lastStakeholder = stakesByAgent[_agent][lastStake].stakeholder;
-            stakesByHolder[lastStakeholder] = stakesByHolder[lastStakeholder].sub(
-                stakesByAgent[_agent][lastStake].value
-            );
-            stakesByAgent[_agent].pop();
-        }
-
-        eraseAgent(_agent);
-    }
-
     /**
      * @notice Determines whether an agent exists with a given name.
      * @param _name The name to look for
@@ -288,7 +257,7 @@ contract BILD is BILDGovernance, ERC20, ERC20Detailed {
         address agent = highestAgent;
         while (agent != NULL_ADDRESS)
         {
-            if(UtilsLib.stringsAreEqual(agents[agent].name, _name)) return true;
+            if (UtilsLib.stringsAreEqual(agents[agent].name, _name)) return true;
             agent = agents[agent].lowerAgent;
         }
         return false;
@@ -305,6 +274,7 @@ contract BILD is BILDGovernance, ERC20, ERC20Detailed {
         returns(uint256)
     {
         address agent = highestAgent;
+        // solium-disable-next-line mixedcase
         uint256 _R = 0;
         while (agent != NULL_ADDRESS){
             _R += 1;
@@ -319,6 +289,7 @@ contract BILD is BILDGovernance, ERC20, ERC20Detailed {
      * @param _R The number of agents to aggregate stakes for, starting by the top rated agent.
      * @return The aggregated stakes fot the R top ranked agents.
      */
+    // solium-disable-next-line mixedcase
     function totalStakes(uint256 _R)
         public
         view
@@ -403,6 +374,7 @@ contract BILD is BILDGovernance, ERC20, ERC20Detailed {
         internal
         returns(uint256)
     {
+        // solium-disable-next-line mixedcase
         uint256 _R = calculateR(); // This must ensure a valid R at or below the total number f agents is returned.
         uint256 _totalStakes = totalStakes(_R);
         uint256 paidFees = 0;
@@ -418,5 +390,34 @@ contract BILD is BILDGovernance, ERC20, ERC20Detailed {
             currentAgent = agents[currentAgent].lowerAgent;
         }
         return paidFees;
+    }
+
+    /**
+     * @notice Removes all stakes for an agent, effectively revoking its 
+     * nomination. This function requires that the aggregated stakes for the
+     * agent are below the minimum stake for nomination.
+     * @param _agent The stakeholder to revoke the nomination from.
+     */
+    function revokeNomination(address _agent)
+        internal
+        agentExists(_agent)
+    {
+        require (
+            aggregateAgentStakes(_agent) < minimumStake,
+            "Too many stakes to revoke agent nomination."
+        );
+
+        // We pop each stake from the agent after updating the aggregate holder stakes view 
+        while (stakesByAgent[_agent].length > 0)
+        {
+            uint256 lastStake = stakesByAgent[_agent].length.sub(1);
+            address lastStakeholder = stakesByAgent[_agent][lastStake].stakeholder;
+            stakesByHolder[lastStakeholder] = stakesByHolder[lastStakeholder].sub(
+                stakesByAgent[_agent][lastStake].value
+            );
+            stakesByAgent[_agent].pop();
+        }
+
+        eraseAgent(_agent);
     }
 }

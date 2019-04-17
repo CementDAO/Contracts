@@ -2,25 +2,20 @@ const BILDDataTest = artifacts.require('./BILDDataTest.sol');
 
 const BigNumber = require('bignumber.js');
 const chai = require('chai');
-const { itShouldThrow, tokenNumber } = require('./utils');
+const { itShouldThrow } = require('./utils');
 // use default BigNumber
 chai.use(require('chai-bignumber')()).should();
 
 contract('BILDDataTest', (accounts) => {
     let bild;
-    const bildDecimals = 18;
     const distributor = accounts[1];
     const stakeholder1 = accounts[2];
     const agent1 = accounts[5];
     const agent2 = accounts[6];
     const agent3 = accounts[7];
-    let oneBILDToken;
-    let manyBILDTokens;
 
     before(async () => {
         bild = await BILDDataTest.deployed();
-        oneBILDToken = tokenNumber(bildDecimals, 1);
-        manyBILDTokens = tokenNumber(bildDecimals, 100);
     });
 
     describe('detachAgent 1', () => {
@@ -37,7 +32,7 @@ contract('BILDDataTest', (accounts) => {
         it('detachAgent highestAgent.', async () => {
             let highestAgent = await bild.getHighestAgent();
             let lowestAgent = await bild.getLowestAgent();
-            let rank0 = await bild.agentAtRank(0);
+            const rank0 = await bild.agentAtRank(0);
             assert(highestAgent === agent1);
             assert(lowestAgent === agent1);
             assert(rank0 === agent1);
@@ -86,7 +81,7 @@ contract('BILDDataTest', (accounts) => {
             let highestAgent = await bild.getHighestAgent();
             let lowestAgent = await bild.getLowestAgent();
             let rank0 = await bild.agentAtRank(0);
-            let rank1 = await bild.agentAtRank(1);
+            const rank1 = await bild.agentAtRank(1);
             assert(highestAgent === agent2);
             assert(lowestAgent === agent1);
             assert(rank0 === agent2);
@@ -106,9 +101,9 @@ contract('BILDDataTest', (accounts) => {
             await bild.testDetachAgent(
                 agent1,
             );
-            highestAgent = await bild.getHighestAgent();
-            lowestAgent = await bild.getLowestAgent();
-            rank0 = await bild.agentAtRank(0);
+            const highestAgent = await bild.getHighestAgent();
+            const lowestAgent = await bild.getLowestAgent();
+            const rank0 = await bild.agentAtRank(0);
             assert(highestAgent === agent2);
             assert(lowestAgent === agent2);
             assert(rank0 === agent2);

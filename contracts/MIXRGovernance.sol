@@ -74,7 +74,12 @@ contract MIXRGovernance is MIXRData, Ownable {
     /**
      * @notice This function adds an ERC20 token to the registered tokens list.
      */
-    function registerStandardToken(address _token, string memory _name, string memory _symbol, uint8 _decimals)
+    function registerStandardToken(
+        address _token,
+        string memory _name,
+        string memory _symbol,
+        uint8 _decimals
+    )
         public
         onlyGovernor()
         isCompliantToken(_token)

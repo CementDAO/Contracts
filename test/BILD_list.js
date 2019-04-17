@@ -437,7 +437,7 @@ contract('BILD', (accounts) => {
             let lowestAgent = await bild.getLowestAgent();
             let rank0 = await bild.agentAtRank(0);
             let rank1 = await bild.agentAtRank(1);
-            let rank2 = await bild.agentAtRank(2);
+            const rank2 = await bild.agentAtRank(2);
             assert(highestAgent === agent3);
             assert(lowestAgent === agent1);
             assert(rank0 === agent3);
@@ -465,7 +465,7 @@ contract('BILD', (accounts) => {
             let lowestAgent = await bild.getLowestAgent();
             let rank0 = await bild.agentAtRank(0);
             let rank1 = await bild.agentAtRank(1);
-            let rank2 = await bild.agentAtRank(2);
+            const rank2 = await bild.agentAtRank(2);
             assert(highestAgent === agent3);
             assert(lowestAgent === agent1);
             assert(rank0 === agent3);
@@ -493,7 +493,7 @@ contract('BILD', (accounts) => {
             let lowestAgent = await bild.getLowestAgent();
             let rank0 = await bild.agentAtRank(0);
             let rank1 = await bild.agentAtRank(1);
-            let rank2 = await bild.agentAtRank(2);
+            const rank2 = await bild.agentAtRank(2);
             assert(highestAgent === agent3);
             assert(lowestAgent === agent1);
             assert(rank0 === agent3);

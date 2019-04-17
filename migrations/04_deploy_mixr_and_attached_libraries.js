@@ -17,9 +17,6 @@ module.exports = (deployer) => {
     deployer.deploy(UtilsLib);
     deployer.link(UtilsLib, Fees);
     deployer.link(UtilsLib, MIXR);
-    // deploy fees
-    deployer.deploy(Fees).then(() => {
-        // deploy mixr
-        return deployer.deploy(MIXR, Whitelist.address, Fees.address);
-    });
+    // deploy fees and then mixr
+    deployer.deploy(Fees).then(() => deployer.deploy(MIXR, Whitelist.address, Fees.address));
 };

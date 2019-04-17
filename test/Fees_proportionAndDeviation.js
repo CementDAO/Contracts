@@ -147,7 +147,7 @@ contract('Fees', (accounts) => {
                     from: governor,
                 },
             );
-            
+
             const result = new BigNumber(
                 await fees.proportionAfterTransaction(
                     sampleDetailedERC20.address,

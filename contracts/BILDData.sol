@@ -5,6 +5,7 @@ pragma solidity ^0.5.0;
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./UtilsLib.sol";
 
+
 /**
  * @title BILD Data 
  * @author Alberto Cuesta Canada, Bernardo Vieira
@@ -17,11 +18,13 @@ contract BILDData {
      * @notice Code indicating a stakeholder has no stakes for a given agent
      * @dev Difficult to create such a large array of stakes, so probably safe
      */
+    // solium-disable-next-line mixedcase
     uint256 internal NO_STAKES = 115792089237316195423570985008687907853269984665640564039457584007913129639935;
 
     /**
      * @notice An initializated address.
      */
+    // solium-disable-next-line mixedcase
     address internal NULL_ADDRESS = address(0);
 
 
@@ -29,6 +32,7 @@ contract BILDData {
      * @notice The address of the MIXR contract.
      * @dev Used only to calculate R from MIXR.totalSupply().
      */
+    // solium-disable-next-line mixedcase
     address internal MIXRContract;
 
     /**
@@ -73,6 +77,7 @@ contract BILDData {
     /**
      * @notice The number of agents that can be Curating Agents
      */
+    // solium-disable-next-line mixedcase
     uint256 internal R = 10;
 
     /**

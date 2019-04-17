@@ -29,7 +29,6 @@ contract('MIXR governance', (accounts) => {
     const user = accounts[2];
     const stakeholders = accounts[3];
     let DEPOSIT;
-    let REDEMPTION;
 
     before(async () => {
         mixr = await MIXR.deployed();
@@ -41,7 +40,6 @@ contract('MIXR governance', (accounts) => {
         sampleDetailedERC20Other = await SampleDetailedERC20.deployed();
         somePlainERC20 = await SamplePlainERC20.deployed();
         DEPOSIT = await fees.DEPOSIT();
-        REDEMPTION = await fees.REDEMPTION();
     });
 
     describe('setting the BILD Contract address', () => {

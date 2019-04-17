@@ -3,7 +3,7 @@ const BILDGovernance = artifacts.require('./BILDGovernance.sol');
 
 const BigNumber = require('bignumber.js');
 const chai = require('chai');
-const { itShouldThrow, tokenNumber } = require('./utils');
+const { itShouldThrow } = require('./utils');
 
 // use default BigNumber
 chai.use(require('chai-bignumber')()).should();
@@ -59,7 +59,7 @@ contract('BILD governance', (accounts) => {
                 from: owner,
             });
         });
-        
+
         itShouldThrow(
             'regular users can\'t set the MIXR Contract address.',
             async () => {
@@ -70,7 +70,7 @@ contract('BILD governance', (accounts) => {
             },
             'revert',
         );
-        
+
         it('the contract owner can set the address for the MIXR contract.', async () => {
             await bildGovernance.setMIXRContract(
                 MIXRContract,

@@ -3,7 +3,6 @@ const Whitelist = artifacts.require('./Whitelist.sol');
 
 const BigNumber = require('bignumber.js');
 const chai = require('chai');
-const { itShouldThrow, tokenNumber } = require('./utils');
 // use default BigNumber
 chai.use(require('chai-bignumber')()).should();
 
@@ -27,9 +26,9 @@ contract('BILD', (accounts) => {
             const agentStakes = 5;
             const holderStakes = 3;
             const payout = new BigNumber(await bild.stakePayout(
-                totalPayout, 
-                agentStakes, 
-                holderStakes
+                totalPayout,
+                agentStakes,
+                holderStakes,
             ));
             payout.should.be.bignumber.equal(4);
         });

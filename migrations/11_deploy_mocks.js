@@ -1,7 +1,6 @@
 const FixidityLib = artifacts.require('./fixidity/FixidityLib.sol');
 const LogarithmLib = artifacts.require('./fixidity/LogarithmLib.sol');
 const UtilsLib = artifacts.require('./UtilsLib.sol');
-const Fees = artifacts.require('./Fees.sol');
 const FixidityLibMock = artifacts.require('./mocks/FixidityLibMock.sol');
 const LogarithmLibMock = artifacts.require('./mocks/LogarithmLibMock.sol');
 const UtilsLibMock = artifacts.require('./mocks/UtilsLibMock.sol');
