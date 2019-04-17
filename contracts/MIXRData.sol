@@ -1,11 +1,10 @@
 pragma solidity ^0.5.0;
 
-// import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
-// import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "fixidity/contracts/FixidityLib.sol";
 import "./UtilsLib.sol";
+import "./IMIXR.sol";
 
 
 /**
@@ -14,7 +13,7 @@ import "./UtilsLib.sol";
  * @notice Implements a basket of stablecoins as an ERC20 token, as described
  * in the CementDAO whitepaper.
  */
-contract MIXRData {
+contract MIXRData is IMIXR {
     using SafeMath for uint256;
 
     /**

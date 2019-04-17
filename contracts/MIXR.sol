@@ -3,7 +3,7 @@ pragma solidity ^0.5.0;
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
 import "./MIXRGovernance.sol";
-import "./Fees.sol";
+import "./IFees.sol";
 
 
 /**
@@ -68,11 +68,11 @@ contract MIXR is MIXRGovernance, ERC20, ERC20Detailed {
         acceptedForDeposits(_token)
     {
         // Calculate the deposit fee and the returned amount
-        uint256 feeInBasketWei = Fees(fees).transactionFee(
+        uint256 feeInBasketWei = IFees(fees).transactionFee(
                 _token,
                 address(this),
                 _depositInTokenWei,
-                Fees(fees).DEPOSIT()
+                IFees(fees).DEPOSIT()
             );
         uint256 depositInBasketWei = UtilsLib.convertTokenAmount(
             getDecimals(_token), 
@@ -120,11 +120,11 @@ contract MIXR is MIXRGovernance, ERC20, ERC20Detailed {
             _redemptionInBasketWei
         );
         //
-        uint256 feeInBasketWei = Fees(fees).transactionFee(
+        uint256 feeInBasketWei = IFees(fees).transactionFee(
                 _token,
                 address(this),
                 redemptionInTokenWei,
-                Fees(fees).REDEMPTION()
+                IFees(fees).REDEMPTION()
             );
         uint256 withoutFeeInBasketWei = _redemptionInBasketWei.sub(feeInBasketWei);
         uint256 returnInTokenWei = UtilsLib.convertTokenAmount(
@@ -163,7 +163,7 @@ contract MIXR is MIXRGovernance, ERC20, ERC20Detailed {
         view
         returns (uint256) 
     {
-        return Fees(fees).transactionFee(
+        return IFees(fees).transactionFee(
             _token, 
             _basket,
             _transactionAmount, 

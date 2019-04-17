@@ -6,7 +6,8 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "fixidity/contracts/FixidityLib.sol";
 import "fixidity/contracts/LogarithmLib.sol";
 import "./UtilsLib.sol";
-import "./MIXR.sol";
+import "./IMIXR.sol";
+import "./IFees.sol";
 
 
 /**
@@ -16,7 +17,7 @@ import "./MIXR.sol";
  * CementDAO whitepaper formulas, using FixidityLib for arithmetic and MIXR.sol
  * to retrieve token basket parameters.
  */
-contract Fees {
+contract Fees is IFees {
     using SafeMath for uint256;
 
     constructor() public {
@@ -74,7 +75,7 @@ contract Fees {
         view
         returns (int256)
     {
-        MIXR mixr = MIXR(_basket);
+        IMIXR mixr = IMIXR(_basket);
 
         int256 tokenBalance = FixidityLib.newFixed(
             // The command below returns the balance of _token with this.decimals precision
@@ -177,7 +178,7 @@ contract Fees {
                 _transactionAmount,
                 _transactionType
             ),
-            MIXRData(_basket).getTargetProportion(_token)
+            IMIXR(_basket).getTargetProportion(_token)
         );
         assert(
             result >= FixidityLib.fixed1()*(-1) && 
@@ -267,7 +268,7 @@ contract Fees {
     {
         require(_fee >= 0, "Attempted to apply a negative fee.");
         int256 validatedFee = _fee;
-        MIXR mixr = MIXR(_basket);
+        IMIXR mixr = IMIXR(_basket);
         if (validatedFee < mixr.minimumFee()) 
             validatedFee = mixr.minimumFee();
 
@@ -335,7 +336,7 @@ contract Fees {
         view
         returns (uint256) 
     {
-        MIXR mixr = MIXR(_basket);
+        IMIXR mixr = IMIXR(_basket);
         int256 targetProportion = mixr.getTargetProportion(_token);
         
         int256 deviation = deviationAfterTransaction(
@@ -404,7 +405,7 @@ contract Fees {
         view
         returns (uint256) 
     {
-        MIXR mixr = MIXR(_basket);
+        IMIXR mixr = IMIXR(_basket);
         int256 targetProportion = mixr.getTargetProportion(_token);
         
         // The fee calculation formula implies a division by zero if the target proportion is zero.
