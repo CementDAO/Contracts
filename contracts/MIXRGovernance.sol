@@ -5,7 +5,7 @@ import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "fixidity/contracts/FixidityLib.sol";
 import "./MIXRData.sol";
 import "./Fees.sol";
-import "./Whitelist.sol";
+import "./IWhitelist.sol";
 import "./UtilsLib.sol";
 
 
@@ -33,7 +33,7 @@ contract MIXRGovernance is MIXRData, Ownable {
      */
     modifier onlyGovernor() {
         require(
-            Whitelist(whitelist).isGovernor(msg.sender),
+            IWhitelist(whitelist).isGovernor(msg.sender),
             "Not allowed."
         );
         _;

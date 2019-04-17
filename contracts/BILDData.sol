@@ -60,17 +60,17 @@ contract BILDData {
     /**
      * @notice All the agents stored in a linked list ordered by their aggregated stakes
      */
-    mapping(address => Agent) internal agents;
+    mapping(address => Agent) public agents;
 
     /**
      * @notice The address of the agent at the top of the list.
      */
-    address internal highestAgent;
+    address public highestAgent;
     
     /**
      * @notice The address of the agent at the top of the list.
      */
-    address internal lowestAgent;
+    address public lowestAgent;
 
     /**
      * @notice The number of agents that can be Curating Agents
@@ -83,7 +83,7 @@ contract BILDData {
      * @dev It might be more gas effective to remove this mapping and just use
      * the agentRanking list to access the stakes.
      */
-    mapping(address => Stake[]) internal stakesByAgent;
+    mapping(address => Stake[]) public stakesByAgent;
 
     /**
      * @notice View of aggregated stakes by stakeholder address.
@@ -92,7 +92,7 @@ contract BILDData {
      * seems more user friendly to put the cost of the platform on those that
      * create stakes than those that transact with MIX.
      */
-    mapping(address => uint256) internal stakesByHolder;
+    mapping(address => uint256) public stakesByHolder;
 
     /**
      * @notice Verifies that an agent exists
@@ -161,10 +161,11 @@ contract BILDData {
     {
         //Stake[] memory agentStakes = stakes[_agent];
         uint256 result = 0;
-        for (uint256 i = 0; i < stakesByAgent[_agent].length; i += 1)
+        for (uint256 i = 0; i < stakesByAgent[_agent].length; i += 1) {
             result = result.add(
                 stakesByAgent[_agent][i].value
             );
+        }
         return result;
     }
 
@@ -182,28 +183,6 @@ contract BILDData {
     }
 
     /**
-     * @notice Return the address of the highest ranked agent.
-     */
-    function getHighestAgent()
-        public
-        view
-        returns(address)
-    {
-        return highestAgent;
-    }
-
-    /**
-     * @notice Return the address of the lowest ranked agent.
-     */
-    function getLowestAgent()
-        public
-        view
-        returns(address)
-    {
-        return lowestAgent;
-    }
-
-    /**
      * @notice Find whether an agent is in the agents list
      * @param _agent The agent to verify.
      */
@@ -214,7 +193,7 @@ contract BILDData {
         returns(bool)
     {
         address current = highestAgent;
-        while (current != NULL_ADDRESS){
+        while (current != NULL_ADDRESS) {
             if (current == _agent) return true;
             current = agents[current].lowerAgent;
         }
@@ -235,11 +214,10 @@ contract BILDData {
             agentIsInList(_agent),
             "The agent is not in the agents ranking."
         );
-        if (_agent == highestAgent) 
-            return NULL_ADDRESS;
+        if (_agent == highestAgent) return NULL_ADDRESS;
         
         address current = highestAgent;
-        while (agents[current].lowerAgent != _agent){
+        while (agents[current].lowerAgent != _agent) {
             current = agents[current].lowerAgent;
             require(
                 current != NULL_ADDRESS,
@@ -266,7 +244,7 @@ contract BILDData {
         );
         
         address current = _agent;
-        for (uint256 i = 0; i < _rank; i += 1){
+        for (uint256 i = 0; i < _rank; i += 1) {
             current = agents[current].lowerAgent;
             require(
                 current != NULL_ADDRESS,
@@ -301,10 +279,11 @@ contract BILDData {
             "Can't insert an agent that is already in the agents ranking."
         );
         // If there are no highestAgent and no lowestAgent then _agent is the only one in the list.
-        if (highestAgent == NULL_ADDRESS && lowestAgent == NULL_ADDRESS)
+        if (highestAgent == NULL_ADDRESS && lowestAgent == NULL_ADDRESS) {
             highestAgent = _agent;
-        else
+        } else {
             agents[lowestAgent].lowerAgent = _agent;
+        }
         lowestAgent = _agent;
     }
 

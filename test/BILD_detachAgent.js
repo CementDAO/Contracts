@@ -30,8 +30,8 @@ contract('BILDDataTest', (accounts) => {
             );
         });
         it('detachAgent highestAgent.', async () => {
-            let highestAgent = await bild.getHighestAgent();
-            let lowestAgent = await bild.getLowestAgent();
+            let highestAgent = await bild.highestAgent();
+            let lowestAgent = await bild.lowestAgent();
             const rank0 = await bild.agentAtRank(0);
             assert(highestAgent === agent1);
             assert(lowestAgent === agent1);
@@ -40,9 +40,9 @@ contract('BILDDataTest', (accounts) => {
             await bild.testDetachAgent(
                 agent1,
             );
-            highestAgent = new BigNumber(await bild.getHighestAgent());
+            highestAgent = new BigNumber(await bild.highestAgent());
             highestAgent.should.be.bignumber.equal(0);
-            lowestAgent = new BigNumber(await bild.getLowestAgent());
+            lowestAgent = new BigNumber(await bild.lowestAgent());
             lowestAgent.should.be.bignumber.equal(0);
         });
         itShouldThrow(
@@ -78,8 +78,8 @@ contract('BILDDataTest', (accounts) => {
             );
         });
         it('detachAgent highestAgent.', async () => {
-            let highestAgent = await bild.getHighestAgent();
-            let lowestAgent = await bild.getLowestAgent();
+            let highestAgent = await bild.highestAgent();
+            let lowestAgent = await bild.lowestAgent();
             let rank0 = await bild.agentAtRank(0);
             const rank1 = await bild.agentAtRank(1);
             assert(highestAgent === agent2);
@@ -90,8 +90,8 @@ contract('BILDDataTest', (accounts) => {
             await bild.testDetachAgent(
                 agent2,
             );
-            highestAgent = await bild.getHighestAgent();
-            lowestAgent = await bild.getLowestAgent();
+            highestAgent = await bild.highestAgent();
+            lowestAgent = await bild.lowestAgent();
             rank0 = await bild.agentAtRank(0);
             assert(highestAgent === agent1);
             assert(lowestAgent === agent1);
@@ -101,8 +101,8 @@ contract('BILDDataTest', (accounts) => {
             await bild.testDetachAgent(
                 agent1,
             );
-            const highestAgent = await bild.getHighestAgent();
-            const lowestAgent = await bild.getLowestAgent();
+            const highestAgent = await bild.highestAgent();
+            const lowestAgent = await bild.lowestAgent();
             const rank0 = await bild.agentAtRank(0);
             assert(highestAgent === agent2);
             assert(lowestAgent === agent2);
@@ -146,8 +146,8 @@ contract('BILDDataTest', (accounts) => {
             );
         });
         it('detachAgent highestAgent.', async () => {
-            let highestAgent = await bild.getHighestAgent();
-            let lowestAgent = await bild.getLowestAgent();
+            let highestAgent = await bild.highestAgent();
+            let lowestAgent = await bild.lowestAgent();
             let rank0 = await bild.agentAtRank(0);
             let rank1 = await bild.agentAtRank(1);
             const rank2 = await bild.agentAtRank(2);
@@ -160,8 +160,8 @@ contract('BILDDataTest', (accounts) => {
             await bild.testDetachAgent(
                 agent3,
             );
-            highestAgent = await bild.getHighestAgent();
-            lowestAgent = await bild.getLowestAgent();
+            highestAgent = await bild.highestAgent();
+            lowestAgent = await bild.lowestAgent();
             rank0 = await bild.agentAtRank(0);
             rank1 = await bild.agentAtRank(1);
             assert(highestAgent === agent2);
@@ -173,8 +173,8 @@ contract('BILDDataTest', (accounts) => {
             await bild.testDetachAgent(
                 agent2,
             );
-            const highestAgent = await bild.getHighestAgent();
-            const lowestAgent = await bild.getLowestAgent();
+            const highestAgent = await bild.highestAgent();
+            const lowestAgent = await bild.lowestAgent();
             const rank0 = await bild.agentAtRank(0);
             const rank1 = await bild.agentAtRank(1);
             assert(highestAgent === agent3);
@@ -186,8 +186,8 @@ contract('BILDDataTest', (accounts) => {
             await bild.testDetachAgent(
                 agent1,
             );
-            const highestAgent = await bild.getHighestAgent();
-            const lowestAgent = await bild.getLowestAgent();
+            const highestAgent = await bild.highestAgent();
+            const lowestAgent = await bild.lowestAgent();
             const rank0 = await bild.agentAtRank(0);
             const rank1 = await bild.agentAtRank(1);
             assert(highestAgent === agent3);
