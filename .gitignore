@@ -85,3 +85,4 @@ typings/
 
 .secret
 .zos.session
+zos.ropsten.json

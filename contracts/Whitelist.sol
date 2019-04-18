@@ -39,6 +39,7 @@ contract Whitelist is Initializable, IWhitelist, Ownable {
      */
     function initialize(address sender) public initializer {
         Ownable.initialize(sender);
+        governors[sender] = true;
     }
 
     /**
