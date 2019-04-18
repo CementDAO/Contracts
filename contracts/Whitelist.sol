@@ -1,6 +1,6 @@
 pragma solidity ^0.5.7;
 
-import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "openzeppelin-eth/contracts/ownership/Ownable.sol";
 import "./IWhitelist.sol";
 
 
@@ -9,7 +9,7 @@ import "./IWhitelist.sol";
  * @author Bernardo Vieira, Alberto Cuesta Canada
  * @notice Implements a whitelist for contract governance.
  */
-contract Whitelist is IWhitelist, Ownable {
+contract Whitelist is Initializable, IWhitelist, Ownable {
 
     /**
      * @notice Whitelist of addresses that can do governance.
@@ -32,6 +32,13 @@ contract Whitelist is IWhitelist, Ownable {
             "Not allowed."
         );
         _;
+    }
+
+    /**
+     * @dev nitialize method
+     */
+    function initialize(address sender) public initializer {
+        // Ownable.initialize(sender);
     }
 
     /**

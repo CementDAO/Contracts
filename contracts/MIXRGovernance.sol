@@ -1,7 +1,8 @@
 pragma solidity ^0.5.7;
 
-import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
-import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "zos-lib/contracts/Initializable.sol";
+import "openzeppelin-eth/contracts/token/ERC20/ERC20Detailed.sol";
+import "openzeppelin-eth/contracts/ownership/Ownable.sol";
 import "fixidity/contracts/FixidityLib.sol";
 import "./MIXRData.sol";
 import "./Fees.sol";
@@ -14,7 +15,7 @@ import "./UtilsLib.sol";
  * @author Bernardo Vieira.
  * @notice Implements governance functions for a MIXR token.
  */
-contract MIXRGovernance is MIXRData, Ownable {
+contract MIXRGovernance is Initializable, MIXRData, Ownable {
 
     address internal whitelist;
     address internal fees;
@@ -22,7 +23,7 @@ contract MIXRGovernance is MIXRData, Ownable {
     /**
      * @notice Constructor with the details of the ERC20.
      */
-    constructor(address _whitelist, address _fees) public {
+    function initialize(address _whitelist, address _fees) public initializer {
         whitelist = _whitelist;
         fees = _fees;
     }

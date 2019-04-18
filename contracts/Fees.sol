@@ -1,10 +1,9 @@
 pragma solidity ^0.5.7;
 
-import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
-import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "openzeppelin-eth/contracts/token/ERC20/IERC20.sol";
+import "openzeppelin-eth/contracts/token/ERC20/ERC20Detailed.sol";
+import "openzeppelin-eth/contracts/math/SafeMath.sol";
 import "fixidity/contracts/FixidityLib.sol";
-import "fixidity/contracts/LogarithmLib.sol";
 import "./UtilsLib.sol";
 import "./IMIXR.sol";
 import "./IFees.sol";
@@ -19,10 +18,6 @@ import "./IFees.sol";
  */
 contract Fees is IFees {
     using SafeMath for uint256;
-
-    constructor() public {
-        //
-    }
 
     /**
      * @notice Accepted transaction type for the proportion, deviation and fee
@@ -80,7 +75,7 @@ contract Fees is IFees {
         int256 tokenBalance = FixidityLib.newFixed(
             // The command below returns the balance of _token with this.decimals precision
             UtilsLib.safeCast(
-                UtilsLib.convertTokenAmount(
+                convertTokenAmount(
                     mixr.getDecimals(_token),
                     mixr.decimals(),
                     IERC20(_token).balanceOf(_basket))
@@ -92,7 +87,7 @@ contract Fees is IFees {
 
         int256 transactionAmount = FixidityLib.newFixed(
             UtilsLib.safeCast(
-                UtilsLib.convertTokenAmount(
+                convertTokenAmount(
                     mixr.getDecimals(_token),
                     mixr.decimals(),
                     _transactionAmount)
@@ -216,7 +211,7 @@ contract Fees is IFees {
                 _deviation
             )
         );
-        return LogarithmLib.log_b(
+        return FixidityLib.log_b(
             FixidityLib.newFixed(10),
             deviationCurve
         );
@@ -465,5 +460,30 @@ contract Fees is IFees {
             _transactionAmount, 
             fee
         );
+    }
+
+    /**
+     * @notice Converts a token amount from the precision of _originToken
+     * to that of _destinationToken.
+     * @param _originTokenDecimals Decimals of the tokens to convert from.
+     * @param _destinationTokenDecimals Decimals of the token to convert to.
+     * @param _amount Quantity of wei of the origin token to convert.
+     */
+    function convertTokenAmount(
+        uint8 _originTokenDecimals, 
+        uint8 _destinationTokenDecimals, 
+        uint256 _amount
+    )
+        public
+        pure
+        returns (uint256)
+    {
+        int256 convertedAmount = FixidityLib.convertFixed(
+            UtilsLib.safeCast(_amount), 
+            _originTokenDecimals, 
+            _destinationTokenDecimals
+        );
+        assert(convertedAmount >= 0);
+        return uint256(convertedAmount);
     }
 }

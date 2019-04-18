@@ -1,0 +1,14 @@
+{
+  "zosversion": "2.2",
+  "name": "cementdao",
+  "version": "0.1.0",
+  "contracts": {
+    "Fees": "Fees",
+    "Whitelist": "Whitelist",
+    "MIXR": "MIXR",
+    "BILD": "BILD"
+  },
+  "dependencies": {
+    "openzeppelin-eth": "^2.1.3"
+  }
+}

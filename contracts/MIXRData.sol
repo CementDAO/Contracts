@@ -1,7 +1,8 @@
 pragma solidity ^0.5.7;
 
-import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "openzeppelin-eth/contracts/ownership/Ownable.sol";
+import "openzeppelin-eth/contracts/token/ERC20/IERC20.sol";
+import "openzeppelin-eth/contracts/math/SafeMath.sol";
 import "fixidity/contracts/FixidityLib.sol";
 import "./UtilsLib.sol";
 import "./IMIXR.sol";

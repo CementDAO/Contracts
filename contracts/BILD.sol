@@ -1,8 +1,9 @@
 pragma solidity ^0.5.7;
 
-import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
-import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "zos-lib/contracts/Initializable.sol";
+import "openzeppelin-eth/contracts/token/ERC20/ERC20.sol";
+import "openzeppelin-eth/contracts/token/ERC20/ERC20Detailed.sol";
+import "openzeppelin-eth/contracts/math/SafeMath.sol";
 import "./BILDGovernance.sol";
 import "./Whitelist.sol";
 import "./UtilsLib.sol";
@@ -13,7 +14,7 @@ import "./UtilsLib.sol";
  * @author Alberto Cuesta Canada, Bernardo Vieira
  * @notice Implements staking of BILD tokens towards a Curation Agent Ranking
  */
-contract BILD is BILDGovernance, ERC20, ERC20Detailed {
+contract BILD is Initializable, BILDGovernance, ERC20, ERC20Detailed {
     using SafeMath for uint256;
 
     /**
@@ -22,11 +23,9 @@ contract BILD is BILDGovernance, ERC20, ERC20Detailed {
      * @param _distributor The account that will receive all BILD tokens on contract creation.
      * @param _whitelist The address for the governance and BILD holding authorized individuals.
      */
-    constructor(address _distributor, address _whitelist) 
-        public 
-        BILDGovernance(_whitelist)
-        ERC20Detailed("BILD", "BILD", 18)
-    {
+    function initialize(address _distributor, address _whitelist) public initializer {
+        BILDGovernance.initialize(_whitelist);
+        ERC20Detailed.initialize("BILD", "BILD", 18);
         _mint(_distributor, 10**27);
     }
 

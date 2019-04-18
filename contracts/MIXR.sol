@@ -1,7 +1,8 @@
 pragma solidity ^0.5.7;
 
-import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
-import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
+import "zos-lib/contracts/Initializable.sol";
+import "openzeppelin-eth/contracts/token/ERC20/ERC20.sol";
+import "openzeppelin-eth/contracts/token/ERC20/ERC20Detailed.sol";
 import "./MIXRGovernance.sol";
 import "./IFees.sol";
 
@@ -12,17 +13,14 @@ import "./IFees.sol";
  * This means that in addition to the usual ERC20 features the MIXR token
  * can react to transfers of tokens other than itself.
  */
-contract MIXR is MIXRGovernance, ERC20, ERC20Detailed {
+contract MIXR is Initializable, MIXRGovernance, ERC20, ERC20Detailed {
 
     /**
      * @notice Constructor with the details of the ERC20.
      */
-    constructor(address _whitelist, address _fees)
-    public
-    ERC20Detailed("MIX", "MIX", 24)
-    MIXRGovernance(_whitelist, _fees)
-    {
-        
+    function initialize(address _whitelist, address _fees) public initializer {
+        ERC20Detailed.initialize("MIX", "MIX", 24);
+        MIXRGovernance.initialize(_whitelist, _fees);
     }
 
     /**
@@ -74,7 +72,7 @@ contract MIXR is MIXRGovernance, ERC20, ERC20Detailed {
                 _depositInTokenWei,
                 IFees(fees).DEPOSIT()
             );
-        uint256 depositInBasketWei = UtilsLib.convertTokenAmount(
+        uint256 depositInBasketWei = IFees(fees).convertTokenAmount(
             getDecimals(_token), 
             ERC20Detailed(address(this)).decimals(), 
             _depositInTokenWei
@@ -114,7 +112,7 @@ contract MIXR is MIXRGovernance, ERC20, ERC20Detailed {
         acceptedForRedemptions(_token)
     {
         // Calculate fee and redemption return
-        uint256 redemptionInTokenWei = UtilsLib.convertTokenAmount(
+        uint256 redemptionInTokenWei = IFees(fees).convertTokenAmount(
             ERC20Detailed(address(this)).decimals(), 
             getDecimals(_token), 
             _redemptionInBasketWei
@@ -127,7 +125,7 @@ contract MIXR is MIXRGovernance, ERC20, ERC20Detailed {
                 IFees(fees).REDEMPTION()
             );
         uint256 withoutFeeInBasketWei = _redemptionInBasketWei.sub(feeInBasketWei);
-        uint256 returnInTokenWei = UtilsLib.convertTokenAmount(
+        uint256 returnInTokenWei = IFees(fees).convertTokenAmount(
             ERC20Detailed(address(this)).decimals(), 
             getDecimals(_token), 
             withoutFeeInBasketWei

@@ -84,3 +84,4 @@ typings/
 *.png
 
 .secret
+.zos.session

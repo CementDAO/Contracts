@@ -50,4 +50,9 @@ interface IFees {
         address _basket,
         uint256 _transactionAmount
     ) external view returns (uint256);
+    function convertTokenAmount(
+        uint8 _originTokenDecimals, 
+        uint8 _destinationTokenDecimals, 
+        uint256 _amount
+    ) external pure returns (uint256);
 }

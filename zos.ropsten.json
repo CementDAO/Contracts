@@ -1,0 +1,745 @@
+{
+  "contracts": {
+    "Fees": {
+      "address": "0x6f159160f600657D0f1cc03cd18DfEE3Bc37d821",
+      "constructorCode": "608060405234801561001057600080fd5b506126d3806100206000396000f3fe",
+      "bodyBytecodeHash": "f429bc6eaca198a8b0f84055f4ab99bcda589012588266bc83f7dbd1cebb7dcf",
+      "localBytecodeHash": "964a023a748e4c328c85d79b12dff57924017ca7e731a80167e1c74d44d5561b",
+      "deployedBytecodeHash": "f6e19c8375795025b27ce63fd1ca474acf3a2b4052346025941e98a109833acd",
+      "types": {},
+      "storage": [],
+      "warnings": {
+        "hasConstructor": false,
+        "hasSelfDestruct": false,
+        "hasDelegateCall": false,
+        "hasInitialValuesInDeclarations": false,
+        "uninitializedBaseContracts": []
+      }
+    },
+    "MIXR": {
+      "address": "0xc1Aa4F8fA91050da827D98d09fD0C9F6c8205821",
+      "constructorCode": "6080604052603380546001600160a01b031916905534801561002057600080fd5b50614727806100306000396000f3fe",
+      "bodyBytecodeHash": "a381648f999d082649e23669081d8ebdce694905ad260b3cbdee2ba74ec90bbf",
+      "localBytecodeHash": "c747386f57266e1c3a756faeb91eb1029fe177d81dd4750bfb84566fb580ea25",
+      "deployedBytecodeHash": "09e925261c44c11237c8729e8403120aa6a240c71d40373c70072302b3263991",
+      "types": {
+        "t_bool": {
+          "id": "t_bool",
+          "kind": "elementary",
+          "label": "bool"
+        },
+        "t_uint256": {
+          "id": "t_uint256",
+          "kind": "elementary",
+          "label": "uint256"
+        },
+        "t_array:50<t_uint256>": {
+          "id": "t_array:50<t_uint256>",
+          "valueType": "t_uint256",
+          "length": "50",
+          "kind": "array",
+          "label": "uint256[50]"
+        },
+        "t_address": {
+          "id": "t_address",
+          "kind": "elementary",
+          "label": "address"
+        },
+        "t_int256": {
+          "id": "t_int256",
+          "kind": "elementary",
+          "label": "int256"
+        },
+        "t_struct<MIXRData.TokenData>": {
+          "id": "t_struct<MIXRData.TokenData>",
+          "kind": "struct",
+          "label": "MIXRData.TokenData",
+          "members": [
+            {
+              "label": "registered",
+              "astId": 2869,
+              "type": "t_bool",
+              "src": "1831:15:8"
+            },
+            {
+              "label": "decimals",
+              "astId": 2871,
+              "type": "t_uint8",
+              "src": "1958:14:8"
+            },
+            {
+              "label": "targetProportion",
+              "astId": 2873,
+              "type": "t_int256",
+              "src": "2394:23:8"
+            },
+            {
+              "label": "name",
+              "astId": 2875,
+              "type": "t_string",
+              "src": "2486:11:8"
+            },
+            {
+              "label": "symbol",
+              "astId": 2877,
+              "type": "t_string",
+              "src": "2507:13:8"
+            }
+          ]
+        },
+        "t_uint8": {
+          "id": "t_uint8",
+          "kind": "elementary",
+          "label": "uint8"
+        },
+        "t_string": {
+          "id": "t_string",
+          "kind": "elementary",
+          "label": "string"
+        },
+        "t_mapping<t_struct<MIXRData.TokenData>>": {
+          "id": "t_mapping<t_struct<MIXRData.TokenData>>",
+          "valueType": "t_struct<MIXRData.TokenData>",
+          "label": "mapping(key => MIXRData.TokenData)",
+          "kind": "mapping"
+        },
+        "t_array:dyn<t_address>": {
+          "id": "t_array:dyn<t_address>",
+          "valueType": "t_address",
+          "length": "dyn",
+          "kind": "array",
+          "label": "address[]"
+        },
+        "t_mapping<t_uint256>": {
+          "id": "t_mapping<t_uint256>",
+          "valueType": "t_uint256",
+          "label": "mapping(key => uint256)",
+          "kind": "mapping"
+        }
+      },
+      "storage": [
+        {
+          "contract": "Initializable",
+          "path": "zos-lib/contracts/Initializable.sol",
+          "label": "initialized",
+          "astId": 5655,
+          "type": "t_bool",
+          "src": "757:24:20"
+        },
+        {
+          "contract": "Initializable",
+          "path": "zos-lib/contracts/Initializable.sol",
+          "label": "initializing",
+          "astId": 5657,
+          "type": "t_bool",
+          "src": "876:25:20"
+        },
+        {
+          "contract": "Initializable",
+          "path": "zos-lib/contracts/Initializable.sol",
+          "label": "______gap",
+          "astId": 5706,
+          "type": "t_array:50<t_uint256>",
+          "src": "1891:29:20"
+        },
+        {
+          "contract": "MIXRData",
+          "path": "contracts/MIXRData.sol",
+          "label": "NULL_ADDRESS",
+          "astId": 2855,
+          "type": "t_address",
+          "src": "657:40:8"
+        },
+        {
+          "contract": "MIXRData",
+          "path": "contracts/MIXRData.sol",
+          "label": "baseDepositFee",
+          "astId": 2863,
+          "type": "t_int256",
+          "src": "1284:28:8"
+        },
+        {
+          "contract": "MIXRData",
+          "path": "contracts/MIXRData.sol",
+          "label": "baseRedemptionFee",
+          "astId": 2865,
+          "type": "t_int256",
+          "src": "1430:31:8"
+        },
+        {
+          "contract": "MIXRData",
+          "path": "contracts/MIXRData.sol",
+          "label": "baseTransferFee",
+          "astId": 2867,
+          "type": "t_int256",
+          "src": "1577:29:8"
+        },
+        {
+          "contract": "MIXRData",
+          "path": "contracts/MIXRData.sol",
+          "label": "tokens",
+          "astId": 2882,
+          "type": "t_mapping<t_struct<MIXRData.TokenData>>",
+          "src": "2622:43:8"
+        },
+        {
+          "contract": "MIXRData",
+          "path": "contracts/MIXRData.sol",
+          "label": "tokensList",
+          "astId": 2885,
+          "type": "t_array:dyn<t_address>",
+          "src": "2836:27:8"
+        },
+        {
+          "contract": "MIXRData",
+          "path": "contracts/MIXRData.sol",
+          "label": "BILDContract",
+          "astId": 2887,
+          "type": "t_address",
+          "src": "3256:27:8"
+        },
+        {
+          "contract": "Ownable",
+          "path": "openzeppelin-eth/contracts/ownership/Ownable.sol",
+          "label": "_owner",
+          "astId": 4964,
+          "type": "t_address",
+          "src": "302:22:16"
+        },
+        {
+          "contract": "Ownable",
+          "path": "openzeppelin-eth/contracts/ownership/Ownable.sol",
+          "label": "______gap",
+          "astId": 5075,
+          "type": "t_array:50<t_uint256>",
+          "src": "2186:29:16"
+        },
+        {
+          "contract": "MIXRGovernance",
+          "path": "contracts/MIXRGovernance.sol",
+          "label": "whitelist",
+          "astId": 3228,
+          "type": "t_address",
+          "src": "532:26:9"
+        },
+        {
+          "contract": "MIXRGovernance",
+          "path": "contracts/MIXRGovernance.sol",
+          "label": "fees",
+          "astId": 3230,
+          "type": "t_address",
+          "src": "564:21:9"
+        },
+        {
+          "contract": "ERC20",
+          "path": "openzeppelin-eth/contracts/token/ERC20/ERC20.sol",
+          "label": "_balances",
+          "astId": 5092,
+          "type": "t_mapping<t_uint256>",
+          "src": "774:46:17"
+        },
+        {
+          "contract": "ERC20",
+          "path": "openzeppelin-eth/contracts/token/ERC20/ERC20.sol",
+          "label": "_allowed",
+          "astId": 5098,
+          "type": "t_mapping<t_uint256>",
+          "src": "827:66:17"
+        },
+        {
+          "contract": "ERC20",
+          "path": "openzeppelin-eth/contracts/token/ERC20/ERC20.sol",
+          "label": "_totalSupply",
+          "astId": 5100,
+          "type": "t_uint256",
+          "src": "900:28:17"
+        },
+        {
+          "contract": "ERC20",
+          "path": "openzeppelin-eth/contracts/token/ERC20/ERC20.sol",
+          "label": "______gap",
+          "astId": 5514,
+          "type": "t_array:50<t_uint256>",
+          "src": "7661:29:17"
+        },
+        {
+          "contract": "ERC20Detailed",
+          "path": "openzeppelin-eth/contracts/token/ERC20/ERC20Detailed.sol",
+          "label": "_name",
+          "astId": 5525,
+          "type": "t_string",
+          "src": "382:20:18"
+        },
+        {
+          "contract": "ERC20Detailed",
+          "path": "openzeppelin-eth/contracts/token/ERC20/ERC20Detailed.sol",
+          "label": "_symbol",
+          "astId": 5527,
+          "type": "t_string",
+          "src": "408:22:18"
+        },
+        {
+          "contract": "ERC20Detailed",
+          "path": "openzeppelin-eth/contracts/token/ERC20/ERC20Detailed.sol",
+          "label": "_decimals",
+          "astId": 5529,
+          "type": "t_uint8",
+          "src": "436:23:18"
+        },
+        {
+          "contract": "ERC20Detailed",
+          "path": "openzeppelin-eth/contracts/token/ERC20/ERC20Detailed.sol",
+          "label": "______gap",
+          "astId": 5581,
+          "type": "t_array:50<t_uint256>",
+          "src": "1097:29:18"
+        }
+      ],
+      "warnings": {
+        "hasConstructor": false,
+        "hasSelfDestruct": false,
+        "hasDelegateCall": false,
+        "hasInitialValuesInDeclarations": false,
+        "uninitializedBaseContracts": []
+      }
+    },
+    "Whitelist": {
+      "address": "0x4ee726E71827000b7157b29f5b4Df3E7E3bc0FE6",
+      "constructorCode": "608060405234801561001057600080fd5b506105a6806100206000396000f3fe",
+      "bodyBytecodeHash": "82dcfeb382ab21f15ba9782bd2a93a31e1fcfed74887d2a4a55cfab7e7223f5b",
+      "localBytecodeHash": "b1b78dabc48d0e4c67d67eda195b8c80023667965e5fc3e2a660612a5ac95296",
+      "deployedBytecodeHash": "b1b78dabc48d0e4c67d67eda195b8c80023667965e5fc3e2a660612a5ac95296",
+      "types": {
+        "t_bool": {
+          "id": "t_bool",
+          "kind": "elementary",
+          "label": "bool"
+        },
+        "t_uint256": {
+          "id": "t_uint256",
+          "kind": "elementary",
+          "label": "uint256"
+        },
+        "t_array:50<t_uint256>": {
+          "id": "t_array:50<t_uint256>",
+          "valueType": "t_uint256",
+          "length": "50",
+          "kind": "array",
+          "label": "uint256[50]"
+        },
+        "t_address": {
+          "id": "t_address",
+          "kind": "elementary",
+          "label": "address"
+        },
+        "t_mapping<t_bool>": {
+          "id": "t_mapping<t_bool>",
+          "valueType": "t_bool",
+          "label": "mapping(key => bool)",
+          "kind": "mapping"
+        }
+      },
+      "storage": [
+        {
+          "contract": "Initializable",
+          "path": "zos-lib/contracts/Initializable.sol",
+          "label": "initialized",
+          "astId": 5655,
+          "type": "t_bool",
+          "src": "757:24:20"
+        },
+        {
+          "contract": "Initializable",
+          "path": "zos-lib/contracts/Initializable.sol",
+          "label": "initializing",
+          "astId": 5657,
+          "type": "t_bool",
+          "src": "876:25:20"
+        },
+        {
+          "contract": "Initializable",
+          "path": "zos-lib/contracts/Initializable.sol",
+          "label": "______gap",
+          "astId": 5706,
+          "type": "t_array:50<t_uint256>",
+          "src": "1891:29:20"
+        },
+        {
+          "contract": "Ownable",
+          "path": "openzeppelin-eth/contracts/ownership/Ownable.sol",
+          "label": "_owner",
+          "astId": 4964,
+          "type": "t_address",
+          "src": "302:22:16"
+        },
+        {
+          "contract": "Ownable",
+          "path": "openzeppelin-eth/contracts/ownership/Ownable.sol",
+          "label": "______gap",
+          "astId": 5075,
+          "type": "t_array:50<t_uint256>",
+          "src": "2186:29:16"
+        },
+        {
+          "contract": "Whitelist",
+          "path": "contracts/Whitelist.sol",
+          "label": "governors",
+          "astId": 3696,
+          "type": "t_mapping<t_bool>",
+          "src": "393:43:12"
+        },
+        {
+          "contract": "Whitelist",
+          "path": "contracts/Whitelist.sol",
+          "label": "stakeholders",
+          "astId": 3700,
+          "type": "t_mapping<t_bool>",
+          "src": "525:46:12"
+        }
+      ],
+      "warnings": {
+        "hasConstructor": false,
+        "hasSelfDestruct": false,
+        "hasDelegateCall": false,
+        "hasInitialValuesInDeclarations": false,
+        "uninitializedBaseContracts": []
+      }
+    },
+    "BILD": {
+      "address": "0x6f54CfA50BdD23B94621981B44F1b31eDd3E632F",
+      "constructorCode": "6080604052600019603355603480546001600160a01b0319169055670de0b6b3a7640000603655600a603a5534801561003757600080fd5b506142ce806100476000396000f3fe",
+      "bodyBytecodeHash": "9e6602e3b38d6aafc92c3a283296059870c0d1140878926aea0ff8f2b8d1cdc4",
+      "localBytecodeHash": "b55239e001d61edbfd45778d68e88d6437755fe256ff41da881b86227cd118b7",
+      "deployedBytecodeHash": "21c7559aba65d3446df3269508b80cc79e0c188fde7ecbc3d2d8c152a8e5db5e",
+      "types": {
+        "t_bool": {
+          "id": "t_bool",
+          "kind": "elementary",
+          "label": "bool"
+        },
+        "t_uint256": {
+          "id": "t_uint256",
+          "kind": "elementary",
+          "label": "uint256"
+        },
+        "t_array:50<t_uint256>": {
+          "id": "t_array:50<t_uint256>",
+          "valueType": "t_uint256",
+          "length": "50",
+          "kind": "array",
+          "label": "uint256[50]"
+        },
+        "t_address": {
+          "id": "t_address",
+          "kind": "elementary",
+          "label": "address"
+        },
+        "t_struct<BILDData.Agent>": {
+          "id": "t_struct<BILDData.Agent>",
+          "kind": "struct",
+          "label": "BILDData.Agent",
+          "members": [
+            {
+              "label": "name",
+              "astId": 889,
+              "type": "t_string",
+              "src": "1351:11:1"
+            },
+            {
+              "label": "contact",
+              "astId": 891,
+              "type": "t_string",
+              "src": "1372:14:1"
+            },
+            {
+              "label": "lowerAgent",
+              "astId": 893,
+              "type": "t_address",
+              "src": "1396:18:1"
+            }
+          ]
+        },
+        "t_string": {
+          "id": "t_string",
+          "kind": "elementary",
+          "label": "string"
+        },
+        "t_mapping<t_struct<BILDData.Agent>>": {
+          "id": "t_mapping<t_struct<BILDData.Agent>>",
+          "valueType": "t_struct<BILDData.Agent>",
+          "label": "mapping(key => BILDData.Agent)",
+          "kind": "mapping"
+        },
+        "t_struct<BILDData.Stake>": {
+          "id": "t_struct<BILDData.Stake>",
+          "kind": "struct",
+          "label": "BILDData.Stake",
+          "members": [
+            {
+              "label": "stakeholder",
+              "astId": 896,
+              "type": "t_address",
+              "src": "1526:19:1"
+            },
+            {
+              "label": "value",
+              "astId": 898,
+              "type": "t_uint256",
+              "src": "1555:13:1"
+            }
+          ]
+        },
+        "t_array:dyn<t_struct<BILDData.Stake>>": {
+          "id": "t_array:dyn<t_struct<BILDData.Stake>>",
+          "valueType": "t_struct<BILDData.Stake>",
+          "length": "dyn",
+          "kind": "array",
+          "label": "BILDData.Stake[]"
+        },
+        "t_mapping<t_array:dyn<t_struct<BILDData.Stake>>>": {
+          "id": "t_mapping<t_array:dyn<t_struct<BILDData.Stake>>>",
+          "valueType": "t_array:dyn<t_struct<BILDData.Stake>>",
+          "label": "mapping(key => BILDData.Stake[])",
+          "kind": "mapping"
+        },
+        "t_mapping<t_uint256>": {
+          "id": "t_mapping<t_uint256>",
+          "valueType": "t_uint256",
+          "label": "mapping(key => uint256)",
+          "kind": "mapping"
+        },
+        "t_uint8": {
+          "id": "t_uint8",
+          "kind": "elementary",
+          "label": "uint8"
+        }
+      },
+      "storage": [
+        {
+          "contract": "Initializable",
+          "path": "zos-lib/contracts/Initializable.sol",
+          "label": "initialized",
+          "astId": 5655,
+          "type": "t_bool",
+          "src": "757:24:20"
+        },
+        {
+          "contract": "Initializable",
+          "path": "zos-lib/contracts/Initializable.sol",
+          "label": "initializing",
+          "astId": 5657,
+          "type": "t_bool",
+          "src": "876:25:20"
+        },
+        {
+          "contract": "Initializable",
+          "path": "zos-lib/contracts/Initializable.sol",
+          "label": "______gap",
+          "astId": 5706,
+          "type": "t_array:50<t_uint256>",
+          "src": "1891:29:20"
+        },
+        {
+          "contract": "BILDData",
+          "path": "contracts/BILDData.sol",
+          "label": "NO_STAKES",
+          "astId": 875,
+          "type": "t_uint256",
+          "src": "523:107:1"
+        },
+        {
+          "contract": "BILDData",
+          "path": "contracts/BILDData.sol",
+          "label": "NULL_ADDRESS",
+          "astId": 880,
+          "type": "t_address",
+          "src": "736:42:1"
+        },
+        {
+          "contract": "BILDData",
+          "path": "contracts/BILDData.sol",
+          "label": "MIXRContract",
+          "astId": 882,
+          "type": "t_address",
+          "src": "955:29:1"
+        },
+        {
+          "contract": "BILDData",
+          "path": "contracts/BILDData.sol",
+          "label": "minimumStake",
+          "astId": 887,
+          "type": "t_uint256",
+          "src": "1090:38:1"
+        },
+        {
+          "contract": "BILDData",
+          "path": "contracts/BILDData.sol",
+          "label": "agents",
+          "astId": 903,
+          "type": "t_mapping<t_struct<BILDData.Agent>>",
+          "src": "1686:39:1"
+        },
+        {
+          "contract": "BILDData",
+          "path": "contracts/BILDData.sol",
+          "label": "highestAgent",
+          "astId": 905,
+          "type": "t_address",
+          "src": "1812:27:1"
+        },
+        {
+          "contract": "BILDData",
+          "path": "contracts/BILDData.sol",
+          "label": "lowestAgent",
+          "astId": 907,
+          "type": "t_address",
+          "src": "1930:26:1"
+        },
+        {
+          "contract": "BILDData",
+          "path": "contracts/BILDData.sol",
+          "label": "R",
+          "astId": 910,
+          "type": "t_uint256",
+          "src": "2085:23:1"
+        },
+        {
+          "contract": "BILDData",
+          "path": "contracts/BILDData.sol",
+          "label": "stakesByAgent",
+          "astId": 915,
+          "type": "t_mapping<t_array:dyn<t_struct<BILDData.Stake>>>",
+          "src": "2318:48:1"
+        },
+        {
+          "contract": "BILDData",
+          "path": "contracts/BILDData.sol",
+          "label": "stakesByHolder",
+          "astId": 919,
+          "type": "t_mapping<t_uint256>",
+          "src": "2747:49:1"
+        },
+        {
+          "contract": "Ownable",
+          "path": "openzeppelin-eth/contracts/ownership/Ownable.sol",
+          "label": "_owner",
+          "astId": 4964,
+          "type": "t_address",
+          "src": "302:22:16"
+        },
+        {
+          "contract": "Ownable",
+          "path": "openzeppelin-eth/contracts/ownership/Ownable.sol",
+          "label": "______gap",
+          "astId": 5075,
+          "type": "t_array:50<t_uint256>",
+          "src": "2186:29:16"
+        },
+        {
+          "contract": "BILDGovernance",
+          "path": "contracts/BILDGovernance.sol",
+          "label": "whitelist",
+          "astId": 1526,
+          "type": "t_address",
+          "src": "452:26:2"
+        },
+        {
+          "contract": "ERC20",
+          "path": "openzeppelin-eth/contracts/token/ERC20/ERC20.sol",
+          "label": "_balances",
+          "astId": 5092,
+          "type": "t_mapping<t_uint256>",
+          "src": "774:46:17"
+        },
+        {
+          "contract": "ERC20",
+          "path": "openzeppelin-eth/contracts/token/ERC20/ERC20.sol",
+          "label": "_allowed",
+          "astId": 5098,
+          "type": "t_mapping<t_uint256>",
+          "src": "827:66:17"
+        },
+        {
+          "contract": "ERC20",
+          "path": "openzeppelin-eth/contracts/token/ERC20/ERC20.sol",
+          "label": "_totalSupply",
+          "astId": 5100,
+          "type": "t_uint256",
+          "src": "900:28:17"
+        },
+        {
+          "contract": "ERC20",
+          "path": "openzeppelin-eth/contracts/token/ERC20/ERC20.sol",
+          "label": "______gap",
+          "astId": 5514,
+          "type": "t_array:50<t_uint256>",
+          "src": "7661:29:17"
+        },
+        {
+          "contract": "ERC20Detailed",
+          "path": "openzeppelin-eth/contracts/token/ERC20/ERC20Detailed.sol",
+          "label": "_name",
+          "astId": 5525,
+          "type": "t_string",
+          "src": "382:20:18"
+        },
+        {
+          "contract": "ERC20Detailed",
+          "path": "openzeppelin-eth/contracts/token/ERC20/ERC20Detailed.sol",
+          "label": "_symbol",
+          "astId": 5527,
+          "type": "t_string",
+          "src": "408:22:18"
+        },
+        {
+          "contract": "ERC20Detailed",
+          "path": "openzeppelin-eth/contracts/token/ERC20/ERC20Detailed.sol",
+          "label": "_decimals",
+          "astId": 5529,
+          "type": "t_uint8",
+          "src": "436:23:18"
+        },
+        {
+          "contract": "ERC20Detailed",
+          "path": "openzeppelin-eth/contracts/token/ERC20/ERC20Detailed.sol",
+          "label": "______gap",
+          "astId": 5581,
+          "type": "t_array:50<t_uint256>",
+          "src": "1097:29:18"
+        }
+      ],
+      "warnings": {
+        "hasConstructor": false,
+        "hasSelfDestruct": false,
+        "hasDelegateCall": false,
+        "hasInitialValuesInDeclarations": false,
+        "uninitializedBaseContracts": []
+      }
+    }
+  },
+  "solidityLibs": {
+    "UtilsLib": {
+      "address": "0x11582fe4893DF114D5C4AD30BD0be01790b1F759",
+      "constructorCode": "6102c4610026600b82828239805160001a60731461001957fe5b30600052607381538281f3fe",
+      "bodyBytecodeHash": "0382273664cfa41ffaa155f2b3232a2a7d1692aa7c4f99de9e8c5b90124b6200",
+      "localBytecodeHash": "694779e0b01bb34707e1889bb779be7078d2c5b644ae455bcc07b8ca503c9461",
+      "deployedBytecodeHash": "694779e0b01bb34707e1889bb779be7078d2c5b644ae455bcc07b8ca503c9461"
+    },
+    "FixidityLib": {
+      "address": "0x5C669e531EFED64Ba2A4B93A07C028Cb6C516a75",
+      "constructorCode": "610c1e610026600b82828239805160001a60731461001957fe5b30600052607381538281f3fe",
+      "bodyBytecodeHash": "1cdfad6514a233c68b7f60d7531b25953db39178c815adf1ae9420bcae011390",
+      "localBytecodeHash": "53d411a4fb777e7ca084dc03f48785e9a6ce61cb4bb782e77cfd998d23ee7889",
+      "deployedBytecodeHash": "53d411a4fb777e7ca084dc03f48785e9a6ce61cb4bb782e77cfd998d23ee7889"
+    }
+  },
+  "proxies": {},
+  "zosversion": "2.2",
+  "version": "0.1.0",
+  "dependencies": {
+    "openzeppelin-eth": {
+      "package": "0x2a9e7b63514438906a83a1e320dbbd814d417002",
+      "version": "2.1.3"
+    }
+  }
+}
