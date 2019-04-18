@@ -1,4 +1,4 @@
-const BILD = artifacts.require('./BILD.sol'); 
+const BILD = artifacts.require('./BILD.sol');
 const Whitelist = artifacts.require('./Whitelist.sol');
 const UtilsLib = artifacts.require('./UtilsLib.sol');
 

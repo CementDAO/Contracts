@@ -1,6 +1,6 @@
 const MIXR = artifacts.require('./MIXR.sol');
 const Whitelist = artifacts.require('./Whitelist.sol');
-const FeesMock = artifacts.require('./FeesMock.sol');
+const Fees = artifacts.require('./Fees.sol');
 const FixidityLibMock = artifacts.require('./FixidityLibMock.sol');
 const SampleDetailedERC20 = artifacts.require('./test/SampleDetailedERC20.sol');
 
@@ -14,7 +14,7 @@ chai.use(require('chai-bignumber')()).should();
 contract('Fees', (accounts) => {
     let mixr;
     let whitelist;
-    let feesMock;
+    let fees;
     let fixidityLibMock;
     let sampleDetailedERC20;
     let sampleDetailedERC20Other;
@@ -31,13 +31,13 @@ contract('Fees', (accounts) => {
     before(async () => {
         mixr = await MIXR.deployed();
         whitelist = await Whitelist.deployed();
-        feesMock = await FeesMock.deployed();
+        fees = await Fees.deployed();
         fixidityLibMock = await FixidityLibMock.deployed();
         sampleDetailedERC20 = await SampleDetailedERC20.deployed();
         sampleDetailedERC20Other = await SampleDetailedERC20.deployed();
         fixed1 = new BigNumber(await fixidityLibMock.fixed1());
-        DEPOSIT = await feesMock.DEPOSIT();
-        REDEMPTION = await feesMock.REDEMPTION();
+        DEPOSIT = await fees.DEPOSIT();
+        REDEMPTION = await fees.REDEMPTION();
     });
 
     describe('proportion after transaction functionality', () => {
@@ -46,7 +46,7 @@ contract('Fees', (accounts) => {
             sampleERC20DecimalsOther = 18;
             const amountToUser = tokenNumber(sampleERC20Decimals, 80);
             whitelist = await Whitelist.new();
-            mixr = await MIXR.new(whitelist.address);
+            mixr = await MIXR.new(whitelist.address, fees.address);
             await whitelist.addGovernor(governor, {
                 from: owner,
             });
@@ -103,7 +103,7 @@ contract('Fees', (accounts) => {
         });
         it('proportionAfterTransaction(token, basket, 1, DEPOSIT) with an empty basket', async () => {
             const result = new BigNumber(
-                await feesMock.proportionAfterTransaction(
+                await fees.proportionAfterTransaction(
                     sampleDetailedERC20.address,
                     mixr.address,
                     1,
@@ -147,9 +147,9 @@ contract('Fees', (accounts) => {
                     from: governor,
                 },
             );
-            
+
             const result = new BigNumber(
-                await feesMock.proportionAfterTransaction(
+                await fees.proportionAfterTransaction(
                     sampleDetailedERC20.address,
                     mixr.address,
                     1,
@@ -195,7 +195,7 @@ contract('Fees', (accounts) => {
             );
 
             const result = new BigNumber(
-                await feesMock.proportionAfterTransaction(
+                await fees.proportionAfterTransaction(
                     sampleDetailedERC20Other.address,
                     mixr.address,
                     1,
@@ -208,7 +208,7 @@ contract('Fees', (accounts) => {
         it('proportionAfterTransaction(token, basket, 100 tokens, DEPOSIT) with an empty basket', async () => {
             const amountTokens = new BigNumber(10).pow(18).multipliedBy(100);
             const result = new BigNumber(
-                await feesMock.proportionAfterTransaction(
+                await fees.proportionAfterTransaction(
                     sampleDetailedERC20.address,
                     mixr.address,
                     amountTokens.toString(10),
@@ -221,7 +221,7 @@ contract('Fees', (accounts) => {
         it('proportionAfterTransaction(token, basket, 1000000 tokens, DEPOSIT) with an empty basket', async () => {
             const amountTokens = new BigNumber(10).pow(24);
             const result = new BigNumber(
-                await feesMock.proportionAfterTransaction(
+                await fees.proportionAfterTransaction(
                     sampleDetailedERC20.address,
                     mixr.address,
                     amountTokens.toString(10),
@@ -234,7 +234,7 @@ contract('Fees', (accounts) => {
         it('proportionAfterTransaction(token, basket, 10**12 tokens, DEPOSIT) with an empty basket', async () => {
             const amountTokens = new BigNumber(10).pow(30);
             const result = new BigNumber(
-                await feesMock.proportionAfterTransaction(
+                await fees.proportionAfterTransaction(
                     sampleDetailedERC20.address,
                     mixr.address,
                     amountTokens.toString(10),
@@ -303,7 +303,7 @@ contract('Fees', (accounts) => {
             );
 
             const result = new BigNumber(
-                await feesMock.proportionAfterTransaction(
+                await fees.proportionAfterTransaction(
                     sampleDetailedERC20.address,
                     mixr.address,
                     1,
@@ -371,7 +371,7 @@ contract('Fees', (accounts) => {
             );
 
             const result = new BigNumber(
-                await feesMock.proportionAfterTransaction(
+                await fees.proportionAfterTransaction(
                     sampleDetailedERC20.address,
                     mixr.address,
                     2,
@@ -389,7 +389,7 @@ contract('Fees', (accounts) => {
             sampleERC20DecimalsOther = 18;
             const amountToUser = tokenNumber(sampleERC20Decimals, 80);
             whitelist = await Whitelist.new();
-            mixr = await MIXR.new(whitelist.address);
+            mixr = await MIXR.new(whitelist.address, fees.address);
             await whitelist.addGovernor(governor, {
                 from: owner,
             });
@@ -438,7 +438,7 @@ contract('Fees', (accounts) => {
 
         it('deviationAfterTransaction(x, basket, 1, DEPOSIT) with empty basket', async () => {
             const result = new BigNumber(
-                await feesMock.deviationAfterTransaction(
+                await fees.deviationAfterTransaction(
                     sampleDetailedERC20.address,
                     mixr.address,
                     1,
@@ -480,7 +480,7 @@ contract('Fees', (accounts) => {
             );
 
             const result = new BigNumber(
-                await feesMock.deviationAfterTransaction(
+                await fees.deviationAfterTransaction(
                     sampleDetailedERC20.address,
                     mixr.address,
                     amountToTransfer.toString(10),
@@ -529,7 +529,7 @@ contract('Fees', (accounts) => {
             );
 
             const result = new BigNumber(
-                await feesMock.deviationAfterTransaction(
+                await fees.deviationAfterTransaction(
                     sampleDetailedERC20.address,
                     mixr.address,
                     amountToTransfer.toString(10),

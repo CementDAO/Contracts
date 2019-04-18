@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.7;
 
 import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
@@ -6,7 +6,8 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "fixidity/contracts/FixidityLib.sol";
 import "fixidity/contracts/LogarithmLib.sol";
 import "./UtilsLib.sol";
-import "./MIXR.sol";
+import "./IMIXR.sol";
+import "./IFees.sol";
 
 
 /**
@@ -16,8 +17,12 @@ import "./MIXR.sol";
  * CementDAO whitepaper formulas, using FixidityLib for arithmetic and MIXR.sol
  * to retrieve token basket parameters.
  */
-library Fees {
+contract Fees is IFees {
     using SafeMath for uint256;
+
+    constructor() public {
+        //
+    }
 
     /**
      * @notice Accepted transaction type for the proportion, deviation and fee
@@ -70,7 +75,7 @@ library Fees {
         view
         returns (int256)
     {
-        MIXR mixr = MIXR(_basket);
+        IMIXR mixr = IMIXR(_basket);
 
         int256 tokenBalance = FixidityLib.newFixed(
             // The command below returns the balance of _token with this.decimals precision
@@ -112,7 +117,7 @@ library Fees {
                 tokenBalance, 
                 transactionAmount
             );
-        } else revert("Transaction type not accepted.");
+        } else revert("Type not accepted.");
 
         // The amount to redeem needs to be added to the basket balance to avoid
         // dividing by zero on an empty basket.
@@ -173,7 +178,7 @@ library Fees {
                 _transactionAmount,
                 _transactionType
             ),
-            MIXRData(_basket).getTargetProportion(_token)
+            IMIXR(_basket).getTargetProportion(_token)
         );
         assert(
             result >= FixidityLib.fixed1()*(-1) && 
@@ -263,9 +268,9 @@ library Fees {
     {
         require(_fee >= 0, "Attempted to apply a negative fee.");
         int256 validatedFee = _fee;
-        MIXR mixr = MIXR(_basket);
-        if (validatedFee < mixr.getMinimumFee()) 
-            validatedFee = mixr.getMinimumFee();
+        IMIXR mixr = IMIXR(_basket);
+        if (validatedFee < mixr.minimumFee()) 
+            validatedFee = mixr.minimumFee();
 
         int256 transactionAmount = FixidityLib.newFixed(
             UtilsLib.safeCast(_transactionAmount), 
@@ -312,7 +317,7 @@ library Fees {
                 _basket,
                 _transactionAmount
             );
-        } else revert("Transaction type not accepted.");
+        } else revert("Type not accepted.");
     }
 
     /**
@@ -331,7 +336,7 @@ library Fees {
         view
         returns (uint256) 
     {
-        MIXR mixr = MIXR(_basket);
+        IMIXR mixr = IMIXR(_basket);
         int256 targetProportion = mixr.getTargetProportion(_token);
         
         int256 deviation = deviationAfterTransaction(
@@ -341,7 +346,7 @@ library Fees {
             DEPOSIT()
         );
         
-        int256 baseFee = mixr.getDepositFee();
+        int256 baseFee = mixr.baseDepositFee();
         int256 fee;
 
         // Floors and ceilings
@@ -365,7 +370,7 @@ library Fees {
         int256 logitPoint = calculateLogit(targetProportion, deviation);
         int256 scaledLogit = scaleLogit(
             baseFee,
-            mixr.getScalingFactor(),
+            mixr.scalingFactor(),
             logitPoint
         );
 
@@ -400,7 +405,7 @@ library Fees {
         view
         returns (uint256) 
     {
-        MIXR mixr = MIXR(_basket);
+        IMIXR mixr = IMIXR(_basket);
         int256 targetProportion = mixr.getTargetProportion(_token);
         
         // The fee calculation formula implies a division by zero if the target proportion is zero.
@@ -409,7 +414,7 @@ library Fees {
                 _token, 
                 _basket,
                 _transactionAmount, 
-                mixr.getMinimumFee()
+                mixr.minimumFee()
             );
 
         int256 deviation = deviationAfterTransaction(
@@ -419,7 +424,7 @@ library Fees {
             REDEMPTION()
         );
         
-        int256 baseFee = mixr.getRedemptionFee();
+        int256 baseFee = mixr.baseRedemptionFee();
         int256 fee;
 
         // Floors and ceilings
@@ -445,7 +450,7 @@ library Fees {
 
         int256 scaledLogit = scaleLogit(
             baseFee,
-            mixr.getScalingFactor(),
+            mixr.scalingFactor(),
             logitPoint
         );
 

@@ -1,11 +1,10 @@
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.7;
 
-// import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
-// import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "fixidity/contracts/FixidityLib.sol";
 import "./UtilsLib.sol";
+import "./IMIXR.sol";
 
 
 /**
@@ -14,12 +13,13 @@ import "./UtilsLib.sol";
  * @notice Implements a basket of stablecoins as an ERC20 token, as described
  * in the CementDAO whitepaper.
  */
-contract MIXRData {
+contract MIXRData is IMIXR {
     using SafeMath for uint256;
 
     /**
      * @notice An initializated address.
      */
+    // solium-disable-next-line mixedcase
     address public NULL_ADDRESS = address(0);
 
     /**
@@ -38,15 +38,15 @@ contract MIXRData {
     /**
      * @notice The base deposit percentage fees in fixed point units (FixidityLib.digits()).
      */
-    int256 baseDepositFee;
+    int256 public baseDepositFee;
     /**
      * @notice The base redemption percentage fees in fixed point units (FixidityLib.digits()).
      */
-    int256 baseRedemptionFee;
+    int256 public baseRedemptionFee;
     /**
      * @notice The base transfer percentage fees in fixed point units (FixidityLib.digits()).
      */
-    int256 baseTransferFee;
+    int256 public baseTransferFee;
 
     /**
      * @notice Additional token data which is required for MIXR transactions.
@@ -79,12 +79,12 @@ contract MIXRData {
     /**
      * @notice Mapping of tokens either candidates for or in the basket.
      */
-    mapping(address => TokenData) internal tokens;
+    mapping(address => TokenData) public tokens;
     /**
      * @dev Since it's not possible to iterate over a mapping, it's necessary
      * to have an array to iterate over it and verify all the entries.
      */
-    address[] internal tokensList;
+    address[] public tokensList;
 
     /**
      * @notice (C13) As a Stablecoin Holder, I would like to be able to pay any
@@ -95,7 +95,8 @@ contract MIXRData {
     /**
      * @notice BILD Contract address, which will receive the fees before they are distributed to stakeholders.
      */
-    address internal BILDContract;
+    // solium-disable-next-line mixedcase
+    address public BILDContract;
 
     /**
      * @dev This is one of the possible solutions allowing to check
@@ -110,13 +111,13 @@ contract MIXRData {
         // solium-disable-next-line security/no-inline-assembly
         assembly { size := extcodesize(_token) }
         require(
-            size > 0, "The specified address doesn't look like a deployed contract."
+            size > 0, "Address is not a contract."
         );
 
         require(
             IERC20(_token).balanceOf(_token) >= 0 &&
             IERC20(_token).totalSupply() >= 0,
-            "The provided address doesn't look like a valid ERC20 implementation."
+            "Address is not an ERC20."
         );
         _;
     }
@@ -130,7 +131,7 @@ contract MIXRData {
         TokenData memory token = tokens[_token];
         require(
             token.registered == true,
-            "The given token is not registered."
+            "Token is not registered."
         );
         _;
     }
@@ -146,11 +147,11 @@ contract MIXRData {
         TokenData memory token = tokens[_token];
         require(
             token.registered == true,
-            "The given token is not registered."
+            "Token is not registered."
         );
         require(
             token.targetProportion > 0,
-            "The given token can't be deposited, the target proportion is 0."
+            "Target proportion is 0."
         );
         _;
     }
@@ -166,35 +167,13 @@ contract MIXRData {
         TokenData memory token = tokens[_token];
         require(
             token.registered == true,
-            "The given token is not registered."
+            "Token is not registered."
         );
         require(
             IERC20(_token).balanceOf(address(this)) > 0,
-            "MIXR doesn't contain any of the given tokens."
+            "No given tokens."
         );
         _;
-    }
-
-    /**
-     * @notice Returns the scaling factor for MIXR, in fixed point units.
-     */
-    function getScalingFactor() 
-    public
-    pure
-    returns(int256)
-    {
-        return scalingFactor;
-    }
-
-    /**
-     * @notice Returns minimum fee that will be charged for transactions, in MIX wei.
-     */
-    function getMinimumFee() 
-    public
-    pure
-    returns(int256)
-    {
-        return minimumFee;
     }
 
     /**
@@ -262,36 +241,29 @@ contract MIXRData {
     }
 
     /**
-     * @notice Returns the base deposit fee, in MIX wei.
+     * Generic method to get available tokens under some condition
      */
-    function getDepositFee() 
-    public
-    view
-    returns(int256)
+    function getTokensIf(uint8 _conditionN)
+        public 
+        view 
+        returns(address[] memory) 
     {
-        return baseDepositFee;
-    }
-
-    /**
-     * @notice Returns the base redemption fee, in MIX wei.
-     */
-    function getRedemptionFee() 
-    public
-    view
-    returns(int256)
-    {
-        return baseRedemptionFee;
-    }
-
-    /**
-     * @notice Returns the base transfer fee, in MIX wei.
-     */
-    function getTransferFee() 
-    public
-    view
-    returns(int256)
-    {
-        return baseTransferFee;
+        uint256 totalAddresses = tokensList.length;
+        uint256 activeIndex = 0;
+        address[] memory activeAddresses = new address[](totalAddresses);
+        for (uint256 totalIndex = 0; totalIndex < totalAddresses; totalIndex += 1) {
+            TokenData memory token = tokens[tokensList[totalIndex]];
+            if (
+                (_conditionN == 1 && token.registered) ||
+                (_conditionN == 2 && token.registered && token.targetProportion > 0) ||
+                (_conditionN == 3 && token.registered && IERC20(tokensList[totalIndex]).balanceOf(address(this)) > 0)
+            ) {
+                activeAddresses[activeIndex] = tokensList[totalIndex];
+                activeIndex += 1; // Unlikely to overflow
+            }
+        }
+        // Do we need to return activeIndex? Can't the caller use activeAddresses.length?
+        return activeAddresses;
     }
 
     /**
@@ -300,20 +272,9 @@ contract MIXRData {
     function getRegisteredTokens() 
         public 
         view 
-        returns(address[] memory, uint256) 
+        returns(address[] memory) 
     {
-        uint256 totalAddresses = tokensList.length;
-        uint256 activeIndex = 0;
-        address[] memory activeAddresses = new address[](totalAddresses);
-        for (uint256 totalIndex = 0; totalIndex < totalAddresses; totalIndex += 1) {
-            TokenData memory token = tokens[tokensList[totalIndex]];
-            if (token.registered) {
-                activeAddresses[activeIndex] = tokensList[totalIndex];
-                activeIndex += 1; // Unlikely to overflow
-            }
-        }
-        // Do we need to return activeIndex? Can't the caller use activeAddresses.length?
-        return (activeAddresses, activeIndex);
+        return getTokensIf(1);
     }
 
     /**
@@ -322,20 +283,9 @@ contract MIXRData {
     function getTokensAcceptedForDeposits()
         public
         view
-        returns(address[] memory, uint256)
+        returns(address[] memory)
     {
-        uint256 totalAddresses = tokensList.length;
-        uint256 activeIndex = 0;
-        address[] memory activeAddresses = new address[](totalAddresses);
-        for (uint256 totalIndex = 0; totalIndex < totalAddresses; totalIndex += 1) {
-            TokenData memory token = tokens[tokensList[totalIndex]];
-            if (token.registered && token.targetProportion > 0) {
-                activeAddresses[activeIndex] = tokensList[totalIndex];
-                activeIndex += 1; // Unlikely to overflow
-            }
-        }
-        // Do we need to return activeIndex? Can't the caller use activeAddresses.length?
-        return (activeAddresses, activeIndex);
+        return getTokensIf(2);
     }
 
     /**
@@ -344,20 +294,8 @@ contract MIXRData {
     function getTokensAcceptedForRedemptions()
         public
         view
-        returns(address[] memory, uint256)
+        returns(address[] memory)
     {
-        uint256 totalAddresses = tokensList.length;
-        uint256 activeIndex = 0;
-        address[] memory activeAddresses = new address[](totalAddresses);
-        for (uint256 totalIndex = 0; totalIndex < totalAddresses; totalIndex += 1) {
-            address tokenAddress = tokensList[totalIndex];
-            TokenData memory token = tokens[tokenAddress];
-            if (token.registered && IERC20(tokenAddress).balanceOf(address(this)) > 0) {
-                activeAddresses[activeIndex] = tokensList[totalIndex];
-                activeIndex += 1; // Unlikely to overflow
-            }
-        }
-        // Do we need to return activeIndex? Can't the caller use activeAddresses.length?
-        return (activeAddresses, activeIndex);
+        return getTokensIf(3);
     }
 }

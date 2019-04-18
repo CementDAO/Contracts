@@ -1,13 +1,15 @@
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.7;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "./IWhitelist.sol";
+
 
 /**
  * @title Whitelist.
  * @author Bernardo Vieira, Alberto Cuesta Canada
  * @notice Implements a whitelist for contract governance.
  */
-contract Whitelist is Ownable {
+contract Whitelist is IWhitelist, Ownable {
 
     /**
      * @notice Whitelist of addresses that can do governance.
@@ -27,7 +29,7 @@ contract Whitelist is Ownable {
     modifier onlyGovernor() {
         require(
             isGovernor(msg.sender),
-            "Message sender isn't part of the governance whitelist."
+            "Not allowed."
         );
         _;
     }

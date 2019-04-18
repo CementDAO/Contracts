@@ -1,9 +1,8 @@
 const BILD = artifacts.require('./BILD.sol');
 const Whitelist = artifacts.require('./Whitelist.sol');
 
-const BigNumber = require('bignumber.js');
 const chai = require('chai');
-const { itShouldThrow, tokenNumber } = require('./utils');
+const { tokenNumber } = require('./utils');
 // use default BigNumber
 chai.use(require('chai-bignumber')()).should();
 
@@ -15,24 +14,14 @@ contract('BILD', (accounts) => {
     const distributor = accounts[1];
     const governor = accounts[2];
     const stakeholder1 = accounts[3];
-    const stakeholder2 = accounts[4];
-    const stakeholder3 = accounts[5];
-    const agent1 = accounts[6];
-    const agent2 = accounts[7];
-    const agent3 = accounts[8];
     let oneBILDToken;
-    let twoBILDTokens;
     let manyBILDTokens;
-    let minimumStake;
-    let NO_STAKES;
 
     before(async () => {
         bild = await BILD.deployed();
         whitelist = await Whitelist.deployed();
         oneBILDToken = tokenNumber(bildDecimals, 1);
-        twoBILDTokens = tokenNumber(bildDecimals, 2);
         manyBILDTokens = tokenNumber(bildDecimals, 100);
-        minimumStake = oneBILDToken;
     });
 
     describe('calculate R', () => {
@@ -53,12 +42,13 @@ contract('BILD', (accounts) => {
                 { from: distributor },
             );
 
-            for (var i=0; i < 9; i++){
+            for (let i = 0; i < 9; i += 1) {
+                // eslint-disable-next-line no-await-in-loop
                 await bild.nominateAgent(
-                    '0x2191ef87e392377ec08e7c08eb105ef5448eced' + i,
+                    `0x2191ef87e392377ec08e7c08eb105ef5448eced${i}`,
                     oneBILDToken,
-                    'agent' + i,
-                    'contact' + i,
+                    `agent${i}`,
+                    `contact${i}`,
                     {
                         from: stakeholder1,
                     },
@@ -67,22 +57,23 @@ contract('BILD', (accounts) => {
         });
         it('Less agents than R', async () => {
             const R = await bild.calculateR();
-            assert.equal(R, 9); 
+            assert.equal(R, 9);
         });
         it('More agents than R', async () => {
-            for (var i=0; i < 2; i++){
+            for (let i = 0; i < 2; i += 1) {
+                // eslint-disable-next-line no-await-in-loop
                 await bild.nominateAgent(
-                    '0x2191ef87e392377ec08e7c08eb105ef5448ecee' + i,
+                    `0x2191ef87e392377ec08e7c08eb105ef5448ecee${i}`,
                     oneBILDToken,
-                    'agent1' + i,
-                    'contact1' + i,
+                    `agent1${i}`,
+                    `contact1${i}`,
                     {
                         from: stakeholder1,
                     },
                 );
             }
             const R = await bild.calculateR();
-            assert.equal(R, 10); 
+            assert.equal(R, 10);
         });
     });
 });

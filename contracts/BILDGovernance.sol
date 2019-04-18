@@ -1,9 +1,10 @@
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.7;
 
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "./BILDData.sol";
-import "./Whitelist.sol";
+import "./IWhitelist.sol";
+
 
 /**
  * @title BILD Governance.
@@ -29,8 +30,8 @@ contract BILDGovernance is BILDData, Ownable {
      */
     modifier onlyGovernor() {
         require(
-            Whitelist(whitelist).isGovernor(msg.sender),
-            "Message sender isn't part of the governance whitelist."
+            IWhitelist(whitelist).isGovernor(msg.sender),
+            "Not allowed."
         );
         _;
     }
