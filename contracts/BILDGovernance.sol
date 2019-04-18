@@ -1,4 +1,4 @@
-pragma solidity ^0.5.7;
+pragma solidity ^0.5.0;
 
 import "zos-lib/contracts/Initializable.sol";
 import "openzeppelin-eth/contracts/token/ERC20/ERC20Detailed.sol";
@@ -17,10 +17,12 @@ contract BILDGovernance is Initializable, BILDData, Ownable {
     address internal whitelist;
     /**
      * @notice Constructor of the BILD Governance layer.
-     * @param _whitelist The address for the governance and BILD holding authorized individuals.
+     * @param _owner the contract owner
+     * @param _whitelistContract The address for the governance and BILD holding authorized individuals.
      */
-    function initialize(address _whitelist) public initializer {
-        whitelist = _whitelist;
+    function initialize(address _owner, address _whitelistContract) public initializer {
+        Ownable.initialize(_owner);
+        whitelist = _whitelistContract;
     }
 
     /**

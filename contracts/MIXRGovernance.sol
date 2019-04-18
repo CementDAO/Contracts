@@ -1,4 +1,4 @@
-pragma solidity ^0.5.7;
+pragma solidity ^0.5.0;
 
 import "zos-lib/contracts/Initializable.sol";
 import "openzeppelin-eth/contracts/token/ERC20/ERC20Detailed.sol";
@@ -23,8 +23,9 @@ contract MIXRGovernance is Initializable, MIXRData, Ownable {
     /**
      * @notice Constructor with the details of the ERC20.
      */
-    function initialize(address _whitelist, address _fees) public initializer {
-        whitelist = _whitelist;
+    function initialize(address _owner, address _whitelistContract, address _fees) public initializer {
+        Ownable.initialize(_owner);
+        whitelist = _whitelistContract;
         fees = _fees;
     }
 

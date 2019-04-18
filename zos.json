@@ -6,7 +6,8 @@
     "Fees": "Fees",
     "Whitelist": "Whitelist",
     "MIXR": "MIXR",
-    "BILD": "BILD"
+    "BILD": "BILD",
+    "SampleDetailedERC20": "SampleDetailedERC20"
   },
   "dependencies": {
     "openzeppelin-eth": "^2.1.3"

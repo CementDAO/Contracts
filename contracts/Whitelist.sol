@@ -1,4 +1,4 @@
-pragma solidity ^0.5.7;
+pragma solidity ^0.5.0;
 
 import "openzeppelin-eth/contracts/ownership/Ownable.sol";
 import "./IWhitelist.sol";
@@ -38,7 +38,7 @@ contract Whitelist is Initializable, IWhitelist, Ownable {
      * @dev nitialize method
      */
     function initialize(address sender) public initializer {
-        // Ownable.initialize(sender);
+        Ownable.initialize(sender);
     }
 
     /**

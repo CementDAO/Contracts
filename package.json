@@ -32,7 +32,8 @@
     "bignumber.js": "8.0.2",
     "fixidity": "file:../Fixidity",
     "openzeppelin-eth": "file:../openzeppelin-eth",
-    "zos-lib": "2.2.3"
+    "zos-lib": "2.2.3",
+    "zos": "2.2.3"
   },
   "devDependencies": {
     "chai": "^4.2.0",
@@ -49,7 +50,6 @@
     "solidity-coverage": "0.6.0-beta.3",
     "surya": "0.2.8",
     "truffle": "5.0.13",
-    "truffle-hdwallet-provider": "^1.0.7",
-    "zos": "2.2.3"
+    "truffle-hdwallet-provider": "^1.0.7"
   }
 }

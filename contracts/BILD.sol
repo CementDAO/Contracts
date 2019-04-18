@@ -1,4 +1,4 @@
-pragma solidity ^0.5.7;
+pragma solidity ^0.5.0;
 
 import "zos-lib/contracts/Initializable.sol";
 import "openzeppelin-eth/contracts/token/ERC20/ERC20.sol";
@@ -21,10 +21,11 @@ contract BILD is Initializable, BILDGovernance, ERC20, ERC20Detailed {
      * @notice Constructor of the BILD Business Layer. BILD is constructed as an ERC20Detailed with 18 decimals 
      * and 10**9 tokens are minted and assigned to the distributor account.
      * @param _distributor The account that will receive all BILD tokens on contract creation.
-     * @param _whitelist The address for the governance and BILD holding authorized individuals.
+     * @param _owner the contract owner
+     * @param _whitelistContract The address for the governance and BILD holding authorized individuals.
      */
-    function initialize(address _distributor, address _whitelist) public initializer {
-        BILDGovernance.initialize(_whitelist);
+    function initialize(address _distributor, address _owner, address _whitelistContract) public initializer {
+        BILDGovernance.initialize(_owner, _whitelistContract);
         ERC20Detailed.initialize("BILD", "BILD", 18);
         _mint(_distributor, 10**27);
     }

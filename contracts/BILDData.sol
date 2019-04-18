@@ -1,4 +1,4 @@
-pragma solidity ^0.5.7;
+pragma solidity ^0.5.0;
 
 import "openzeppelin-eth/contracts/math/SafeMath.sol";
 import "./UtilsLib.sol";
@@ -31,7 +31,7 @@ contract BILDData {
      * @dev Used only to calculate R from MIXR.totalSupply().
      */
     // solium-disable-next-line mixedcase
-    address internal MIXRContract;
+    address public MIXRContract;
 
     /**
      * @notice Minimum BILD wei that are accepted to nominate a new Curation Agent

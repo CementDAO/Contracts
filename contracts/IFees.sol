@@ -1,4 +1,4 @@
-pragma solidity ^0.5.7;
+pragma solidity ^0.5.0;
 
 interface IFees {
     // solium-disable-next-line mixedcase

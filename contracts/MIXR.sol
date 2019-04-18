@@ -1,4 +1,4 @@
-pragma solidity ^0.5.7;
+pragma solidity ^0.5.0;
 
 import "zos-lib/contracts/Initializable.sol";
 import "openzeppelin-eth/contracts/token/ERC20/ERC20.sol";
@@ -18,9 +18,9 @@ contract MIXR is Initializable, MIXRGovernance, ERC20, ERC20Detailed {
     /**
      * @notice Constructor with the details of the ERC20.
      */
-    function initialize(address _whitelist, address _fees) public initializer {
+    function initialize(address _owner, address _whitelistContract, address _fees) public initializer {
         ERC20Detailed.initialize("MIX", "MIX", 24);
-        MIXRGovernance.initialize(_whitelist, _fees);
+        MIXRGovernance.initialize(_owner, _whitelistContract, _fees);
     }
 
     /**
