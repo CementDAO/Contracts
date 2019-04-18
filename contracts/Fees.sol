@@ -1,5 +1,6 @@
 pragma solidity ^0.5.7;
 
+import "zos-lib/contracts/Initializable.sol";
 import "openzeppelin-eth/contracts/token/ERC20/IERC20.sol";
 import "openzeppelin-eth/contracts/token/ERC20/ERC20Detailed.sol";
 import "openzeppelin-eth/contracts/math/SafeMath.sol";
@@ -16,8 +17,12 @@ import "./IFees.sol";
  * CementDAO whitepaper formulas, using FixidityLib for arithmetic and MIXR.sol
  * to retrieve token basket parameters.
  */
-contract Fees is IFees {
+contract Fees is Initializable, IFees {
     using SafeMath for uint256;
+
+    function initialize() public initializer {
+        //
+    }
 
     /**
      * @notice Accepted transaction type for the proportion, deviation and fee
