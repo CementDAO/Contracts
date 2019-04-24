@@ -9,7 +9,7 @@ import "./IWhitelist.sol";
  * @author Bernardo Vieira, Alberto Cuesta Canada
  * @notice Implements a whitelist for contract governance.
  */
-contract Whitelist is Initializable, IWhitelist, Ownable {
+contract Whitelist is IWhitelist, Ownable {
 
     /**
      * @notice Whitelist of addresses that can do governance.
@@ -37,8 +37,8 @@ contract Whitelist is Initializable, IWhitelist, Ownable {
     /**
      * @dev nitialize method
      */
-    function initialize(address sender) public initializer {
-        Ownable.initialize(sender);
+    function initialize(address sender) public {
+        _transferOwnership(sender);
         governors[sender] = true;
     }
 
